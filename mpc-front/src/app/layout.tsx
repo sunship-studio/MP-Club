@@ -16,6 +16,7 @@ export const metadata: Metadata = {
 };
 import localFont from 'next/font/local';
 import { DesktopHeader, MobileHeader } from "@/components/Header";
+import { DesktopFooter, MobileFooter } from "@/components/Footer";
 
 const goodTimes = localFont({
   src: '../../public/fonts/GoodTimes.otf',
@@ -32,7 +33,9 @@ export default function RootLayout({
       <body className="font-inter antialiased flex flex-col min-h-screen">
         <MobileHeader />
         <DesktopHeader />
-        <main className="  inset-0 bg-[linear-gradient(to_bottom,#0E77A5,#000000bf)] font-inter flex-grow min-h-[calc(100vh-var(--header-height)-var(--footer-height))]">  {children} </main>
+        <main className="  inset-0 bg-[linear-gradient(to_bottom,#10719B,#000000bf)] font-inter flex-grow min-h-[calc(100vh-var(--header-height)-var(--footer-height))]">  {children} </main>
+        {/* <DesktopFooter />
+        <MobileFooter /> */}
       </body>
     </html>
   );
