@@ -60,16 +60,22 @@ class Waitinglist extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Pending:",
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontFamily: 'SF-Pro',
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
+                      if (state.waitingList.any(
+                        (entry) => entry.approvalStatus == "pending",
+                      ))
+                        Text(
+                          "Pending:",
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontFamily: 'SF-Pro',
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
+                      if (state.waitingList.any(
+                        (entry) => entry.approvalStatus == "pending",
+                      ))
+                        const SizedBox(height: 10),
                       ListView.builder(
                         padding: EdgeInsets.only(),
                         shrinkWrap: true,
@@ -80,10 +86,15 @@ class Waitinglist extends StatelessWidget {
                           if (entry.approvalStatus == "pending") {
                             print(entry);
                             return WaitingListEntryBox(entry: entry);
+                          } else {
+                            return Container();
                           }
                         },
                       ),
-                      const SizedBox(height: 10),
+                      if (state.waitingList.any(
+                        (entry) => entry.approvalStatus == "pending",
+                      ))
+                        const SizedBox(height: 10),
                       state.waitingList.any(
                             (entry) => entry.approvalStatus == "approved",
                           )
@@ -107,6 +118,8 @@ class Waitinglist extends StatelessWidget {
                           final entry = state.waitingList[index];
                           if (entry.approvalStatus == "approved") {
                             return WaitingListEntryBox(entry: entry);
+                          } else {
+                            return Container();
                           }
                         },
                       ),
@@ -374,82 +387,88 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 5),
-                    Row(
-                      children: [
-                        FilledButton(
-                          onPressed: () {
-                            context
-                                .read<WaitingListCubit>()
-                                .acceptEntry(widget.entry.id);
-                          },
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color>(
-                              Color.fromRGBO(54, 169, 222, 1),
-                            ),
-                            padding:
-                                MaterialStateProperty.all<EdgeInsetsGeometry>(
+                    if (widget.entry.approvalStatus == "pending")
+                      Container(
+                        margin: EdgeInsets.only(top: 5),
+                        child: Row(
+                          children: [
+                            FilledButton(
+                              onPressed: () {
+                                context.read<WaitingListCubit>().acceptEntry(
+                                  widget.entry.id,
+                                );
+                              },
+                              style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStateProperty.all<Color>(
+                                      Color.fromRGBO(54, 169, 222, 1),
+                                    ),
+                                padding: MaterialStateProperty.all<
+                                  EdgeInsetsGeometry
+                                >(
                                   const EdgeInsets.symmetric(
                                     vertical: 6,
                                     horizontal: 25,
                                   ),
                                 ),
-                            shape: MaterialStateProperty.all<
-                              RoundedRectangleBorder
-                            >(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.0),
+                                shape: MaterialStateProperty.all<
+                                  RoundedRectangleBorder
+                                >(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                "Accept",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontFamily: 'SF-Pro',
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                          ),
-                          child: Text(
-                            "Accept",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontFamily: 'SF-Pro',
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        FilledButton(
-                          onPressed: () {
-                            context
-                                .read<WaitingListCubit>()
-                                .rejectEntry(widget.entry.id);
-                          },
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all<Color>(
-                              const Color.fromARGB(255, 172, 77, 77)!,
-                            ),
-                            padding:
-                                MaterialStateProperty.all<EdgeInsetsGeometry>(
+                            const SizedBox(width: 10),
+                            FilledButton(
+                              onPressed: () {
+                                context.read<WaitingListCubit>().rejectEntry(
+                                  widget.entry.id,
+                                );
+                              },
+                              style: ButtonStyle(
+                                backgroundColor: WidgetStateProperty.all<Color>(
+                                  const Color.fromARGB(255, 172, 77, 77)!,
+                                ),
+                                padding: MaterialStateProperty.all<
+                                  EdgeInsetsGeometry
+                                >(
                                   const EdgeInsets.symmetric(
                                     vertical: 6,
                                     horizontal: 28,
                                   ),
                                 ),
-                            shape: MaterialStateProperty.all<
-                              RoundedRectangleBorder
-                            >(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.0),
+                                shape: MaterialStateProperty.all<
+                                  RoundedRectangleBorder
+                                >(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                "Reject",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontFamily: 'SF-Pro',
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                          ),
-                          child: Text(
-                            "Reject",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontFamily: 'SF-Pro',
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
                   ],
                 ),
               )
