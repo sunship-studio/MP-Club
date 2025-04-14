@@ -26,5 +26,20 @@ mobileAppRouter.get(
   }
 );
 
+mobileAppRouter.post(
+  '/waiting-list/reject',
+  mobileAppAuth,
+  async (req: Request, res: Response) => {
+    await mobileAppController.rejectWaitingList(req, res);
+  }
+)
+
+mobileAppRouter.post(
+  '/waiting-list/accept',
+  mobileAppAuth,
+  async (req: Request, res: Response) => {
+    await mobileAppController.acceptWaitingList(req, res);
+  }
+)
 
 export default mobileAppRouter;

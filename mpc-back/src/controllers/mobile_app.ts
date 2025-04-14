@@ -62,4 +62,43 @@ export default class MobileAppController {
       return res.status(500).json({ message: "Internal server error" });
     }
   }
+
+  public async rejectWaitingList(
+    req: Request,
+    res: Response
+  ): Promise<Response> {
+    try {
+      const { id } = req.body;
+      const entry = await WaitingListEntry.findById(id);
+      if (!entry) {
+        return res.status(404).json({ message: "Entry not found" });
+      }
+      entry.approvalStatus = "rejected";
+      await entry.save();
+      return res.status(200).json({ message: "Entry rejected" });
+    } catch (error) {
+      console.error("Error rejecting waiting list entry:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  }
+
+  public async acceptWaitingList(
+    req: Request,
+    res: Response
+  ): Promise<Response> {
+    try {
+      const { id } = req.body;
+      const entry = await WaitingListEntry.findById(id);
+      if (!entry) {
+        return res.status(404).json({ message: "Entry not found" });
+      }
+      entry.approvalStatus = "approved";
+      entry.approvedDate = new Date();
+      await entry.save();
+      return res.status(200).json({ message: "Entry approved" });
+    } catch (error) {
+      console.error("Error approving waiting list entry:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  }
 }

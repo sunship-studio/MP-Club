@@ -24,7 +24,7 @@ interface WeeklyAvailability {
   thursday: DayAvailability;
   friday: DayAvailability;
   saturday: DayAvailability;
-  sunday: DayAvailability;
+
   [key: string]: DayAvailability;
 }
 
