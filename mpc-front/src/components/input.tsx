@@ -1,7 +1,7 @@
 import { ChangeEventHandler } from "react";
 
 
-const WaitingListInput = ({ label, handleInputChange, id }: { label: string, handleInputChange : ChangeEventHandler, id : string  }) => {
+const Input = ({ label, handleInputChange, id }: { label: string, handleInputChange : ChangeEventHandler, id : string  }) => {
     return (
         <>
             <div className="flex flex-col items-center justify-center w-full h-full">
@@ -21,4 +21,4 @@ const WaitingListInput = ({ label, handleInputChange, id }: { label: string, han
 
 }
 
-export default WaitingListInput;
+export default Input;

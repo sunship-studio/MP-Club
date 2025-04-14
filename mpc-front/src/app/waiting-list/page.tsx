@@ -1,7 +1,7 @@
 "use client";
 import AvailableBox from "@/components/waiting-list/available-box";
 import CustomCheckbox from "@/components/waiting-list/Checkbox";
-import WaitingListInput from "@/components/waiting-list/input";
+import Input from "@/components/input";
 import AgeSlider from "@/components/waiting-list/slider";
 import { number, set, z } from "zod";
 import TimeDropdown from "@/components/waiting-list/TimeDropdown";
@@ -197,7 +197,7 @@ const WaitingList = () => {
             <div className="hidden md:flex flex-col w-full space-y-2 py-2">
               <div className="flex flex-row w-full space-x-5">
                 <div className="flex flex-col w-full">
-                  <WaitingListInput
+                  <Input
                     label="First Name"
                     handleInputChange={handleInputChange}
                     id="firstName"
@@ -205,7 +205,7 @@ const WaitingList = () => {
                   <ErrorText error={formErrors["firstName"]} />
                 </div>
                 <div className="flex flex-col w-full">
-                  <WaitingListInput
+                  <Input
                     label="Last Name"
                     handleInputChange={handleInputChange}
                     id="lastName"
@@ -214,7 +214,7 @@ const WaitingList = () => {
                 </div>
               </div>
               <div className="flex flex-col w-full">
-                <WaitingListInput
+                <Input
                   label="E-mail"
                   handleInputChange={handleInputChange}
                   id="email"
@@ -224,19 +224,19 @@ const WaitingList = () => {
             </div>
             {/* Mobile Text Inputs */}
             <div className="flex flex-col md:hidden w-full">
-              <WaitingListInput
+              <Input
                 label="First Name"
                 handleInputChange={handleInputChange}
                 id="firstName"
               />
               <ErrorText error={formErrors["firstName"]} />
-              <WaitingListInput
+              <Input
                 label="Last Name"
                 handleInputChange={handleInputChange}
                 id="lastName"
               />
               <ErrorText error={formErrors["lastName"]} />
-              <WaitingListInput
+              <Input
                 label="E-mail"
                 handleInputChange={handleInputChange}
                 id="email"
