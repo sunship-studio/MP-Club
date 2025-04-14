@@ -1,1 +1,3 @@
-declare module "cors";
+declare module 'express' {
+    export = express;
+  }

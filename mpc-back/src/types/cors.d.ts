@@ -1,1 +1,4 @@
-declare module 'cors';
+declare module 'cors' {
+    const cors: any;
+    export = cors;
+  }
