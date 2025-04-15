@@ -17,8 +17,9 @@ onlineCoachingRouter.post(
 onlineCoachingRouter.post(
   "/webhook",
   express.raw({ type: "application/json" }),
-  
-
+ async (req: Request, res: Response) => {
+    onlineCoachingController.handleWebhook(req, res);
+  }
 );
 
 export default onlineCoachingRouter;

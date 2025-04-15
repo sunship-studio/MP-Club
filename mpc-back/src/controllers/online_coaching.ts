@@ -7,7 +7,8 @@ export default class OnlineCoachingController {
   }
 
   async createCheckoutSession(req: Request, res: Response) {
-    console.log(process.env.NODE_ENV);
+    console.log("Creating checkout session...");
+    console.log("Request body:", req.body);
     const { email, firstName, lastName, age } = req.body;
 
     try {

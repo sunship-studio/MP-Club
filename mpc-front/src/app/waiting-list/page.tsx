@@ -1,7 +1,7 @@
 "use client";
 import AvailableBox from "@/components/waiting-list/available-box";
 import CustomCheckbox from "@/components/waiting-list/Checkbox";
-import Input from "@/components/input";
+
 import AgeSlider from "@/components/waiting-list/slider";
 import { number, set, z } from "zod";
 import TimeDropdown from "@/components/waiting-list/TimeDropdown";
@@ -9,6 +9,7 @@ import { createContext, useContext, useState } from "react";
 import ErrorText from "@/components/waiting-list/ErrorText";
 import axios from "axios";
 import apiService, { DataState } from "@/services/api.service";
+import Input from "@/components/waiting-list/input";
 type Weekday = {
   name: string;
   value: boolean;

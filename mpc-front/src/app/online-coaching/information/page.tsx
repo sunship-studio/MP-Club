@@ -1,7 +1,7 @@
 "use client";
 import AvailableBox from "@/components/waiting-list/available-box";
 import CustomCheckbox from "@/components/waiting-list/Checkbox";
-import Input from "@/components/input";
+
 import AgeSlider from "@/components/waiting-list/slider";
 import { number, set, z } from "zod";
 import TimeDropdown from "@/components/waiting-list/TimeDropdown";
@@ -9,6 +9,12 @@ import { createContext, useContext, useState } from "react";
 import ErrorText from "@/components/waiting-list/ErrorText";
 import axios from "axios";
 import apiService, { DataState } from "@/services/api.service";
+import { loadStripe } from "@stripe/stripe-js";
+import Input from "@/components/waiting-list/input";
+
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
+);
 type Weekday = {
   name: string;
   value: boolean;
@@ -50,8 +56,9 @@ const OnlineCoachingInformation = () => {
       // Validate weekdays
 
       schema.parse(formData);
-
+    
       setFormErrors({});
+      return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
@@ -66,25 +73,37 @@ const OnlineCoachingInformation = () => {
     }
   };
 
-  const handleSubmit = () => {
+  async function handleSubmit() {
+    console.log("Form data", formData);
     const isValid = validateForm();
 
     if (isValid) {
+        console.log("Form Working");
       setState({ status: "loading" });
+      console.log("Form data", formData);
       try {
-        apiService.post("to_be_resolved", formData);
+        const response = await apiService.post<{ sessionId: string }>(
+          "/online-coaching/create-checkout-session",
+          formData
+        );
+        const stripe = await stripePromise;
+        const { sessionId } = response;
+        const result = await stripe?.redirectToCheckout({
+          sessionId: sessionId,
+        });
+
         setState({ status: "success", data: "Form submitted successfully" });
       } catch (error) {
         setState({ status: "error", error: "Error submitting form" });
       }
     }
-  };
+  }
   switch (state.status) {
     case "initial":
       return (
         <div className="flex flex-col items-center justify-center py-8 px-6">
           <h1 className={`text-2xl md:text-3xl font-semibold mb-4 text-center`}>
-                Sign up for Online Coaching
+            Sign up for Online Coaching
           </h1>
           <div className="flex flex-col w-full md:w-2/3 ">
             {/* Desktop Text Inputs */}

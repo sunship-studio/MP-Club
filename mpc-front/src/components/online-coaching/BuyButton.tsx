@@ -1,26 +1,13 @@
 "use client";
 import apiService from "@/services/api.service";
 import { loadStripe } from "@stripe/stripe-js";
+import { useRouter } from "next/navigation";
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
 );
 
 const BuyButton = () => {
-  async function handleClick() {
-    const response = await apiService.get<{ sessionId: string }>(
-      "/online-coaching/create-checkout-session",
-      {}
-    );
-
-    const stripe = await stripePromise;
-    if (!stripe) {
-      console.error("Stripe not loaded");
-      return;
-    }
-    const { error } = await stripe.redirectToCheckout({
-      sessionId: response.sessionId,
-    });
-  }
+  const router = useRouter();
 
   return (
     <div className="flex flex-col w-full">
@@ -36,7 +23,7 @@ const BuyButton = () => {
       </div>
       <button
         onClick={() => {
-          handleClick();
+          router.push("/online-coaching/information");
         }}
         className="bg-[#118CC3] w-full h-12 font-bold rounded-lg shadow-md shadow-[#118CC3]/30 text-white hover:bg-[#0f7ab5]  active:shadow-sm
     active:bg-[#0f7ab5]
