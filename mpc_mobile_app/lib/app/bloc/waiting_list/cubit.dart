@@ -53,4 +53,6 @@ class WaitingListCubit extends Cubit<WaitingListState> {
   void showError(String error) {
     emit(WaitinglistErrorState(error));
   }
+
+  
 }

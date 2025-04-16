@@ -1,8 +1,11 @@
+import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mpc_mobile_app/app/bloc/online_coaching/cubit.dart';
 import 'package:mpc_mobile_app/app/bloc/online_coaching/state.dart';
 import 'package:mpc_mobile_app/app/models/CurrentSubcriber.dart';
+import 'package:mpc_mobile_app/app/models/WaitingListEntry.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class OnlineCoaching extends StatelessWidget {
@@ -163,9 +166,27 @@ class _OnlineSubscriberBoxState extends State<OnlineSubscriberBox> {
                       Row(
                         children: [
                           Text(
-                            "${widget.subcriber.email}",
+                            "${widget.subcriber.firstNane} ${widget.subcriber.lastName}",
                             style: TextStyle(
                               fontSize: 18,
+                              fontFamily: 'SF-Pro',
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Container(
+                            margin: EdgeInsets.symmetric(horizontal: 6),
+                            height: 18,
+                            width: 1.5,
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          Text(
+                            widget.subcriber.age.toString(),
+                            style: TextStyle(
+                              fontSize: 16,
                               fontFamily: 'SF-Pro',
                               color: Colors.black,
                               fontWeight: FontWeight.w600,
@@ -174,12 +195,157 @@ class _OnlineSubscriberBoxState extends State<OnlineSubscriberBox> {
                         ],
                       ),
                       const SizedBox(height: 0),
+                      Row(
+                        children: [
+                          Text(
+                            widget.subcriber.email.toString(),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontFamily: 'SF-Pro',
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(width: 6),
+                          SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: IconButton(
+                              onPressed: () {
+                                print("Copy email: ${widget.subcriber.email}");
+                                Clipboard.setData(
+                                  ClipboardData(text: widget.subcriber.email),
+                                );
+                              },
+                              icon: Icon(Coolicons.copy),
+                              iconSize: 20,
+                              style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStateProperty.all<Color>(
+                                      Colors.white,
+                                    ),
+                                padding:
+                                    WidgetStateProperty.all<EdgeInsetsGeometry>(
+                                      const EdgeInsets.symmetric(
+                                        vertical: 0,
+                                        horizontal: 0,
+                                      ),
+                                    ),
+
+                                shape: MaterialStateProperty.all<
+                                  RoundedRectangleBorder
+                                >(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5.0),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
+                  ),
+                  const Spacer(),
+                  Icon(
+                    isExpanded
+                        ? Coolicons.chevron_big_down
+                        : Coolicons.chevron_big_right,
+                    size: 24,
+                    color: Colors.black,
                   ),
                 ],
               ),
             ),
           ),
+
+          const SizedBox(height: 5),
+
+          isExpanded
+              ? Container(
+                margin: EdgeInsets.only(top: 5),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 5),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            launchGmail(widget.subcriber.email);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Color.fromRGBO(227, 227, 227, 0.5),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 10,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Image.asset('assets/gmail.png', width: 24),
+                                const SizedBox(width: 5),
+                                Text(
+                                  "Go to Gmail",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: 'SF-Pro',
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+                        Container(
+                          decoration: BoxDecoration(
+                            color:
+                                widget.subcriber.status == "active"
+                                    ? Color.fromRGBO(44, 199, 46, 0.6)
+                                    : Color.fromRGBO(255, 0, 0, 0.6),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            vertical: 6,
+                            horizontal: 10,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                widget.subcriber.status == "active"
+                                    ? Coolicons.check
+                                    : Coolicons.close_big,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                widget.subcriber.status == "active"
+                                    ? "Active"
+                                    : "Inactive",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontFamily: 'SF-Pro',
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              )
+              : Container(),
         ],
       ),
     );

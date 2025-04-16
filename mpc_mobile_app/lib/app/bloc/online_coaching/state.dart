@@ -20,7 +20,6 @@ class OnlineCoachingLoadedState extends OnlineCoachingState {
   List<Object?> get props => [currentSubscribers];
 }
 
-
 class OnlineCoachingErrorState extends OnlineCoachingState {
   final String error;
 

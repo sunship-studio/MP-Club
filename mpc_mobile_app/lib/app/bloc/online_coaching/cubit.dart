@@ -12,11 +12,13 @@ class OnlineCoachingCubit extends Cubit<OnlineCoachingState> {
     Response response = await apiService.get(
       '/mobile-app/online-subscriptions',
     );
+    print('Response: ${response.data}');
     if (response.statusCode == 200) {
       List<CurrentSubcriber> currentSubscribers =
           (response.data as List)
               .map((entry) => CurrentSubcriber.fromJson(entry))
               .toList();
+              
       emit(OnlineCoachingLoadedState(currentSubscribers: currentSubscribers));
     } else {
       emit(OnlineCoachingErrorState('Failed to load current subscribers'));

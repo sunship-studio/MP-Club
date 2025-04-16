@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { WaitingListEntry } from "../models/WaitingListEntry";
 import stripe from "../config/stripe";
+import OnlineSubscriber from "../models/OnlineSubscriber";
 export default class MobileAppController {
   public async getWaitingList(req: Request, res: Response): Promise<Response> {
     try {
@@ -25,38 +26,9 @@ export default class MobileAppController {
     res: Response
   ): Promise<Response> {
     try {
-      const subscriptions = await stripe.subscriptions.list({
+      const subscriptions = await OnlineSubscriber.find({});
 
-        expand: ["data.customer"],
-        price: process.env.STRIPE_PRICE_ID,
-      });
-      if (!subscriptions || subscriptions.data.length === 0) {
-        return res.status(404).json({ message: "No subscriptions found" });
-      }
-      // Sort the subscriptions by createdAt in descending order
-      subscriptions.data.sort((a, b) => {
-        return b.created - a.created;
-      });
-      return res.status(200).json(
-        subscriptions.data
-          .map((sub) => {
-            if (
-              typeof sub.customer !== "string" &&
-              sub.customer &&
-              !sub.customer.deleted
-            ) {
-              return {
-                customerId: sub.customer.id,
-                email: sub.customer.email || "No email",
-                subscriptionId: sub.id,
-                startDate: sub.start_date,
-                status: sub.status,
-              };
-            }
-            return null;
-          })
-          .filter(Boolean)
-      );
+      return res.status(200).json(subscriptions);
     } catch (error) {
       console.error("Error fetching online subscriptions:", error);
       return res.status(500).json({ message: "Internal server error" });

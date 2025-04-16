@@ -88,11 +88,13 @@ const OnlineCoachingInformation = () => {
         );
         const stripe = await stripePromise;
         const { sessionId } = response;
+        setState({ status: "initial" });
         const result = await stripe?.redirectToCheckout({
           sessionId: sessionId,
         });
-
-        setState({ status: "success", data: "Form submitted successfully" });
+       
+      
+        
       } catch (error) {
         setState({ status: "error", error: "Error submitting form" });
       }

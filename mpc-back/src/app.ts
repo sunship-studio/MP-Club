@@ -13,14 +13,16 @@ connectToDatabase();
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
+
 // Middleware
 app.use(cors());
-
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/waiting-list", waitingListRouter);
 app.use("/online-coaching", onlineCoachingRouter);
 app.use("/mobile-app", mobileAppRouter);
+
+app.use(express.json());
+
 // Start server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

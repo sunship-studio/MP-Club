@@ -36,7 +36,7 @@ class _MpcAppState extends State<MpcApp> {
   Widget build(BuildContext context) {
     List<Widget> routes = [
       HomeScreen(changeScreen: changeScreen),
-      Waitinglist(),
+      WaitingList(),
       OnlineCoaching(),
     ];
     return MaterialApp(
@@ -68,7 +68,6 @@ class _MpcAppState extends State<MpcApp> {
                   ),
                 ),
                 width: double.infinity,
-
                 child: Column(
                   children: [
                     Row(

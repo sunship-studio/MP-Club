@@ -3,10 +3,16 @@ class CurrentSubcriber {
   String email;
   String subscriptionId;
   String status;
-  int startDate;
+  String firstNane;
+  String lastName;
+  int age;
+  DateTime startDate;
 
   CurrentSubcriber({
     required this.customerId,
+    required this.firstNane,
+    required this.age,
+    required this.lastName,
     required this.email,
     required this.subscriptionId,
     required this.status,
@@ -15,11 +21,14 @@ class CurrentSubcriber {
 
   factory CurrentSubcriber.fromJson(Map<String, dynamic> json) {
     return CurrentSubcriber(
+      firstNane: json['firstName'],
+      lastName: json['lastName'],
+      age: json['age'],
       customerId: json['customerId'],
       email: json['email'],
       subscriptionId: json['subscriptionId'],
       status: json['status'],
-      startDate: json['startDate'],
+      startDate: DateTime.parse(json['startDate']),
     );
   }
 }

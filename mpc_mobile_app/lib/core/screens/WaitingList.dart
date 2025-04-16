@@ -7,8 +7,8 @@ import 'package:mpc_mobile_app/app/bloc/waiting_list/state.dart';
 import 'package:mpc_mobile_app/app/models/WaitingListEntry.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class Waitinglist extends StatelessWidget {
-  const Waitinglist({super.key});
+class WaitingList extends StatelessWidget {
+  const WaitingList({super.key});
 
   @override
   Widget build(BuildContext context) {
