@@ -59,14 +59,14 @@ const MobileHeader = () => {
               WAITING LIST
             </Link>
             <Link
-              href="#menu3"
+              href="/plans"
               className="text-gray-800 py-2"
               onClick={() => setIsOpen(false)}
             >
               PLANS
             </Link>
             <Link
-              href="#menu4"
+              href="#"
               className="text-gray-800 py-2"
               onClick={() => setIsOpen(false)}
             >
@@ -116,10 +116,10 @@ const DesktopHeader = () => {
           <a href="/waiting-list" className="hover:text-gray-400">
             WAITING LIST
           </a>
-          <a href="#" className="hover:text-gray-400">
+          <a href="/plans" className="hover:text-gray-400">
             PLANS
           </a>
-          <a href="#" className="hover:text-gray-400">
+          <a href="" className="hover:text-gray-400">
             FORUM
           </a>
           <a href="/cancel" className="hover:text-gray-400">

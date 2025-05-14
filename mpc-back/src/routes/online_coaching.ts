@@ -3,7 +3,6 @@ import OnlineCoachingController from "../controllers/online_coaching";
 import { Request, Response } from "express";
 
 import bodyParser from "body-parser";
-import { on } from "events";
 
 // Online Coaching Router
 const onlineCoachingRouter = express.Router();
@@ -26,8 +25,14 @@ onlineCoachingRouter.post(
 );
 
 onlineCoachingRouter.post(
-  '/cancel',
+  "/cancel",
   onlineCoachingController.cancelSubscription
-)
+);
+
+onlineCoachingRouter.post(
+  "/confirm_cancel",
+  bodyParser.json(),
+  onlineCoachingController.confirmCancelSubscription
+);
 
 export default onlineCoachingRouter;

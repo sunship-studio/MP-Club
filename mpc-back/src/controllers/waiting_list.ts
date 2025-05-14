@@ -4,6 +4,7 @@ import {
   WaitingListEntry,
 } from "../models/WaitingListEntry";
 import { start } from "repl";
+import { sendNotificationToAdmin } from "../services/notificationsService";
 
 export default class WaitingListController {
   // Add a new user to the waiting list
@@ -39,6 +40,10 @@ export default class WaitingListController {
       res
         .status(201)
         .json({ message: "User added to waiting list", entry: newEntry });
+      sendNotificationToAdmin(
+        `New user added to waiting list: ${firstName} ${lastName}`,
+        "New Waiting List Entry"
+      );
     } catch (error) {
       console.error("Error adding user to waiting list:", error);
       res

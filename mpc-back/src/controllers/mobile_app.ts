@@ -26,8 +26,8 @@ export default class MobileAppController {
     res: Response
   ): Promise<Response> {
     try {
-      const subscriptions = await OnlineSubscriber.find({});
-
+      const subscriptions = await OnlineSubscriber.find();
+      console.log("Subscriptions:", subscriptions);
       return res.status(200).json(subscriptions);
     } catch (error) {
       console.error("Error fetching online subscriptions:", error);

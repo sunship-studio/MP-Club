@@ -1,12 +1,26 @@
+import 'dart:io';
+
 import 'package:coolicons/coolicons.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:mpc_mobile_app/app/network/api.dart';
 import 'package:mpc_mobile_app/core/screens/HomeScreen.dart';
 import 'package:mpc_mobile_app/core/screens/OnlineCoaching.dart';
 import 'package:mpc_mobile_app/core/screens/WaitingList.dart';
+import 'package:mpc_mobile_app/firebase_options.dart';
 
 bool debug = true;
 String admin_key = 'shanempc113@';
-void main() {
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print("Handling a background message: ${message.messageId}");
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   if (debug) {
     // Enable debug mode
     debugPrint("Debug mode is enabled");
@@ -14,6 +28,25 @@ void main() {
     // Disable debug mode
     debugPrint("Debug mode is disabled");
   }
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  NotificationSettings settings = await FirebaseMessaging.instance
+      .requestPermission(alert: true, badge: true, sound: true);
+
+  // Only proceed if user granted permission
+  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+    // Get the token
+    try {
+      String? token = await FirebaseMessaging.instance.getToken();
+      print('FCM Token: $token');
+
+      // For iOS, specifically get the APNS token
+      String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+      print('APNS Token: $apnsToken');
+    } catch (e) {
+      debugPrint("cant get aspn");
+    }
+  }
+
   runApp(MpcApp());
 }
 

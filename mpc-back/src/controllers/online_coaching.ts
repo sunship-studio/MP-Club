@@ -4,6 +4,8 @@ import PaymentSession from "../models/PaymentSession";
 import OnlineSubscriber from "../models/OnlineSubscriber";
 import fs from "fs";
 import path from "path";
+import transporter from "../config/mailer";
+import { sendNotificationToAdmin } from "../services/notificationsService";
 export default class OnlineCoachingController {
   constructor() {
     // Initialize any properties or dependencies here
@@ -69,6 +71,7 @@ export default class OnlineCoachingController {
       console.error("Webhook Error: Request body is not a Buffer");
       return res.status(400).send("Webhook Error: Invalid request body format");
     }
+    
     try {
       event = stripe.webhooks.constructEvent(
         req.body as Buffer,
@@ -91,7 +94,23 @@ export default class OnlineCoachingController {
         const subStatus = (
           await stripe.subscriptions.retrieve(subscription! as string)
         ).status;
-
+        const template_path = path.join(
+          __dirname,
+          "templates",
+          "online_success.html"
+        );
+        const templateSource = readHTMLFile(template_path);
+        const template = Handlebars.compile(templateSource);
+        const htmlToSend = template({
+          subtotal: "€200.00"
+        });
+        const mailOptions = {
+          from: process.env.MAIL_FROM,
+          to: paymentSession?.email,
+          subject: "Subscription Confirmation",
+          html: htmlToSend,
+        };
+        await transporter.sendMail(mailOptions);
         const subscriber = await OnlineSubscriber.create({
           email: paymentSession?.email,
           firstName: paymentSession?.firstName,
@@ -102,6 +121,10 @@ export default class OnlineCoachingController {
           status: subStatus,
           startDate: new Date(),
         });
+        sendNotificationToAdmin(
+          "New Online Coaching Subscription",
+          `New subscription from ${paymentSession?.firstName} ${paymentSession?.lastName}`
+        );
         console.log("Payment successful:", session);
         break;
       case "checkout.session.async_payment_failed":
@@ -113,17 +136,82 @@ export default class OnlineCoachingController {
 
     res.status(200).json({ received: true });
   }
-  async cancelSubscription(req: Request, res: Response) {
+  public async cancelSubscription(req: Request, res: Response) {
     const { email } = req.body;
     try {
-      const template_path = path.join(__dirname, 'templates', 'cancel.html');
+      // generate token for the customer
+      const customer = await stripe.customers.list({
+        email: email,
+      });
+      if (customer.data.length === 0) {
+        res.status(404).json({ error: "Customer not found" });
+      }
+      // Token generation
+      const token = await generateToken(customer.data[0].id);
+      const subscriber = await OnlineSubscriber.findOneAndUpdate(
+        { email: email },
+        { cancelToken: token }
+      );
+      // Template emails
+      const template_path = path.join(
+        __dirname,
+        "templates",
+        "online_cancelation.html"
+      );
+      const templateSource = readHTMLFile(template_path);
+      const template = Handlebars.compile(templateSource);
+      const htmlToSend = template({
+        cancelUrl: `midlandsperformanceclub.ie/online-coaching/cancel?token=${token}`,
+      });
+      const mailOptions = {
+        from: process.env.MAIL_FROM,
+        to: email,
+        subject: "Subscription Cancellation",
+        html: htmlToSend,
+      };
+
+      await transporter.sendMail(mailOptions);
+      res.status(200);
+
+      console.log("Cancellation email sent to:", email);
     } catch (error) {
       console.error("Error deleting subscription:", error);
       res.status(500).json({ error: "Failed to delete subscription" });
+    }
+  }
+  public async confirmCancelSubscription(req: Request, res: Response) {
+    const { token } = req.body;
+    console.log("Token received:", token);
+    try {
+      const subscriber = await OnlineSubscriber.findOne({
+        cancelToken: token,
+      });
+      if (!subscriber) {
+        res.status(404).json({ error: "Subscriber not found" });
+        return;
+      }
+      // Cancel the subscription
+      const subscription = await stripe.subscriptions.cancel(
+        subscriber.subscriptionId
+      );
+      // Delete the subscriber from the database
+      await OnlineSubscriber.findOneAndUpdate({ cancelToken: token }, {status: "canceled"});
+
+      res.status(200).json({ message: "Subscription cancelled successfully" });
+    } catch (error) {
+      console.error("Error confirming cancellation:", error);
+      res.status(500).json({ error: "Failed to confirm cancellation" });
     }
   }
 }
 
 const readHTMLFile = (filePath: string) => {
   return fs.readFileSync(filePath, "utf8");
+};
+
+const generateToken = async (customerId: string) => {
+  const token = await stripe.tokens.create({
+    customer: customerId,
+  });
+  return token.id;
 };

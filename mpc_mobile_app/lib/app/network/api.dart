@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 
 class ApiService {
   static String baseUrl =
-      debug ? 'http://localhost:3500' : 'https://api.example.com';
+      debug ? 'http://localhost:3500' : 'https://mpc-back-d6547de592cb.herokuapp.com';
 
   Dio dio = Dio();
 
