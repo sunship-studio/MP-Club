@@ -6,7 +6,7 @@ import connectToDatabase from "./config/database";
 import onlineCoachingRouter from "./routes/online_coaching";
 import mobileAppRouter from "./routes/mobile_app";
 import notificationsRouter from "./routes/notifications";
-import { sendNotificationToDebug } from "./services/notificationsService";
+import { sendNotificationToDebug } from "./services/notification";
 import plansRouter from "./routes/plans";
 import handleWebhook from "./controllers/webhook";
 import bodyParser from "body-parser";

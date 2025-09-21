@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { WaitingListEntry } from "../models/WaitingListEntry";
 import stripe from "../config/stripe";
-import OnlineSubscriber from "../models/OnlineSubscriber";
+import OnlineSubscriber from "../models/User";
 export default class MobileAppController {
   public async getWaitingList(req: Request, res: Response): Promise<Response> {
     try {

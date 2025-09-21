@@ -1,7 +1,7 @@
 import express from 'express';
 
 import { Request, Response } from 'express';
-import { storeAdminFCMToken } from '../services/notificationsService';
+import { storeAdminFCMToken } from '../services/notification';
 
 
 const notificationsRouter = express.Router();

@@ -4,7 +4,7 @@ import {
   WaitingListEntry,
 } from "../models/WaitingListEntry";
 import { start } from "repl";
-import { sendNotificationToAdmin } from "../services/notificationsService";
+import { sendNotificationToAdmin } from "../services/notification";
 
 export default class WaitingListController {
   // Add a new user to the waiting list

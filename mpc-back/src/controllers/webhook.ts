@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { sendNotificationToAdmin } from "../services/notificationsService";
+import { sendNotificationToAdmin } from "../services/notification";
 import transporter from "../config/mailer";
-import OnlineSubscriber from "../models/OnlineSubscriber";
+import OnlineSubscriber from "../models/User";
 import fs from "fs";
 import PaymentSession from "../models/PaymentSession";
 import stripe from "../config/stripe";
@@ -12,21 +12,25 @@ const plans = [
     type: "Push Pull Legs",
     price: 199.99,
     priceId: "price_1RGjVPPrBbVluHtKMSq17jrQ",
+    link: "https://drive.google.com/uc?export=download&id=1vmKbNcbPr1EUPkjUrU7ksUPxxst0MQE8",
   },
   {
     type: "Upper Focused 4 Day Split",
     price: 199.99,
     priceId: "price_1RGjVtPrBbVluHtKMS8Gj0I5",
+    link: "https://drive.google.com/uc?export=download&id=1CuwfbxlULpadU9juCNnrUC-5lvFF831t",
   },
   {
     type: "Female Lower Focused Split",
     price: 199.99,
+    link: "https://drive.google.com/uc?export=download&id=1_YUB4ki8GnAJ1Acq8cSOPkr-TLXlrw6D",
     priceId: "price_1RGjQQPrBbVluHtKOJhsfoRW",
   },
   {
     type: "Lower Focused 4 Day Split",
     price: 199.99,
     priceId: "price_1RGjPmPrBbVluHtKAdUK720a",
+    link: "https://drive.google.com/uc?export=download&id=1WgXc95e3lN4a89YqMAEG9uaeawtJO8iC",
   },
 ];
 
@@ -121,7 +125,7 @@ const handleWebhook = async (req: Request, res: Response) => {
       } else {
         const template_path = path.join(
           __dirname,
-          '../..',
+          "../..",
           "templates",
           "plan_order.html"
         );
@@ -140,6 +144,14 @@ const handleWebhook = async (req: Request, res: Response) => {
           subtotal: plans[0].price.toString(),
           orderDate: new Date().toLocaleDateString("en-US"),
           orderNumber: session.id,
+          planDownloadLink:
+            priceId === plans[0].priceId
+              ? plans[0].link
+              : priceId === plans[1].priceId
+              ? plans[1].link
+              : priceId === plans[2].priceId
+              ? plans[2].link
+              : plans[3].link,
         });
         const mailOptions = {
           from: process.env.MAIL_FROM,

@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import stripe from "../config/stripe";
 import PaymentSession from "../models/PaymentSession";
-import OnlineSubscriber from "../models/OnlineSubscriber";
+import OnlineSubscriber from "../models/User";
 import fs from "fs";
 import path from "path";
 import transporter from "../config/mailer";
-import { sendNotificationToAdmin } from "../services/notificationsService";
+import { sendNotificationToAdmin } from "../services/notification";
+import User from "../models/User";
 export default class OnlineCoachingController {
   constructor() {
     // Initialize any properties or dependencies here
@@ -71,7 +72,7 @@ export default class OnlineCoachingController {
       console.error("Webhook Error: Request body is not a Buffer");
       return res.status(400).send("Webhook Error: Invalid request body format");
     }
-    
+
     try {
       event = stripe.webhooks.constructEvent(
         req.body as Buffer,
@@ -102,7 +103,7 @@ export default class OnlineCoachingController {
         const templateSource = readHTMLFile(template_path);
         const template = Handlebars.compile(templateSource);
         const htmlToSend = template({
-          subtotal: "€200.00"
+          subtotal: "€200.00",
         });
         const mailOptions = {
           from: process.env.MAIL_FROM,
@@ -111,7 +112,7 @@ export default class OnlineCoachingController {
           html: htmlToSend,
         };
         await transporter.sendMail(mailOptions);
-        const subscriber = await OnlineSubscriber.create({
+        const subscriber = await User.create({
           email: paymentSession?.email,
           firstName: paymentSession?.firstName,
           lastName: paymentSession?.lastName,
@@ -120,6 +121,7 @@ export default class OnlineCoachingController {
           subscriptionId: session.subscription,
           status: subStatus,
           startDate: new Date(),
+          type: "online_coaching",
         });
         sendNotificationToAdmin(
           "New Online Coaching Subscription",
@@ -195,7 +197,10 @@ export default class OnlineCoachingController {
         subscriber.subscriptionId
       );
       // Delete the subscriber from the database
-      await OnlineSubscriber.findOneAndUpdate({ cancelToken: token }, {status: "canceled"});
+      await OnlineSubscriber.findOneAndUpdate(
+        { cancelToken: token },
+        { status: "canceled" }
+      );
 
       res.status(200).json({ message: "Subscription cancelled successfully" });
     } catch (error) {

@@ -10,7 +10,7 @@ import 'package:mpc_mobile_app/core/screens/OnlineCoaching.dart';
 import 'package:mpc_mobile_app/core/screens/WaitingList.dart';
 import 'package:mpc_mobile_app/firebase_options.dart';
 
-bool debug = true;
+bool debug = false;
 String admin_key = 'shanempc113@';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
