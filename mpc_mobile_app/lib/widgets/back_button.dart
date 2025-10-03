@@ -1,0 +1,42 @@
+import 'package:coolicons/coolicons.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mpc_mobile_app/core/constants.dart';
+
+class MpcBackButton extends StatefulWidget {
+  const MpcBackButton({super.key});
+
+  @override
+  State<MpcBackButton> createState() => _MpcBackButtonState();
+}
+
+class _MpcBackButtonState extends State<MpcBackButton> {
+  Function()? onTap;
+
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        // Your action here
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: Container(
+        padding: EdgeInsets.all(horizontalPadding.w),
+        child: AnimatedScale(
+          scale: _isPressed ? 0.85 : 1.0,
+          duration: Duration(milliseconds: 100),
+          child: Icon(
+            Coolicons.chevron_big_left,
+            size: 24.w,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}

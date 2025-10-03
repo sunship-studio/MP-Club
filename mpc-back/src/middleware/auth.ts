@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 
-const mobileAppAuth = (req: Request, res: Response, next: NextFunction) => {
+const adminAppAuth = (req: Request, res: Response, next: NextFunction) => {
   // Check if the request has a valid mobile app token
   const token = req.headers["token"];
   if (token === process.env.ADMIN_TOKEN) {
@@ -25,9 +25,9 @@ const verifyFirebaseToken = async (
   try {
     const decodedToken = await getAuth().verifyIdToken(token!);
     (req as any).idToken = decodedToken;
-    next();a
+    next();
   } catch (error) {
     res.status(401).json({ error: "Unauthorized" });
   }
 };
-export default mobileAppAuth;
+export default adminAppAuth;

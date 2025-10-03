@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "408557830192",
+    "project_id": "midlands-perfomance-club",
+    "storage_bucket": "midlands-perfomance-club.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:408557830192:android:33120ce233d98c9141edf5",
+        "android_client_info": {
+          "package_name": "com.example.mpc_admin_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNryBLvh3VaBuO9x9BGPux4kJqtOMCJtc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

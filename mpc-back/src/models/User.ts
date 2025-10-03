@@ -12,7 +12,7 @@ export interface IUser extends Document {
   lastLogin?: Date;
   passwordHash?: string;
   trainingPlan: [
-    { exerciseId: string; sets: number; reps: number; rir: number }
+    { exerciseId: string; sets: number; reps: number; rir: number; name: string }[]
   ];
   startDate: Date;
   firstName: string;
@@ -38,19 +38,20 @@ const UserSchema = new Schema<IUser>({
   lastLogin: { type: Date },
   passwordHash: { type: String },
   trainingPlan: [
-    {
-      exerciseId: { type: String, required: true },
-      sets: { type: Number, required: true },
-      reps: { type: Number, required: true },
-      rir: { type: Number, required: true }
-    }
+    [
+      {
+        exerciseId: { type: String, required: true },
+        sets: { type: Number, required: true },
+        reps: { type: Number, required: true },
+        rir: { type: Number, required: true },
+        name: { type: String, required: true }, 
+      },
+    ],
   ],
-    
+
   cancelToken: { type: String },
   // Optional field for storing the cancel token
 });
-
-
 
 const User = mongoose.model<IUser>("User", UserSchema);
 export default User;

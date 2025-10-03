@@ -95,23 +95,25 @@ export default class OnlineCoachingController {
         const subStatus = (
           await stripe.subscriptions.retrieve(subscription! as string)
         ).status;
-        const template_path = path.join(
-          __dirname,
-          "templates",
-          "online_success.html"
-        );
-        const templateSource = readHTMLFile(template_path);
-        const template = Handlebars.compile(templateSource);
-        const htmlToSend = template({
-          subtotal: "€200.00",
-        });
-        const mailOptions = {
-          from: process.env.MAIL_FROM,
-          to: paymentSession?.email,
-          subject: "Subscription Confirmation",
-          html: htmlToSend,
-        };
-        await transporter.sendMail(mailOptions);
+
+        // Sending mail (Waiting for designers to create templates)
+        // const template_path = path.join(
+        //   __dirname,
+        //   "templates",
+        //   "online_success.html"
+        // );
+        // // // const templateSource = readHTMLFile(template_path);
+        // const template = Handlebars.compile(templateSource);
+        // const htmlToSend = template({
+        //   subtotal: "€200.00",
+        // });
+        // const mailOptions = {
+        //   from: process.env.MAIL_FROM,
+        //   to: paymentSession?.email,
+        //   subject: "Subscription Confirmation",
+        //   html: htmlToSend,
+        // };
+        // await transporter.sendMail(mailOptions);
         const subscriber = await User.create({
           email: paymentSession?.email,
           firstName: paymentSession?.firstName,

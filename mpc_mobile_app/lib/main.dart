@@ -1,144 +1,31 @@
-import 'dart:io';
-
-import 'package:coolicons/coolicons.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:mpc_mobile_app/app/network/api.dart';
-import 'package:mpc_mobile_app/core/screens/HomeScreen.dart';
-import 'package:mpc_mobile_app/core/screens/OnlineCoaching.dart';
-import 'package:mpc_mobile_app/core/screens/WaitingList.dart';
-import 'package:mpc_mobile_app/firebase_options.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mpc_mobile_app/core/theme/app_colors.dart';
+import 'package:mpc_mobile_app/core/theme/theme.dart';
+import 'package:mpc_mobile_app/screens/forgot_password.dart';
+import 'package:mpc_mobile_app/screens/home.dart';
+import 'package:mpc_mobile_app/screens/login.dart';
+import 'package:mpc_mobile_app/screens/new_password.dart';
+import 'package:mpc_mobile_app/screens/welcome.dart';
 
-bool debug = false;
-String admin_key = 'shanempc113@';
-
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  print("Handling a background message: ${message.messageId}");
+void main(List<String> args) {
+  runApp(const MpcApp());
 }
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  if (debug) {
-    // Enable debug mode
-    debugPrint("Debug mode is enabled");
-  } else {
-    // Disable debug mode
-    debugPrint("Debug mode is disabled");
-  }
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  NotificationSettings settings = await FirebaseMessaging.instance
-      .requestPermission(alert: true, badge: true, sound: true);
-
-  // Only proceed if user granted permission
-  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    // Get the token
-    try {
-      String? token = await FirebaseMessaging.instance.getToken();
-      print('FCM Token: $token');
-
-      // For iOS, specifically get the APNS token
-      String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-      print('APNS Token: $apnsToken');
-    } catch (e) {
-      debugPrint("cant get aspn");
-    }
-  }
-
-  runApp(MpcApp());
-}
-
-class MpcApp extends StatefulWidget {
+class MpcApp extends StatelessWidget {
   const MpcApp({super.key});
 
   @override
-  State<MpcApp> createState() => _MpcAppState();
-}
-
-class _MpcAppState extends State<MpcApp> {
-  void changeScreen(int index) {
-    setState(() {
-      currentIndex = index;
-    });
-  }
-
-  int currentIndex = 0;
-  @override
   Widget build(BuildContext context) {
-    List<Widget> routes = [
-      HomeScreen(changeScreen: changeScreen),
-      WaitingList(),
-      OnlineCoaching(),
-    ];
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Color.fromRGBO(20, 163, 230, 1),
-        ),
-      ),
-      home: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [const Color.fromARGB(255, 17, 138, 194), Colors.black],
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.only(top: 40, left: 10, right: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(10),
-                    bottomRight: Radius.circular(10),
-                  ),
-                ),
-                width: double.infinity,
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        currentIndex != 0
-                            ? Expanded(
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      currentIndex = 0;
-                                    });
-                                  },
-                                  icon: Icon(
-                                    Coolicons.chevron_big_left,
-                                    size: 30,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            )
-                            : Expanded(child: Container()),
-                        Container(
-                          width: MediaQuery.of(context).size.width * 0.5,
-                          child: Image.asset('assets/logo.png'),
-                        ),
-                        Expanded(child: Container()),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(child: routes[currentIndex]),
-            ],
-          ),
-        ),
+    return ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+
+      child: MaterialApp(
+        
+        title: 'MP Club',
+        theme: AppTheme.appTheme,
+        home: HomeScreen(),
       ),
     );
   }
