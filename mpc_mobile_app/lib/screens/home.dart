@@ -5,17 +5,17 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:gap/gap.dart';
 import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
-import 'package:mpc_mobile_app/widgets/calories_progress.dart';
-import 'package:mpc_mobile_app/widgets/chat_trainer_card.dart';
-import 'package:mpc_mobile_app/widgets/check_in_card.dart';
-import 'package:mpc_mobile_app/widgets/food_guidelines.dart';
+import 'package:mpc_mobile_app/widgets/home/calories_progress.dart';
+import 'package:mpc_mobile_app/widgets/home/chat_trainer_card.dart';
+import 'package:mpc_mobile_app/widgets/home/check_in_card.dart';
+import 'package:mpc_mobile_app/widgets/home/food_guidelines.dart';
 import 'package:mpc_mobile_app/widgets/icon_button.dart';
-import 'package:mpc_mobile_app/widgets/nutrition_box.dart';
+import 'package:mpc_mobile_app/widgets/home/nutrition_box.dart';
 import 'package:mpc_mobile_app/widgets/profile_avatar.dart';
-import 'package:mpc_mobile_app/widgets/progress_bar.dart';
-import 'package:mpc_mobile_app/widgets/my_training_plan.dart';
-import 'package:mpc_mobile_app/widgets/tutorials_for_you.dart';
-import 'package:mpc_mobile_app/widgets/weight_progress.dart';
+
+import 'package:mpc_mobile_app/widgets/home/my_training_plan.dart';
+import 'package:mpc_mobile_app/widgets/home/tutorials_for_you.dart';
+import 'package:mpc_mobile_app/widgets/home/weight_progress.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
@@ -193,7 +193,7 @@ class _MpcNavBarState extends State<MpcNavBar> {
                 Gap(4.w),
                 NavBarItem(
                   isSelected: selectedIndex == 1,
-                  iconName: 'barbell',
+                  iconName: 'movie',
                   onTap: () {
                     setState(() {
                       selectedIndex = 1;
@@ -203,12 +203,22 @@ class _MpcNavBarState extends State<MpcNavBar> {
                 Gap(4.w),
                 NavBarItem(
                   isSelected: selectedIndex == 2,
-                  iconName: 'movie',
+                  iconName: 'barbell',
                   onTap: () {
                     setState(() {
                       selectedIndex = 2;
                     });
                   },
+                ),
+                Gap(4.w),
+                NavBarItem(
+                  onTap: () {
+                    setState(() {
+                      selectedIndex = 4;
+                    });
+                  },
+                  iconName: 'checklist',
+                  isSelected: selectedIndex == 4,
                 ),
                 Gap(4.w),
                 NavBarItem(

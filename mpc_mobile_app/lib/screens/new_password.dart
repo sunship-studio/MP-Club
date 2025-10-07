@@ -6,7 +6,7 @@ import 'package:mpc_mobile_app/main.dart';
 import 'package:mpc_mobile_app/screens/login.dart';
 import 'package:mpc_mobile_app/widgets/back_button.dart';
 import 'package:mpc_mobile_app/widgets/circular_button.dart';
-import 'package:mpc_mobile_app/widgets/onboarding_input.dart';
+import 'package:mpc_mobile_app/widgets/onboarding/onboarding_input.dart';
 
 class NewPasswordScreen extends StatelessWidget {
   const NewPasswordScreen({super.key});
@@ -66,7 +66,13 @@ class NewPasswordScreen extends StatelessWidget {
                     password: true,
                   ),
                   SizedBox(height: verticalPadding),
-                  CircularButton(label: "Update Password", dark: false),
+                  CircularButton(
+                    label: "Update Password",
+                    dark: false,
+                    onTap: () async {
+                    
+                    },
+                  ),
                 ],
               ),
             ),

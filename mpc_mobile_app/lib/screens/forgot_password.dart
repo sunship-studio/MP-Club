@@ -6,7 +6,7 @@ import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/screens/login.dart';
 import 'package:mpc_mobile_app/widgets/back_button.dart';
 import 'package:mpc_mobile_app/widgets/circular_button.dart';
-import 'package:mpc_mobile_app/widgets/onboarding_input.dart';
+import 'package:mpc_mobile_app/widgets/onboarding/onboarding_input.dart';
 
 class ForgotPasswordScreen extends StatelessWidget {
   const ForgotPasswordScreen({super.key});
@@ -25,7 +25,7 @@ class ForgotPasswordScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             MpcBackButton(),
-             SizedBox(height: 10),
+            SizedBox(height: 10),
             Container(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding.w),
               child: Column(
@@ -58,7 +58,13 @@ class ForgotPasswordScreen extends StatelessWidget {
                     hintText: "Email address...",
                   ),
                   SizedBox(height: verticalPadding),
-                  CircularButton(label: "Send Reset Link", dark: false),
+                  CircularButton(
+                    label: "Send Reset Link",
+                    dark: false,
+                    onTap: () async {
+                      print("Send Reset Link");
+                    },
+                  ),
                 ],
               ),
             ),
@@ -68,4 +74,3 @@ class ForgotPasswordScreen extends StatelessWidget {
     );
   }
 }
-

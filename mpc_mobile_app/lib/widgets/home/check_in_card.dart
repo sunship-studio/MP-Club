@@ -188,7 +188,7 @@ class NumberedDays extends StatelessWidget {
                       i == DateTime.now().weekday % 7
                           ? Colors.transparent
                           : i < DateTime.now().weekday % 7
-                          ? AppColors.redColor
+                          ? AppColors.errorColor
                           : Colors.transparent,
                 ),
                 child: Center(

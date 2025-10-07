@@ -3,7 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/widgets/circular_button.dart';
-import 'package:mpc_mobile_app/widgets/onboarding_input.dart';
+import 'package:mpc_mobile_app/widgets/onboarding/onboarding_input.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

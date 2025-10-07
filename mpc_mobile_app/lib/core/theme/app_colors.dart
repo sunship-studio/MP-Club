@@ -16,4 +16,5 @@ class AppColors {
   static const Color textSubColor = Color.fromRGBO(82, 88, 102, 1);
   static const Color greyTextColor = Color.fromRGBO(134, 140, 152, 1);
   static const Color darkButtonColor = Color.fromRGBO(39, 41, 48, 1);
+  
 }

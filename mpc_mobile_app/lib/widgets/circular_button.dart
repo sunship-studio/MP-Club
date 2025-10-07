@@ -8,11 +8,17 @@ class CircularButton extends StatefulWidget {
     super.key,
     required this.label,
     required this.dark,
-    this.onTap,
+    required this.onTap,
+    this.color,
+    this.textColor,
+    this.borderColor,
   });
+  Color? color;
+  Color? borderColor;
+  Color? textColor;
   String label;
   bool dark;
-  Function()? onTap;
+  Future<void> Function() onTap;
   @override
   State<CircularButton> createState() => _CircularButtonState();
 }
@@ -27,10 +33,9 @@ class _CircularButtonState extends State<CircularButton> {
       onTap: () async {
         setState(() {
           _isLoading = true;
-          widget.onTap!();
         });
-
-        await Future.delayed(const Duration(seconds: 1));
+        await widget.onTap();
+        print("Tapped ${widget.label} button");
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -42,21 +47,32 @@ class _CircularButtonState extends State<CircularButton> {
       onTapCancel: () => setState(() => _isPressed = false),
       child: AnimatedScale(
         scale: _isPressed ? 0.97 : 1.0,
-        duration: const Duration(milliseconds: 100),
+        duration: const Duration(milliseconds: 50),
         child: Container(
           width: double.infinity,
-          padding:  EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
           decoration: BoxDecoration(
-            color: widget.dark ? AppColors.darkScaffoldColor : Colors.white,
+            color:
+                widget.color ??
+                (widget.dark
+                    ? const Color.fromARGB(255, 101, 116, 150)
+                    : Colors.white),
             borderRadius: BorderRadius.circular(100),
-            border: Border.all(
-              color:
-                  widget.dark
-                      ? Colors.grey[200]!.withValues(alpha: 0.07)
-                      : Colors.grey[200]!,
-              width: 1.5,
-              strokeAlign: -1,
-            ),
+            border:
+                widget.borderColor == null
+                    ? Border.all(
+                      color:
+                          widget.dark
+                              ? Colors.grey[200]!.withValues(alpha: 0.07)
+                              : Colors.grey[200]!,
+                      width: 1.5,
+                      strokeAlign: -1,
+                    )
+                    : Border.all(
+                      color: widget.borderColor!,
+                      width: 2,
+                      strokeAlign: -1,
+                    ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(_isPressed ? 0.05 : 0.0),
@@ -72,9 +88,10 @@ class _CircularButtonState extends State<CircularButton> {
                     widget.label,
                     style: TextStyle(
                       color:
-                          widget.dark
+                          widget.textColor ??
+                          (widget.dark
                               ? AppColors.lightTextColor
-                              : AppColors.darkTextColor,
+                              : AppColors.darkTextColor),
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w700,
                       fontFamily: 'Inter',

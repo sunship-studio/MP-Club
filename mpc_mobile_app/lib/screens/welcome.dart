@@ -119,7 +119,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     CircularButton(
                       label: "Skip",
                       dark: false,
-                      onTap: () {
+                      onTap: () async{
                         // **
                         // Navigate to another screen or perform an action
                         // **
@@ -129,16 +129,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     CircularButton(
                       label: "Next",
                       dark: true,
-                      onTap:
-                          () => setState(() {
-                            if (currentPage < pages.length - 1) {
-                              currentPage++;
-                            } else {
-                              // **
-                              // Navigate to another screen or perform an action
-                              // **
-                            }
-                          }),
+                      onTap: () async {
+                        await Future.delayed(const Duration(milliseconds: 1000));
+                        setState(() {
+                          if (currentPage < pages.length - 1) {
+                            currentPage++;
+                          } else {
+                            // **
+                            // Navigate to another screen or perform an action
+                            // **
+                          }
+                        });
+                      },
                     ),
                   ],
                 ),

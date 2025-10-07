@@ -39,6 +39,8 @@ dependencies:
   gap: ^3.0.1
   flutter_screenutil: ^5.9.3
   flutter_svg: ^2.2.1
+  dotted_border: ^3.1.0
+  flutter_layout_grid: ^2.0.8
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +76,11 @@ flutter:
     - assets/images/barbell.svg
     - assets/images/movie.svg
     - assets/images/soup.svg
+    - assets/images/checklist.svg
+    - assets/images/fire.svg
+    - assets/images/photo.svg
+    - assets/images/dumbbell.svg
+    - assets/images/exercise.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
