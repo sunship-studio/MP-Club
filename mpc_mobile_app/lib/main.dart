@@ -3,7 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/core/theme/theme.dart';
+import 'package:mpc_mobile_app/screens/active_workout.dart';
 import 'package:mpc_mobile_app/screens/calorties.dart';
+import 'package:mpc_mobile_app/screens/chat.dart';
 import 'package:mpc_mobile_app/screens/check_in.dart';
 import 'package:mpc_mobile_app/screens/check_in_info.dart';
 import 'package:mpc_mobile_app/screens/forgot_password.dart';
@@ -30,7 +32,7 @@ class MpcApp extends StatelessWidget {
       child: MaterialApp(
         title: 'MP Club',
         theme: AppTheme.appTheme,
-        home: Scaffold(body: TrainingPlanScreen()),
+        home: SubmitCheckIn(),
       ),
     );
   }

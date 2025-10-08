@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gap/gap.dart';
 import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 
 class CircularButton extends StatefulWidget {
   CircularButton({
     super.key,
+    this.icon,
     required this.label,
     required this.dark,
     required this.onTap,
@@ -17,6 +19,7 @@ class CircularButton extends StatefulWidget {
   Color? borderColor;
   Color? textColor;
   String label;
+  Widget? icon;
   bool dark;
   Future<void> Function() onTap;
   @override
@@ -84,19 +87,26 @@ class _CircularButtonState extends State<CircularButton> {
           child:
               _isLoading
                   ? Image.asset('assets/images/loading.gif', height: 18)
-                  : Text(
-                    widget.label,
-                    style: TextStyle(
-                      color:
-                          widget.textColor ??
-                          (widget.dark
-                              ? AppColors.lightTextColor
-                              : AppColors.darkTextColor),
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Inter',
-                    ),
-                    textAlign: TextAlign.center,
+                  : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (widget.icon != null) ...[widget.icon!, Gap(8.w)],
+                      Text(
+                        widget.label,
+                        style: TextStyle(
+                          color:
+                              widget.textColor ??
+                              (widget.dark
+                                  ? AppColors.lightTextColor
+                                  : AppColors.darkTextColor),
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w700,
+                          fontFamily: 'Inter',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
         ),
       ),

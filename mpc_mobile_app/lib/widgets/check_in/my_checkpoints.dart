@@ -104,7 +104,22 @@ class Checkpoints extends StatelessWidget {
 
                     physics: BouncingScrollPhysics(),
                     children: [
-                      CheckpointCard(onTap: () => _showDetailsModal(context)),
+                      CheckpointCard(
+                        onTap: () => _showDetailsModal(context),
+                        date: DateTime(2023, 10, 1),
+                        note:
+                            "Felt great after today's session! Really pushing my limits 💪",
+                        weight: 168,
+                        photoUrl: "assets/images/tutorial.png",
+                      ),
+                      CheckpointCard(
+                        onTap: () => _showDetailsModal(context),
+                        date: DateTime(2023, 9, 30),
+                        note:
+                            "Slept well, and feeling more stronger than last week 💪",
+                        weight: 163,
+                        photoUrl: "assets/images/checkin.png",
+                      ),
                     ],
                   ),
                 ),

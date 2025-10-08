@@ -4,13 +4,40 @@ import 'package:gap/gap.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 
 class CheckpointCard extends StatefulWidget {
-  CheckpointCard({super.key, required this.onTap});
+  CheckpointCard({
+    super.key,
+    required this.onTap,
+    required this.date,
+    required this.note,
+    required this.weight,
+    required this.photoUrl,
+  });
   Function? onTap;
+  DateTime date;
+  String note;
+  int weight;
+  String photoUrl;
+
   @override
   State<CheckpointCard> createState() => _MyCheckpointCardState();
 }
 
 class _MyCheckpointCardState extends State<CheckpointCard> {
+List<String> months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+];
+
   bool _isPressed = false;
 
   @override
@@ -44,7 +71,7 @@ class _MyCheckpointCardState extends State<CheckpointCard> {
             ClipRRect(
               borderRadius: BorderRadius.circular(8.r),
               child: Image.asset(
-                "assets/images/tutorial.png",
+                widget.photoUrl,
                 width: 50.w,
                 height: 50.w,
                 fit: BoxFit.cover,
@@ -56,7 +83,7 @@ class _MyCheckpointCardState extends State<CheckpointCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "4 October",
+                    "${months[widget.date.month - 1]} ${widget.date.day}",
                     style: TextStyle(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
@@ -68,7 +95,7 @@ class _MyCheckpointCardState extends State<CheckpointCard> {
                   Container(
                     width: double.infinity,
                     child: Text(
-                      "“Slept well, and feeling more stronger than last week 💪”",
+                      "${widget.note}",
                       style: TextStyle(
                         fontSize: 11.sp,
                         fontWeight: FontWeight.w400,
@@ -86,7 +113,7 @@ class _MyCheckpointCardState extends State<CheckpointCard> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  "165",
+                  "${widget.weight}",
                   style: TextStyle(
                     color: AppColors.darkTextColor,
                     fontSize: 18.sp,

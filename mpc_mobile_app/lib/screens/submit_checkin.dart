@@ -8,6 +8,7 @@ import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/widgets/circular_button.dart';
 import 'package:mpc_mobile_app/widgets/header.dart';
+import 'package:mpc_mobile_app/widgets/check_in/sheets/browse_file.dart';
 
 class SubmitCheckIn extends StatelessWidget {
   const SubmitCheckIn({super.key});
@@ -222,6 +223,7 @@ class _BrowseGalleryButtonState extends State<BrowseGalleryButton> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onTap: () => {showBrowseFileSheet(context)},
       onTapDown: (_) {
         setState(() {
           _isPressed = true;
@@ -278,6 +280,7 @@ class _TakePhotoButtonState extends State<TakePhotoButton> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onTap: () => {},
       onTapDown: (_) {
         setState(() {
           _isPressed = true;
