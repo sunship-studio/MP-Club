@@ -13,6 +13,7 @@ import caloriesRouter from "./routes/mobile_app/calories";
 import chatRouter from "./routes/mobile_app/chat";
 import checkInRouter from "./routes/mobile_app/check_in";
 import workoutRouter from "./routes/mobile_app/workout";
+import onlineCoachingRouter from "./routes/online_coaching";
 
 
 // Load environment variables
@@ -38,7 +39,7 @@ app.use('/chat', bodyParser.json());
 app.use("/admin-app", bodyParser.json());
 app.use("/mobile-app", bodyParser.json());
 
-
+app.use('/web/online-coaching', onlineCoachingRouter);
 
 
 

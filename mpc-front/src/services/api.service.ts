@@ -7,8 +7,8 @@ export class ApiService {
     this.axiosInstance = axios.create({
       baseURL:
         process.env.NODE_ENV === "production"
-          ? "https://mp-club-production.up.railway.app"
-          : "http://localhost:3500",
+          ? "https://mp-club-production.up.railway.app/web"
+          : "http://localhost:3500/web",
       headers: {
         "Content-Type": "application/json",
       },
