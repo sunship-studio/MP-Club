@@ -9,7 +9,7 @@ class UsersCubit extends Cubit<UsersState> {
 
   void loadUsers() async {
     emit(UsersLoadingState());
-    Response response = await apiService.get('/admin-app/online-users');
+    Response response = await apiService.get('/online-users');
     print('Response: ${response.data}');
     if (response.statusCode == 200) {
       List<User> currentSubscribers =

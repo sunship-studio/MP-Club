@@ -13,7 +13,7 @@ class WaitingListCubit extends Cubit<WaitingListState> {
 
   void loadWaitingList() async {
     print("Loading waiting list...");
-    Response response = await apiService.get('/mobile-app/waiting-list');
+    Response response = await apiService.get('/waiting-list');
     if (response.statusCode == 200) {
       print(response.data);
       List<WaitingListEntry> waitingList =

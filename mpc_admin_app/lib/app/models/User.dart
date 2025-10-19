@@ -1,16 +1,25 @@
 import 'package:mpc_admin_app/app/models/TrainingPlan.dart';
+import 'package:mpc_admin_app/app/models/calories_log.dart';
+import 'package:mpc_admin_app/app/models/checkin.dart';
+import 'package:mpc_admin_app/app/models/workout.dart';
 
 class User {
+  final String customerId;
   final String id;
   final String? token;
   final String? refreshToken;
+  final int? targetWeight;
+
   final String subscriptionId;
   final String status;
   final String type;
+  final List<Workout> doneWorkouts;
+  final List<CheckIn> checkIns;
   final int? caloriesPerDay;
+  final List<CaloriesLog> caloriesLogs;
   final bool? hasPassword;
   final DateTime? lastLogin;
-  final String? passwordHash;
+  final String? password;
   final TrainingPlan trainingPlan;
   final DateTime startDate;
   final String firstName;
@@ -21,15 +30,20 @@ class User {
 
   User({
     required this.id,
+    required this.checkIns,
+    required this.customerId,
+    required this.caloriesLogs,
     this.token,
     this.refreshToken,
+    required this.doneWorkouts,
+    this.targetWeight,
     required this.subscriptionId,
     required this.status,
     required this.type,
     this.caloriesPerDay,
     this.hasPassword,
     this.lastLogin,
-    this.passwordHash,
+    this.password,
     required this.trainingPlan,
     required this.startDate,
     required this.firstName,
@@ -42,20 +56,42 @@ class User {
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['_id'] as String,
+      customerId: json['customerId'] as String,
       token: json['token'] as String?,
+      targetWeight: json['targetWeight'] as int?,
+      doneWorkouts:
+          json['doneWorkouts'] != null
+              ? (json['doneWorkouts'] as List<dynamic>)
+                  .map((item) => Workout.fromJson(item as Map<String, dynamic>))
+                  .toList()
+              : [],
+      caloriesLogs:
+          json['caloriesLogs'] != null
+              ? (json['caloriesLogs'] as List<dynamic>)
+                  .map(
+                    (item) =>
+                        CaloriesLog.fromJson(item as Map<String, dynamic>),
+                  )
+                  .toList()
+              : [],
       refreshToken: json['refreshToken'] as String?,
       subscriptionId: json['subscriptionId'] as String,
       status: json['status'] as String,
       type: json['type'] as String,
       caloriesPerDay: json['caloriesPerDay'] as int?,
+      checkIns:
+          (json['checkIns'] as List<dynamic>)
+              .map((item) => CheckIn.fromJson(item as Map<String, dynamic>))
+              .toList(),
       hasPassword: json['hasPassword'] as bool?,
       lastLogin:
           json['lastLogin'] != null
               ? DateTime.parse(json['lastLogin'] as String)
               : null,
-      passwordHash: json['passwordHash'] as String?,
-      trainingPlan:
-          TrainingPlan.fromJson(json['trainingPlan'] as List<dynamic>),
+      password: json['password'] as String?,
+      trainingPlan: TrainingPlan.fromJson(
+        json['trainingPlan'] as Map<String, dynamic>,
+      ),
       startDate: DateTime.parse(json['startDate'] as String),
       firstName: json['firstName'] as String,
       lastName: json['lastName'] as String,
@@ -67,47 +103,57 @@ class User {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      if (token != null) 'token': token,
-      if (refreshToken != null) 'refreshToken': refreshToken,
+      '_id': id,
+      'customerId': customerId,
+      'token': token,
+      'refreshToken': refreshToken,
       'subscriptionId': subscriptionId,
+      'targetWeight': targetWeight,
+
       'status': status,
       'type': type,
-      if (caloriesPerDay != null) 'caloriesPerDay': caloriesPerDay,
-      if (hasPassword != null) 'hasPassword': hasPassword,
-      if (lastLogin != null) 'lastLogin': lastLogin!.toIso8601String(),
-      if (passwordHash != null) 'passwordHash': passwordHash,
+      'caloriesPerDay': caloriesPerDay,
+      'hasPassword': hasPassword,
+      'lastLogin': lastLogin?.toIso8601String(),
+      'password': password,
       'trainingPlan': trainingPlan.toJson(),
       'startDate': startDate.toIso8601String(),
       'firstName': firstName,
       'lastName': lastName,
       'email': email,
       'age': age,
-      if (cancelToken != null) 'cancelToken': cancelToken,
+      'cancelToken': cancelToken,
     };
   }
 
   User copyWith({
-    String? id,
+    String? customerId,
     String? token,
     String? refreshToken,
     String? subscriptionId,
     String? status,
     String? type,
+    int? targetWeight,
     int? caloriesPerDay,
     bool? hasPassword,
     DateTime? lastLogin,
-    String? passwordHash,
+    String? password,
     TrainingPlan? trainingPlan,
     DateTime? startDate,
     String? firstName,
+    List<CheckIn>? checkIns,
     String? lastName,
     String? email,
     int? age,
     String? cancelToken,
   }) {
     return User(
-      id: id ?? this.id,
+      id: id,
+      targetWeight: targetWeight ?? this.targetWeight,
+      doneWorkouts: doneWorkouts,
+      caloriesLogs: caloriesLogs ?? caloriesLogs,
+      checkIns: checkIns ?? this.checkIns,
+      customerId: customerId ?? this.customerId,
       token: token ?? this.token,
       refreshToken: refreshToken ?? this.refreshToken,
       subscriptionId: subscriptionId ?? this.subscriptionId,
@@ -116,7 +162,7 @@ class User {
       caloriesPerDay: caloriesPerDay ?? this.caloriesPerDay,
       hasPassword: hasPassword ?? this.hasPassword,
       lastLogin: lastLogin ?? this.lastLogin,
-      passwordHash: passwordHash ?? this.passwordHash,
+      password: password ?? this.password,
       trainingPlan: trainingPlan ?? this.trainingPlan,
       startDate: startDate ?? this.startDate,
       firstName: firstName ?? this.firstName,
@@ -126,18 +172,4 @@ class User {
       cancelToken: cancelToken ?? this.cancelToken,
     );
   }
-
-  @override
-  String toString() {
-    return 'User(id: $id, firstName: $firstName, lastName: $lastName, email: $email)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is User && other.id == id;
-  }
-
-  @override
-  int get hashCode => id.hashCode;
 }

@@ -8,12 +8,78 @@ export interface IUser extends Document {
   status: string;
   type: string;
   caloriesPerDay?: number;
+  targetWeight?: number;
+  doneWorkouts: [
+    {
+      date: Date;
+
+      workout: {
+        name: string;
+        exercises: [
+          {
+            bodyParts: [string];
+            exerciseId: string;
+            minutes: number;
+            seconds: number;
+            sets: [
+              {
+                reps: number;
+                rir: number;
+                weight: number;
+              }
+            ];
+            name: string;
+          }
+        ];
+      };
+    }
+  ];
+  checkIns: [
+    {
+
+      date: Date;
+      weight: number;
+      imageUrl?: string | null;
+      note?: string | null;
+
+    }
+  ],
+  caloriesLogs: [
+    {
+      date: Date;
+      calories: number;
+      note?: string | null;
+    }
+  ],
   hasPassword?: boolean;
   lastLogin?: Date;
-  passwordHash?: string;
-  trainingPlan: [
-    { exerciseId: string; sets: number; reps: number; rir: number; name: string }[]
-  ];
+  password?: string;
+  trainingPlan: {
+    lastUpdated?: Date;
+    name: string;
+    days: [
+      {
+        name: string;
+        exercises: [
+          {
+            bodyParts: [string];
+            exerciseId: string;
+            minutes: number;
+            seconds: number;
+            sets: [
+              {
+                reps: number;
+                rir: number;
+                weight: number;
+              }
+            ];
+            name: string;
+          }
+        ];
+      }
+    ];
+    bodyParts: [string];
+  };
   startDate: Date;
   firstName: string;
   lastName: string;
@@ -31,27 +97,100 @@ const UserSchema = new Schema<IUser>({
   lastName: { type: String, required: true },
   email: { type: String, required: true },
   age: { type: Number, required: true },
+  token: { type: String },
+  targetWeight: { type: Number },
+  refreshToken: { type: String },
+  checkIns: [
+    {
+      id: { type: Schema.Types.ObjectId, },
+      date: { type: Date, required: true },
+      weight: { type: Number, required: true },
+      imageUrl: { type: String },
+      note: { type: String },
+    },
 
-  type: { type: String, required: true },
-  caloriesPerDay: { type: Number },
-  hasPassword: { type: Boolean, default: false },
-  lastLogin: { type: Date },
-  passwordHash: { type: String },
-  trainingPlan: [
-    [
+  ],
+  caloriesLogs: [
+    {
+      date: { type: Date, required: true },
+      calories: { type: Number, required: true },
+      note: { type: String },
+    },
+  ],
+
+  doneWorkouts: {
+    type: [
       {
-        exerciseId: { type: String, required: true },
-        sets: { type: Number, required: true },
-        reps: { type: Number, required: true },
-        rir: { type: Number, required: true },
-        name: { type: String, required: true }, 
+
+        date: { type: Date, required: true },
+        workout: {
+          name: { type: String, required: true },
+          exercises: [
+            {
+              bodyParts: { type: [String], default: [] },
+              exerciseId: { type: String, required: true },
+              minutes: { type: Number, default: 0 },
+              seconds: { type: Number, default: 0 },
+              sets: [
+                {
+                  reps: { type: Number, required: true },
+                  rir: { type: Number, required: true },
+
+                  weight: { type: Number, required: true },
+                },
+              ],
+              name: { type: String, required: true },
+            },
+          ],
+        },
       },
     ],
-  ],
+    default: [],
+  },
+  type: { type: String, required: true },
+  caloriesPerDay: { type: Number },
+  lastLogin: { type: Date },
+  password: { type: String },
+  trainingPlan: {
+    lastUpdated: { type: Date },
+    name: {
+      type: String,
+      default: function () {
+        return `Plan for ${this.firstName}`;
+      },
+    },
+    days: [
+      {
+        lastUpdated: { type: Date },
+        name: { type: String, required: true },
+        exercises: [
+          {
+            bodyParts: { type: [String], default: [] },
+            exerciseId: { type: String, required: true },
+            minutes: { type: Number, default: 0 },
+            seconds: { type: Number, default: 0 },
+            sets: [
+              {
+                reps: { type: Number, required: true },
+                rir: { type: Number, required: true },
+
+                weight: { type: Number, required: true },
+              },
+            ],
+            name: { type: String, required: true },
+          },
+        ],
+      },
+    ],
+    bodyParts: { type: [String], default: [] },
+  },
+  hasPassword: { type: Boolean, default: false },
 
   cancelToken: { type: String },
   // Optional field for storing the cancel token
 });
 
+// Export the model and return your IUser interface
+// @ts-ignore
 const User = mongoose.model<IUser>("User", UserSchema);
 export default User;

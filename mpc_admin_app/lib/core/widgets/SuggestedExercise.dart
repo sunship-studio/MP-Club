@@ -1,12 +1,24 @@
 import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mpc_admin_app/app/bloc/training%20plan/cubit.dart';
+import 'package:mpc_admin_app/app/models/Exercise.dart';
 
 class SuggestedExerciseBox extends StatelessWidget {
-  const SuggestedExerciseBox({super.key});
-
+  SuggestedExerciseBox({
+    super.key,
+    required this.exercise,
+    required this.selectedDayIndex,
+    required this.searchController,
+  });
+  final Exercise exercise;
+  TextEditingController searchController;
+  final int selectedDayIndex;
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
+
       margin: EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
@@ -21,69 +33,105 @@ class SuggestedExerciseBox extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          Material(
-            color: Colors.transparent,
-            surfaceTintColor: Colors.transparent,
-            shadowColor: Colors.transparent,
-            child: Container(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+      child: Container(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(width: 12),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    child: Image.asset(
-                      'assets/squat.png',
-                      width: MediaQuery.of(context).size.width * 0.3,
-                      fit: BoxFit.cover,
+                  Text(
+                    exercise.name,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontFamily: 'SF-Pro',
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Squat",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontFamily: 'SF-Pro',
-                          color: Colors.black,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 6),
-                    ],
-                  ),
-                  Spacer(),
-                  Container(
-                    padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor,
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(8),
-                        topLeft: Radius.circular(8),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Text("Add exercise", 
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontFamily: 'SF-Pro',
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(width: 6),
-                        Icon(Icons.add, size: 20, color: Colors.white),
-                      ],
-                    ),
-                  ),
+                  SizedBox(height: 6),
                 ],
               ),
             ),
+
+            AddButton(
+              onTap: () {
+                searchController.clear();
+                context.read<TrainingPlanCubit>().addExercise(
+                  selectedDayIndex,
+                  exercise,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AddButton extends StatefulWidget {
+  AddButton({super.key, required this.onTap});
+  Function onTap;
+  @override
+  State<AddButton> createState() => _AddButtonState();
+}
+
+class _AddButtonState extends State<AddButton> {
+  bool _isPRessed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) {
+        setState(() {
+          _isPRessed = true;
+        });
+      },
+      onTapUp: (_) {
+        setState(() {
+          _isPRessed = false;
+        });
+      },
+      onTapCancel: () {
+        setState(() {
+          _isPRessed = false;
+        });
+      },
+      onTap: () {
+        widget.onTap();
+      },
+      child: AnimatedSize(
+        duration: Duration(milliseconds: 100),
+
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor,
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(8),
+              topLeft: Radius.circular(8),
+            ),
           ),
-        ],
+          child: Row(
+            children: [
+              Text(
+                "Add exercise",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontFamily: 'SF-Pro',
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(width: 6),
+              Icon(Icons.add, size: 20, color: Colors.white),
+            ],
+          ),
+        ),
       ),
     );
   }

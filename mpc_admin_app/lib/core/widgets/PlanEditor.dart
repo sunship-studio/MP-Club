@@ -7,8 +7,11 @@ import 'package:mpc_admin_app/app/models/User.dart';
 import 'package:mpc_admin_app/core/widgets/ExerciseBox.dart';
 import 'package:mpc_admin_app/core/widgets/SuggestedExercise.dart';
 
+TextEditingController _searchController = TextEditingController();
+
 class PlanEditor extends StatefulWidget {
-  PlanEditor({super.key, required this.user});
+  PlanEditor({super.key, required this.user, required this.togglePlanEditor});
+  final Function togglePlanEditor;
   User user;
 
   @override
@@ -16,6 +19,8 @@ class PlanEditor extends StatefulWidget {
 }
 
 class _PlanEditorState extends State<PlanEditor> {
+  bool _nameOfPlanIsEmpty = true;
+
   int selectedDay = 0;
   void selectDay(int index) {
     setState(() {
@@ -27,72 +32,158 @@ class _PlanEditorState extends State<PlanEditor> {
   Widget build(BuildContext context) {
     return BlocBuilder<TrainingPlanCubit, TrainingPlanState>(
       builder: (context, state) {
-        if (state is TrainingPlanEditing) {
+        if (state is TrainingPlanError) {
+          return Center(
+            child: Column(
+              children: [
+                Text(
+                  "Error: ${state.message}",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontFamily: 'SF-Pro',
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () async {
+                    context.read<TrainingPlanCubit>().savePlan(widget.user);
+                    widget.togglePlanEditor(widget.user);
+                  },
+                  child: Text("Retry"),
+                ),
+              ],
+            ),
+          );
+        } else if (state is TrainingPlanEditing ||
+            state is TrainingPlanSearchingExercises) {
           return Container(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ExercisesSearchBar(),
-                DaySelector(
-                  selectedDay: selectedDay,
-                  days: state.trainingPlan.days,
-                  selectDay: selectDay,
-                ),
-                DayNameInput(
-                  selectedDay: selectedDay,
-                  trainingPlan: state.trainingPlan,
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Exercise List
-                        state.trainingPlan.days[selectedDay].exercises.isEmpty
-                            ? Container()
-                            : ListView.builder(
-                              padding: EdgeInsets.only(),
-                              itemBuilder:
-                                  (context, index) => ExerciseBox(
-                                    exercise:
-                                        state
-                                            .trainingPlan
-                                            .days[selectedDay]
-                                            .exercises[index],
-                                  ),
-                              itemCount:
-                                  state
-                                      .trainingPlan
-                                      .days[selectedDay]
-                                      .exercises
-                                      .length,
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
+                SizedBox(height: 12),
+                TrainingPlanNameInput(),
+                SizedBox(height: 12),
+                state is TrainingPlanSearchingExercises &&
+                        state.exercises.isNotEmpty
+                    ? Expanded(
+                      child: ListView.builder(
+                        padding: EdgeInsets.only(),
+                        itemBuilder:
+                            (context, index) => SuggestedExerciseBox(
+                              searchController: _searchController,
+                              selectedDayIndex: selectedDay,
+                              exercise: state.exercises[index],
                             ),
-
-                        Text(
-                          "Suggested",
+                        itemCount: state.exercises.length,
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                      ),
+                    )
+                    : state is TrainingPlanSearchingExercises &&
+                        state.exercises.isEmpty
+                    ? Expanded(
+                      child: Center(
+                        child: Text(
+                          "No exercises found",
                           style: TextStyle(
-                            fontSize: 22,
+                            fontSize: 18,
                             fontFamily: 'SF-Pro',
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                           ),
-                          textAlign: TextAlign.left,
                         ),
-                        SizedBox(height: 12),
-                        ListView.builder(
-                          padding: EdgeInsets.only(),
-                          itemBuilder:
-                              (context, index) => SuggestedExerciseBox(),
-                          itemCount: 5,
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
+                      ),
+                    )
+                    : state is TrainingPlanEditing
+                    ? Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            DaySelector(
+                              selectedDay: selectedDay,
+                              days: state.trainingPlan.days,
+                              selectDay: selectDay,
+                            ),
+                            SizedBox(height: 12),
+                            DayNameInput(
+                              selectedDay: selectedDay,
+                              trainingPlan: state.trainingPlan,
+                            ),
+                            // Exercise List
+                            state.trainingPlan.days.isEmpty ||
+                                    state
+                                        .trainingPlan
+                                        .days[selectedDay]
+                                        .exercises
+                                        .isEmpty
+                                ? Container()
+                                : ListView.builder(
+                                  padding: EdgeInsets.only(),
+                                  itemBuilder:
+                                      (context, index) => ExerciseBox(
+                                        exercise:
+                                            state
+                                                .trainingPlan
+                                                .days[selectedDay]
+                                                .exercises[index],
+                                      ),
+                                  itemCount:
+                                      state
+                                          .trainingPlan
+                                          .days[selectedDay]
+                                          .exercises
+                                          .length,
+                                  shrinkWrap: true,
+                                  physics: NeverScrollableScrollPhysics(),
+                                ),
+
+                            Text(
+                              "Suggested",
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontFamily: 'SF-Pro',
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.left,
+                            ),
+                            SizedBox(height: 12),
+                            state
+                                    .trainingPlan
+                                    .days[selectedDay]
+                                    .suggestedExercises
+                                    .isEmpty
+                                ? Container()
+                                : ListView.builder(
+                                  padding: EdgeInsets.only(),
+                                  itemBuilder:
+                                      (context, index) => SuggestedExerciseBox(
+                                        searchController: _searchController,
+                                        selectedDayIndex: selectedDay,
+                                        exercise:
+                                            state
+                                                .trainingPlan
+                                                .days[selectedDay]
+                                                .suggestedExercises[index],
+                                      ),
+                                  itemCount: 5,
+                                  shrinkWrap: true,
+                                  physics: NeverScrollableScrollPhysics(),
+                                ),
+                            SizedBox(height: 20),
+                            SaveButton(
+                              user: widget.user,
+                              togglePlanEditor: widget.togglePlanEditor,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                ),
+                      ),
+                    )
+                    : Container(),
               ],
             ),
           );
@@ -104,6 +195,124 @@ class _PlanEditorState extends State<PlanEditor> {
           ),
         );
       },
+    );
+  }
+}
+
+class TrainingPlanNameInput extends StatefulWidget {
+  TrainingPlanNameInput({super.key});
+
+  @override
+  State<TrainingPlanNameInput> createState() => _TrainingPlanNameInputState();
+}
+
+class _TrainingPlanNameInputState extends State<TrainingPlanNameInput> {
+  final TextEditingController _nameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (context.read<TrainingPlanCubit>().state is TrainingPlanEditing) {
+      _nameController.text =
+          (context.read<TrainingPlanCubit>().state as TrainingPlanEditing)
+              .trainingPlan
+              .name;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 4),
+      child: TextField(
+        controller: _nameController,
+        onChanged: (value) {},
+        textAlignVertical: TextAlignVertical.center,
+        textAlign: TextAlign.center,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+
+          hintText: 'name of the plan',
+          hintStyle: TextStyle(
+            fontSize: 18,
+            fontFamily: 'SF-Pro',
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SaveButton extends StatefulWidget {
+  SaveButton({super.key, required this.user, required this.togglePlanEditor});
+  Function togglePlanEditor;
+
+  final User user;
+
+  @override
+  State<SaveButton> createState() => _SaveButtonState();
+}
+
+class _SaveButtonState extends State<SaveButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) {
+        setState(() {
+          _isPressed = true;
+        });
+      },
+      onTapUp: (_) {
+        setState(() {
+          _isPressed = false;
+        });
+      },
+      onTapCancel: () {
+        setState(() {
+          _isPressed = false;
+        });
+      },
+      onTap: () {
+        print(
+          (context.read<TrainingPlanCubit>().state as TrainingPlanEditing)
+              .trainingPlan
+              .toJson(),
+        );
+
+        context.read<TrainingPlanCubit>().savePlan(widget.user);
+        widget.togglePlanEditor(widget.user);
+      },
+      child: AnimatedScale(
+        scale: _isPressed ? 0.95 : 1.0,
+        duration: Duration(milliseconds: 100),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 12),
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              "Save Plan",
+              style: TextStyle(
+                fontSize: 18,
+                fontFamily: 'SF-Pro',
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -120,6 +329,14 @@ class ExercisesSearchBar extends StatelessWidget {
       ),
       padding: EdgeInsets.symmetric(horizontal: 4),
       child: TextField(
+        controller: _searchController,
+        onChanged: (value) {
+          if (value.isEmpty) {
+            context.read<TrainingPlanCubit>().clearSearch();
+          } else {
+            context.read<TrainingPlanCubit>().searchExercises(value);
+          }
+        },
         textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
           prefixIcon: Icon(Icons.search, color: Colors.grey[900], size: 32),
@@ -128,7 +345,7 @@ class ExercisesSearchBar extends StatelessWidget {
           hintStyle: TextStyle(
             fontSize: 18,
             fontFamily: 'SF-Pro',
-            color: Colors.grey[400],
+            color: Colors.grey[600],
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -151,13 +368,13 @@ class DayNameInput extends StatefulWidget {
 }
 
 class _DayNameInputState extends State<DayNameInput> {
-  TextEditingController dayNameController = TextEditingController();
-
-
+  TextEditingController _dayNameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    dayNameController.text = widget.trainingPlan.days[widget.selectedDay].name;
+    _dayNameController.text =
+        widget.trainingPlan.days[widget.selectedDay].name ??
+        'Day ' + (widget.selectedDay + 1).toString();
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -166,7 +383,7 @@ class _DayNameInputState extends State<DayNameInput> {
       ),
       padding: EdgeInsets.symmetric(horizontal: 4),
       child: TextField(
-        controller: dayNameController,
+        controller: _dayNameController,
         onChanged: (value) {
           context.read<TrainingPlanCubit>().changeDayName(
             widget.selectedDay,
@@ -182,7 +399,7 @@ class _DayNameInputState extends State<DayNameInput> {
           hintStyle: TextStyle(
             fontSize: 18,
             fontFamily: 'SF-Pro',
-            color: Colors.grey[400],
+            color: Colors.grey[600],
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -205,7 +422,6 @@ class DaySelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         color: Colors.white,

@@ -1,12 +1,19 @@
 import 'package:coolicons/coolicons.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mpc_admin_app/app/models/User.dart';
-import 'package:mpc_admin_app/core/screens/Users.dart';
+import 'package:mpc_admin_app/core/screens/online_coaching.dart';
 
 class UserBox extends StatefulWidget {
-  UserBox({super.key, required this.user, required this.togglePlanEditor});
+  UserBox({
+    super.key,
+    required this.user,
+    required this.togglePlanEditor,
+    required this.changeScreen,
+  });
   final Function togglePlanEditor;
+  final Function changeScreen;
   User user;
   @override
   State<UserBox> createState() => _UserBoxState();
@@ -134,7 +141,27 @@ class _UserBoxState extends State<UserBox> {
                       ),
                     ],
                   ),
+
                   const Spacer(),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.red[700],
+                    ),
+                    child: Center(
+                      child: Text(
+                        "2",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: 'SF-Pro',
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Icon(
                     isExpanded
                         ? Coolicons.chevron_big_down
@@ -231,6 +258,85 @@ class _UserBoxState extends State<UserBox> {
                       ],
                     ),
                     SizedBox(height: 8),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            widget.changeScreen(3, user:   widget.user);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Color.fromRGBO(227, 227, 227, 0.5),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 10,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Coolicons.chat,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  "Chat",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontFamily: 'SF-Pro',
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red[700],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            "2 new messages",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontFamily: 'SF-Pro',
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Training Plan:",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontFamily: 'SF-Pro',
+                        color: Colors.black,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        TrainingPlanButton(
+                          user: widget.user,
+                          togglePlanEditor: widget.togglePlanEditor,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -248,14 +354,6 @@ class _UserBoxState extends State<UserBox> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        TrainingPlanButton(
-                          user: widget.user,
-                          togglePlanEditor: widget.togglePlanEditor,
-                        ),
-                      ],
-                    ),
                   ],
                 ),
               )
@@ -281,9 +379,7 @@ class _TrainingPlanButtonState extends State<TrainingPlanButton> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        widget.togglePlanEditor(
-          widget.user!,
-        );
+        widget.togglePlanEditor(widget.user!);
       },
       onTapDown: (details) {
         setState(() {

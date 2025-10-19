@@ -1,62 +1,65 @@
+// src/models/Message.ts
+import mongoose, { Document, Schema } from 'mongoose';
+
 export interface IMessage extends Document {
-  roomId: string;
-  clientId: string;
-  fromShane: boolean;
+  client_id: mongoose.Types.ObjectId;
   content: string;
-  timestamp: Date;
-  type: string;
-  status: {
-    sent: boolean;
-    delivered: boolean;
-    read: boolean;
-  };
-  attachment: {
-    type: string;
+  fromShane: boolean;
+  message_type: 'text' | 'image' | 'file' | 'audio';
+  attachment?: {
     url: string;
-    thumbnailUrl?: string;
-    metadata?: any;
+    type: string;
+    name?: string;
+    size?: number;
   };
-  workoutData: {
-    exerciseName: string;
-    sets: number;
-    reps: number;
-    rir: number;
-    weight: number;
-  } | null;
+  timestamp: Date;
+  status: {
+    delivered?: Date;
+    read?: Date;
+  };
 }
 
-import mongoose, { Schema } from "mongoose";
-
 const MessageSchema = new Schema<IMessage>({
-  roomId: { type: String, required: true },
-  clientId: { type: String, required: true },
-  fromShane: { type: Boolean, required: true },
-  content: { type: String, required: true },
-  timestamp: { type: Date, default: Date.now },
-  type: { type: String, required: true }, // e.g., text, image, video, workout
-  status: {
-    sent: { type: Boolean, default: false },
-    delivered: { type: Boolean, default: false },
-    read: { type: Boolean, default: false },
+  client_id: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true
   },
+  content: {
+    type: String,
+    required: true
+  },
+  fromShane: {
+    type: Boolean,
+    required: true,
+    index: true
+  },
+  message_type: {
+    type: String,
+    enum: ['text', 'image', 'file', 'audio'],
+    default: 'text'
+  },
+  // ✅ CORRECT: attachment as nested object
   attachment: {
-    type: {
-      type: String,
-      enum: ["image", "video", "file", "none"],
-      default: "none",
-    },
     url: { type: String },
-    thumbnailUrl: { type: String },
-    metadata: { type: Schema.Types.Mixed },
+    type: { type: String },
+    name: { type: String },
+    size: { type: Number },
   },
-  workoutData: {
-    exerciseName: { type: String },
-    sets: { type: Number },
-    reps: { type: Number },
-    rir: { type: Number },
-    weight: { type: Number },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+    index: true
+  },
+  status: {
+    delivered: { type: Date },
+    read: { type: Date },
   },
 });
 
-const Message = mongoose.model<IMessage>("Message", MessageSchema);
-export default Message;
+// Indexes
+MessageSchema.index({ client_id: 1, timestamp: -1 });
+MessageSchema.index({ client_id: 1, fromShane: 1, 'status.read': 1 });
+
+export default mongoose.model<IMessage>('Message', MessageSchema);

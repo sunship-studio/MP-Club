@@ -1,6 +1,5 @@
 import express from "express";
-import OnlineCoachingController from "../controllers/online_coaching";
-import { Request, Response } from "express";
+import OnlineCoachingController from "../controllers/web/online_coaching";
 
 import bodyParser from "body-parser";
 
@@ -13,15 +12,6 @@ onlineCoachingRouter.post(
   "/create-checkout-session",
   bodyParser.json(),
   onlineCoachingController.createCheckoutSession
-);
-
-// webhook for Stripe
-onlineCoachingRouter.post(
-  "/webhook",
-  bodyParser.raw({ type: "application/json" }),
-  async (req: Request, res: Response) => {
-    onlineCoachingController.handleWebhook(req, res);
-  }
 );
 
 onlineCoachingRouter.post(

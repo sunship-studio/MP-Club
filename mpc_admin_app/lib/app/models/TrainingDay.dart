@@ -1,17 +1,23 @@
 import 'package:mpc_admin_app/app/models/Exercise.dart';
+import 'package:mpc_admin_app/app/models/UserExercise.dart';
 
 class TrainingDay {
   String name;
-  List<Exercise> exercises;
+  List<UserExercise> exercises;
+  List<Exercise> suggestedExercises;
 
-  TrainingDay({this.name = "", required this.exercises});
+  TrainingDay({
+    this.name = "",
+    required this.exercises,
+    List<Exercise>? suggestedExercises,
+  }) : suggestedExercises = suggestedExercises ?? [];
 
   factory TrainingDay.fromJson(Map<String, dynamic> json) {
     return TrainingDay(
       name: json['name'] as String,
       exercises:
           (json['exercises'] as List<dynamic>)
-              .map((e) => Exercise.fromJson(e as Map<String, dynamic>))
+              .map((e) => UserExercise.fromJson(e as Map<String, dynamic>))
               .toList(),
     );
   }

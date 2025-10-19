@@ -1,43 +1,31 @@
 class Exercise {
-  String name;
   String id;
-  int sets;
-  int reps;
-  int minutes;
-  int seconds;
-  int weight;
+  String name;
+  String? description;
+  List<String> bodyParts;
+  String? imageUrl;
+  String? videoUrl;
 
   Exercise({
     required this.id,
     required this.name,
-    required this.sets,
-    required this.reps,
-    required this.minutes,
-    required this.seconds,
-    required this.weight,
+    this.imageUrl,
+    this.description,
+    this.videoUrl,
+    required this.bodyParts,
   });
 
   factory Exercise.fromJson(Map<String, dynamic> json) {
     return Exercise(
-      id: json['exerciseId'] as String,
+      id: json['_id'] as String,
       name: json['name'] as String,
-      sets: json['sets'] as int,
-      reps: json['reps'] as int,
-      minutes: json['minutes'] as int? ?? 0,
-      seconds: json['seconds'] as int? ?? 0,
-      weight: json['weight'] as int? ?? 0,
+      description: json['description'] as String?,
+      imageUrl: json['imageUrl'] as String?,
+      videoUrl: json['videoUrl'] as String?,
+      bodyParts: (json['bodyParts'] as List<dynamic>?)
+              ?.map((part) => part as String)
+              .toList() ??
+          [],
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'exerciseId': id,
-      'name': name,
-      'sets': sets,
-      'reps': reps,
-      'minutes': minutes,
-      'seconds': seconds,
-      'weight': weight,
-    };
   }
 }

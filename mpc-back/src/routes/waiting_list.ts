@@ -1,5 +1,5 @@
-import express, {Request, Response} from 'express';
-import WaitingListController from '../controllers/waiting_list';
+import express from 'express';
+import WaitingListController from '../controllers/web/waiting_list';
 
 // Waiting List Router
 const waitingListRouter = express.Router();
@@ -10,7 +10,7 @@ waitingListRouter.post('/add', waitingListController.addUserToWaitingList);
 
 
 
-  
+
 
 
 

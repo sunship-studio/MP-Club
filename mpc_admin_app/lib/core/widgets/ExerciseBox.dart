@@ -1,16 +1,21 @@
 import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mpc_admin_app/app/bloc/training%20plan/cubit.dart';
 import 'package:mpc_admin_app/app/models/Exercise.dart';
+import 'package:mpc_admin_app/app/models/UserExercise.dart';
 
 class ExerciseBox extends StatefulWidget {
   ExerciseBox({super.key, required this.exercise});
-  Exercise exercise;
+  UserExercise exercise;
 
   @override
   State<ExerciseBox> createState() => _ExerciseBoxState();
 }
 
 class _ExerciseBoxState extends State<ExerciseBox> {
+  TextEditingController restMinController = TextEditingController(text: "2");
+  TextEditingController restSecController = TextEditingController();
   bool isExapnded = false;
 
   void expandWidget() {
@@ -52,31 +57,49 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      child: Image.asset(
-                        'assets/squat.png',
-                        width: MediaQuery.of(context).size.width * 0.3,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                    // Container(
+                    //   child: Image.asset(
+                    //     'assets/squat.png',
+                    //     width: MediaQuery.of(context).size.width * 0.2,
+                    //     fit: BoxFit.cover,
+                    //   ),
+                    // ),
                     SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          widget.exercise.name,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontFamily: 'SF-Pro',
-                            color: Colors.black,
-                            fontWeight: FontWeight.w600,
+                        Container(
+                          child: Text(
+                            widget.exercise.name,
+                            maxLines: 2,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontFamily: 'SF-Pro',
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                         SizedBox(height: 6),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            NumberInput(label: "Sets", initialValue: 3),
+                            NumberInput(
+                              label: "Sets",
+                              initialValue: widget.exercise.sets!.length,
+                              onChanged: (value) {
+                                if (value > widget.exercise.sets!.length) {
+                                  context.read<TrainingPlanCubit>().addSet(
+                                    widget.exercise.id!,
+                                  );
+                                } else if (value <
+                                    widget.exercise.sets!.length) {
+                                  context
+                                      .read<TrainingPlanCubit>()
+                                      .deleteLastIndexSet(widget.exercise.id!);
+                                }
+                              },
+                            ),
                             SizedBox(width: 10),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -104,6 +127,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                         width: 50,
 
                                         child: TextField(
+                                          controller: restMinController,
                                           textAlign: TextAlign.center,
                                           decoration: InputDecoration(
                                             isDense: true,
@@ -138,6 +162,23 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                         width: 50,
 
                                         child: TextField(
+                                          controller: restSecController,
+                                          onChanged: (value) {
+                                            int minutes =
+                                                int.tryParse(
+                                                  restMinController.text,
+                                                ) ??
+                                                0;
+                                            int seconds =
+                                                int.tryParse(value) ?? 0;
+                                            context
+                                                .read<TrainingPlanCubit>()
+                                                .updateRestTime(
+                                                  widget.exercise.id!,
+                                                  minutes,
+                                                  seconds,
+                                                );
+                                          },
                                           textAlign: TextAlign.center,
                                           decoration: InputDecoration(
                                             isDense: true,
@@ -177,19 +218,26 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            padding: EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.red[900],
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(8),
-                                bottomLeft: Radius.circular(8),
+                          GestureDetector(
+                            onTap: () {
+                              context.read<TrainingPlanCubit>().deleteExercise(
+                                widget.exercise.id!,
+                              );
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.red[900],
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(8),
+                                  bottomLeft: Radius.circular(8),
+                                ),
                               ),
-                            ),
-                            child: Icon(
-                              Icons.remove,
-                              size: 24,
-                              color: Colors.white,
+                              child: Icon(
+                                Icons.remove,
+                                size: 24,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                           SizedBox(height: 30),
@@ -255,9 +303,33 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                 ),
                               ),
                               SizedBox(width: 12),
-                              NumberInput(label: "Reps", initialValue: 12),
+                              NumberInput(
+                                label: "Reps",
+                                initialValue: widget.exercise.sets![i].reps,
+                                onChanged: (value) {
+                                  context
+                                      .read<TrainingPlanCubit>()
+                                      .updateSetReps(
+                                        widget.exercise.id!,
+                                        value,
+                                        i,
+                                      );
+                                },
+                              ),
                               SizedBox(width: 10),
-                              NumberInput(label: "RiR", initialValue: 2),
+                              NumberInput(
+                                label: "RiR",
+                                initialValue: widget.exercise.sets![i].rir,
+                                onChanged: (value) {
+                                  context
+                                      .read<TrainingPlanCubit>()
+                                      .updateSetRIR(
+                                        widget.exercise.id!,
+                                        value,
+                                        i,
+                                      );
+                                },
+                              ),
                               SizedBox(width: 10),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,6 +355,15 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: TextField(
+                                      onChanged: (value) {
+                                        context
+                                            .read<TrainingPlanCubit>()
+                                            .changeSetWeight(
+                                              widget.exercise.id!,
+                                              int.tryParse(value) ?? 0,
+                                              i,
+                                            );
+                                      },
                                       decoration: InputDecoration(
                                         isDense: true,
                                         border: InputBorder.none,
@@ -314,7 +395,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                       ],
                     );
                   },
-                  itemCount: 3,
+                  itemCount: widget.exercise.sets!.length,
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
                 ),
@@ -337,13 +418,20 @@ class NumberInput extends StatefulWidget {
   String label;
   Function? onChanged;
   int initialValue;
-  int value = 2;
 
   @override
   State<NumberInput> createState() => _NumberInputState();
 }
 
 class _NumberInputState extends State<NumberInput> {
+  int value = 0;
+
+  @override
+  void initState() {
+    value = widget.initialValue;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -367,17 +455,28 @@ class _NumberInputState extends State<NumberInput> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 77, 77, 77),
-                  borderRadius: BorderRadius.circular(8),
+              GestureDetector(
+                onTap: () {
+                  if (value > 1) {
+                    value = value - 1;
+                    setState(() {});
+                    if (widget.onChanged != null) {
+                      widget.onChanged!(value);
+                    }
+                  }
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 77, 77, 77),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: EdgeInsets.all(6),
+                  child: Icon(Icons.remove, color: Colors.white, size: 16),
                 ),
-                padding: EdgeInsets.all(6),
-                child: Icon(Icons.remove, color: Colors.white, size: 16),
               ),
               SizedBox(width: 10),
               Text(
-                "3",
+                "${value}",
                 style: TextStyle(
                   fontSize: 12,
                   fontFamily: 'SF-Pro',
@@ -387,6 +486,13 @@ class _NumberInputState extends State<NumberInput> {
               ),
               SizedBox(width: 10),
               GestureDetector(
+                onTap: () {
+                  value = value + 1;
+                  setState(() {});
+                  if (widget.onChanged != null) {
+                    widget.onChanged!(value);
+                  }
+                },
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(255, 77, 77, 77),

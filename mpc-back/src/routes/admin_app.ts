@@ -1,8 +1,7 @@
-import express from "express";
-import { Request, Response } from "express";
+import express, { Request, Response } from "express";
 
-import adminAppAuth from "../middleware/auth";
-import AdminAppController from "../controllers/admin_app";
+import AdminAppController from "../controllers/admin/admin_app";
+import { adminAppAuth } from "../middleware/auth";
 
 // Mobile App Router
 const adminAppRouter = express.Router();
@@ -16,6 +15,10 @@ adminAppRouter.get(
     await adminAppController.getWaitingList(req, res);
   }
 );
+
+adminAppRouter.get("/exercises", async (req: Request, res: Response) => {
+  await adminAppController.getAllExercises(req, res);
+});
 
 // Route to get online subscriptions
 adminAppRouter.get(
@@ -51,5 +54,24 @@ adminAppRouter.post(
     await adminAppController.saveUserCalories(req, res);
   }
 );
+
+adminAppRouter.post(
+  '/user-target-weight',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    console.log("Received request to save user target weight:", req.body);
+    await adminAppController.saveUserTargetWeight(req, res);
+  }
+);
+
+adminAppRouter.post(
+  "/save-training-plan",
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    console.log("Received request to save training plan:", req.body);
+    await adminAppController.saveTrainingPlan(req, res);
+  }
+);
+
 
 export default adminAppRouter;

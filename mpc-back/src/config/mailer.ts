@@ -11,11 +11,11 @@ const transporter = nodemailer.createTransport({
 });
 
 transporter.verify((error, success) => {
-  if (error) {
-    console.error("Error verifying mailer configuration:", error);
-  } else {
-    console.log("Mailer is ready to send emails.");
-  }
+  // if (error) {
+  //   console.error("Error verifying mailer configuration:", error);
+  // } else {
+  //   console.log("Mailer is ready to send emails.");
+  // }
 });
 
 export default transporter;

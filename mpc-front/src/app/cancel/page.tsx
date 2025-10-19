@@ -7,14 +7,14 @@ import { useState } from "react";
 const Cancel = () => {
   const router = useRouter();
   const [state, setState] = useState<DataState<any>>({ status: "initial" });
-  var email = "";
+  let email = "";
 
   const handleSubmit = async () => {
     setState({ status: "loading" });
     const res = await apiService.post("/cancel", {
       email,
     });
-    
+
   };
   return (
     <div className="flex flex-col items-center justify-center mt-10">
