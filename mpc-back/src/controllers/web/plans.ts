@@ -1,5 +1,5 @@
-import stripe from "../config/stripe";
 import { Request, Response } from "express";
+import stripe from "../../config/stripe";
 export default class PlansController {
   constructor() {}
 

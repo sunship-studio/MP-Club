@@ -1,7 +1,7 @@
 import express from "express";
 
-import PlansController from "../controllers/plans";
 import { Request, Response } from "express";
+import PlansController from "../controllers/web/plans";
 
 import bodyParser from "body-parser";
 
