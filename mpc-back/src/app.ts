@@ -14,6 +14,7 @@ import chatRouter from "./routes/mobile_app/chat";
 import checkInRouter from "./routes/mobile_app/check_in";
 import workoutRouter from "./routes/mobile_app/workout";
 import onlineCoachingRouter from "./routes/online_coaching";
+import waitingListRouter from "./routes/waiting_list";
 
 
 // Load environment variables
@@ -34,13 +35,15 @@ const httpServer = http.createServer(app);
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
+
 app.use("/auth", bodyParser.json());
 app.use('/chat', bodyParser.json());
 app.use("/admin-app", bodyParser.json());
 app.use("/mobile-app", bodyParser.json());
+app.use('/web', bodyParser.json());
 
 app.use('/web/online-coaching', onlineCoachingRouter);
-
+app.use('/web/waiting-list', waitingListRouter);
 
 
 app.use("/mobile-app/auth", authRouter);
