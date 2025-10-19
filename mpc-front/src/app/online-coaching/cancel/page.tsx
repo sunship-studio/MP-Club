@@ -1,9 +1,15 @@
 'use client'
 import apiService from "@/services/api.service";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 
-const CancelOnlineCoaching = () => {
+const CancelOnlineCoaching: React.FC = () => {
+  return <Suspense fallback={<div>Loading...</div>}>
+    <CancelOnlineCoachingContent />
+  </Suspense>;
+}
+
+const CancelOnlineCoachingContent: React.FC = () => {
   const searchParams = useSearchParams();
 
   useEffect(() => {
