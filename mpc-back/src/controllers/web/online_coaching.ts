@@ -28,11 +28,11 @@ export default class OnlineCoachingController {
         success_url:
           process.env.NODE_ENV === "development"
             ? `http://localhost:3000/online-coaching/success`
-            : `${req.protocol}://${req.get("host")}/online-coaching/success`,
+            : `https://www.midlandsperformanceclub.ie/online-coaching/success`,
         cancel_url:
           process.env.NODE_ENV === "development"
             ? `http://localhost:3000/online-coaching/`
-            : `${req.protocol}://${req.get("host")}/online-coaching/`,
+            : `https://www.midlandsperformanceclub.ie/online-coaching/`,
       });
       console.log("Session created:", session);
       // Store the session ID in your database or perform any other necessary actions
