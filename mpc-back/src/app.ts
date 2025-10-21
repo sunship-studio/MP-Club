@@ -8,14 +8,17 @@ import authRouter from "./routes/mobile_app/auth";
 import SocketService from "./services/socket";
 import { handleWebhook } from "./webhook";
 
+import sgMail from "@sendgrid/mail";
 import http from "http";
+import path from "path";
 import caloriesRouter from "./routes/mobile_app/calories";
 import chatRouter from "./routes/mobile_app/chat";
 import checkInRouter from "./routes/mobile_app/check_in";
+import profileRouter from "./routes/mobile_app/profile";
 import workoutRouter from "./routes/mobile_app/workout";
 import onlineCoachingRouter from "./routes/online_coaching";
 import waitingListRouter from "./routes/waiting_list";
-
+sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
 // Load environment variables
 dotenv.config();
@@ -51,6 +54,7 @@ app.use("/mobile-app/auth", authRouter);
 app.use("/admin-app", adminAppRouter);
 app.use("/mobile-app/check-in", checkInRouter);
 app.use("/mobile-app/workout", workoutRouter);
+app.use('/mobile-app/profile', profileRouter)
 app.use("/mobile-app/chat", chatRouter);
 app.use('/admin-app/chat', chatRouter);
 
@@ -62,6 +66,35 @@ app.post(
     handleWebhook(req, res);
   }
 );
+
+import fs from "fs";
+const readHTMLFile = (filePath: string) => {
+  return fs.readFileSync(filePath, "utf8");
+};
+
+
+app.post("/", async (req, res) => {
+ const template_path = path.join(
+    __dirname,
+    "../templates",
+    "online_coaching_confirmation.html"
+  );
+  const templateSource = readHTMLFile(template_path);
+
+
+  const msg = {
+    from: "shanemahon@midlandsperformanceclub.ie",
+    to: "kamryydev@gmail.com",
+    subject: "Subscription Confirmation",
+    html: templateSource,
+  };
+
+  await sgMail.send(msg);
+   console.log('✅ Email sent successfully');
+
+   res.json({ message: "Template test email sent" });
+
+ });
 
 const socketService = new SocketService(httpServer);
 // Make socket service available to routes

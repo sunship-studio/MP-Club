@@ -15,22 +15,14 @@ enum ConnectionStatus {
 }
 
 class TypingIndicator {
-  final String clientId;
-  final String userId;
   final bool isTyping;
   final bool fromShane;
 
-  TypingIndicator({
-    required this.clientId,
-    required this.userId,
-    required this.isTyping,
-    required this.fromShane,
-  });
+  TypingIndicator({required this.isTyping, required this.fromShane});
 
   factory TypingIndicator.fromJson(Map<String, dynamic> json) {
+    print("TypingIndicator json: $json");
     return TypingIndicator(
-      clientId: json['clientId'],
-      userId: json['userId'],
       isTyping: json['isTyping'],
       fromShane: json['fromShane'],
     );
@@ -95,7 +87,11 @@ class SocketService {
   int get unreadCount => _unreadCountSubject.value;
   bool get isShaneOnline => _shaneStatusSubject.value;
 
-  Future<void> connect(String serverUrl, String token) async {
+  Future<void> connect(
+    String serverUrl,
+    String token,
+    String refreshToken,
+  ) async {
     if (isConnected) {
       debugPrint('Socket already connected');
       return;
@@ -112,7 +108,7 @@ class SocketService {
           .setReconnectionAttempts(5)
           .setReconnectionDelay(1000)
           .setReconnectionDelayMax(5000)
-          .setAuth({'token': token})
+          .setAuth({'token': token, 'refreshToken': refreshToken})
           .build(),
     );
 
@@ -141,12 +137,11 @@ class SocketService {
     });
 
     _socket?.on('initial:data', (data) {
+      print("initial data: $data");
       final unreadCount = data[0]['unreadCount'];
       final shaneOnline = data[0]['isUserOnline'] ?? false;
       if (unreadCount is int) {
         _unreadCountSubject.add(unreadCount);
-      } else if (unreadCount is Map) {
-        _unreadCountSubject.add(unreadCount['total'] ?? 0);
       }
       _shaneStatusSubject.add(shaneOnline);
     });
@@ -157,6 +152,7 @@ class SocketService {
     });
 
     _socket?.on('typing:status', (data) {
+      print("typing data: $data");
       final indicator = TypingIndicator.fromJson(data[0]);
       _typingSubject.add(indicator);
     });

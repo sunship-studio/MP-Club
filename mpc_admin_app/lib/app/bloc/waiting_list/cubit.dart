@@ -27,10 +27,9 @@ class WaitingListCubit extends Cubit<WaitingListState> {
   }
 
   void acceptEntry(String id) async {
-    Response response = await apiService.post(
-      '/mobile-app/waiting-list/accept',
-      {'id': id},
-    );
+    Response response = await apiService.post('/waiting-list/accept', {
+      'id': id,
+    });
     if (response.statusCode == 200) {
       loadWaitingList();
     } else {
@@ -39,10 +38,9 @@ class WaitingListCubit extends Cubit<WaitingListState> {
   }
 
   void rejectEntry(String id) async {
-    Response response = await apiService.post(
-      '/mobile-app/waiting-list/reject',
-      {'id': id},
-    );
+    Response response = await apiService.post('/waiting-list/reject', {
+      'id': id,
+    });
     if (response.statusCode == 200) {
       loadWaitingList();
     } else {
@@ -53,6 +51,4 @@ class WaitingListCubit extends Cubit<WaitingListState> {
   void showError(String error) {
     emit(WaitinglistErrorState(error));
   }
-
-  
 }

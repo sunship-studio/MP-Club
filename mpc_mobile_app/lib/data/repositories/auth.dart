@@ -48,7 +48,7 @@ class AuthRepository {
 
   Future<User> getUser() async {
     final response = await dio.get(endpoint: '/auth/user');
-    print('User response data: ${response.data}');
+
     return User.fromJson(response.data);
     throw Exception('Failed to load user data');
   }

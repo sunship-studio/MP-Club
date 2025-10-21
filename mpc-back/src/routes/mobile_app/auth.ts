@@ -1,5 +1,6 @@
 import express from "express";
 import { AuthController } from "../../controllers/mobile/auth";
+import { verifyToken } from "../../middleware/auth";
 
 const authRouter = express.Router();
 
@@ -46,13 +47,9 @@ authRouter.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
 });
 
-authRouter.get("/user", async (req, res) => {
-  console.log("Getting user with token:", req.headers["authorization"]);
-  const user = await AuthController.getUser(
-    req.headers["authorization"] as string
-  );
-  res.json(user);
-});
+authRouter.get("/user", verifyToken,  (req, res) =>
+   AuthController.getUser(req, res)
+);
 
 
 

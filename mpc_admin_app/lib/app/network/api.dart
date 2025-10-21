@@ -27,6 +27,7 @@ class ApiService {
   Future<Response> post(String endpoint, Map<String, dynamic> data) async {
     try {
       Response response = await dio.post(endpoint, data: data);
+
       return response;
     } catch (e) {
       throw Exception('Failed to post data: $e');

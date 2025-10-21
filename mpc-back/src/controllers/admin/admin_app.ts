@@ -41,6 +41,7 @@ export default class AdminAppController {
       const { userId, trainingPlan } = req.body;
       const user = await User.findById(userId);
       if (!user) {
+
         return res.status(404).json({ message: "User not found" });
       }
       console.log("Training Plan to be saved:", trainingPlan.days[0].exercises);
@@ -139,10 +140,12 @@ export default class AdminAppController {
     req: Request,
     res: Response
   ): Promise<Response> {
+
     try {
       const { id, targetWeight } = req.body;
       const user = await User.findById(id);
       if (!user) {
+        console.log("User not found with id:", id);
         return res.status(404).json({ message: "User not found" });
       }
       user.targetWeight = targetWeight;

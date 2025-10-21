@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mpc_mobile_app/data/models/user.dart';
 
 class ProfileAvatar extends StatefulWidget {
-  ProfileAvatar({super.key, this.radius = 20, this.onTap});
+  ProfileAvatar({super.key, this.radius = 20, this.onTap, this.user});
   double radius;
+  User? user;
   Function()? onTap;
-
 
   @override
   State<ProfileAvatar> createState() => _ProfileAvatarState();
@@ -19,12 +20,17 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
     if (widget.onTap == null) {
       return CircleAvatar(
         radius: widget.radius.w,
-        backgroundImage: AssetImage('assets/images/avatar.png'),
+        backgroundImage:
+            widget.user != null
+                ? widget.user!.profilePictureUrl == null
+                    ? AssetImage('assets/images/default_avatar.png')
+                    : NetworkImage(widget.user!.profilePictureUrl!)
+                : AssetImage('assets/images/avatar.png') as ImageProvider,
       );
     }
     return GestureDetector(
       onTap: () {
-       widget.onTap!();
+        widget.onTap!();
       },
       onTapDown: (details) => setState(() => _isPressed = true),
       onTapUp: (details) => setState(() => _isPressed = false),
@@ -35,7 +41,13 @@ class _ProfileAvatarState extends State<ProfileAvatar> {
 
         child: CircleAvatar(
           radius: widget.radius.w,
-          backgroundImage: AssetImage('assets/images/avatar.png'),
+          backgroundImage:
+              widget.user != null
+                  ? widget.user!.profilePictureUrl == null
+                      ? AssetImage('assets/images/default_avatar.png')
+                          as ImageProvider
+                      : NetworkImage(widget.user!.profilePictureUrl!)
+                  : AssetImage('assets/images/avatar.png') as ImageProvider,
         ),
       ),
     );

@@ -21,14 +21,9 @@ class UsersCubit extends Cubit<UsersState> {
     }
   }
 
- 
-
-  void saveCalorieGoal(
-    String userId,
-    int calories
-  ) async {
+  void saveCalorieGoal(String userId, int calories) async {
     emit(UsersLoadingState());
-    Response response = await apiService.post('/admin-app/user-calories', {
+    Response response = await apiService.post('/user-calories', {
       'id': userId,
       'calories': calories,
     });
@@ -40,7 +35,17 @@ class UsersCubit extends Cubit<UsersState> {
     }
   }
 
-  
-
-
+  void saveWeightGoal(String userId, double weight) async {
+    emit(UsersLoadingState());
+    Response response = await apiService.post('/user-target-weight', {
+      'id': userId,
+      'targetWeight': weight,
+    });
+    print('Response: ${response.data}');
+    if (response.statusCode == 200) {
+      loadUsers();
+    } else {
+      emit(UsersErrorState('Failed to save weight goal'));
+    }
+  }
 }

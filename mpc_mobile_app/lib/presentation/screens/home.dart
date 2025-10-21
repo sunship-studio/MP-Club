@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/cubits/auth.dart';
-import 'package:mpc_mobile_app/data/models/user.dart';
 import 'package:mpc_mobile_app/presentation/widgets/home/calories_progress.dart';
 import 'package:mpc_mobile_app/presentation/widgets/home/chat_trainer_card.dart';
 import 'package:mpc_mobile_app/presentation/widgets/home/check_in_card.dart';
@@ -110,6 +109,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                             const Spacer(),
                             ProfileAvatar(
+                              user: user,
                               radius: 18.h,
                               onTap: () {
                                 context.push('/home/profile');

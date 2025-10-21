@@ -29,7 +29,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
-  final SocketService _socketService = SocketService();
+  final SocketService _socketService = getIt<SocketService>();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -74,7 +74,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _initializeChat() async {
     final token = await getIt<TokenStorage>().getAccessToken() ?? '';
-    await _socketService.connect('http://192.168.11.70:3500', token);
+    final refreshToken = await getIt<TokenStorage>().getRefreshToken() ?? '';
+    await _socketService.connect(
+      'http://192.168.2.101:3500',
+      token,
+      refreshToken,
+    );
   }
 
   ///
@@ -105,9 +110,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     _typingSubscription = _socketService.typingStream.listen((indicator) {
       bool shouldShow =
-          widget.isAdmin
-              ? (indicator.clientId == widget.user.id && !indicator.fromShane)
-              : indicator.fromShane;
+          widget.isAdmin ? (!indicator.fromShane) : indicator.fromShane;
 
       if (shouldShow) {
         setState(() => _isTyping = indicator.isTyping);
@@ -318,19 +321,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void _onTextChanged(String text) {
     if (text.isNotEmpty) {
       _typingDebounce?.cancel();
-      _socketService.startTyping(
-        clientId: widget.isAdmin ? widget.user.id : null,
-      );
+      _socketService.startTyping(clientId: widget.user.id);
 
       _typingDebounce = Timer(const Duration(milliseconds: 1000), () {
-        _socketService.stopTyping(
-          clientId: widget.isAdmin ? widget.user.id : null,
-        );
+        _socketService.stopTyping(clientId: widget.user.id);
       });
     } else {
-      _socketService.stopTyping(
-        clientId: widget.isAdmin ? widget.user.id : null,
-      );
+      _socketService.stopTyping(clientId: widget.user.id);
     }
   }
 

@@ -9,7 +9,7 @@ class User {
   final String? token;
   final String? refreshToken;
   final int? targetWeight;
-
+  final String? profilePictureUrl;
   final String subscriptionId;
   final String status;
   final String type;
@@ -29,6 +29,7 @@ class User {
   final String? cancelToken;
 
   User({
+    required this.profilePictureUrl,
     required this.id,
     required this.checkIns,
     required this.customerId,
@@ -57,6 +58,7 @@ class User {
     return User(
       id: json['_id'] as String,
       customerId: json['customerId'] as String,
+      profilePictureUrl: json['profilePictureUrl'] as String?,
       token: json['token'] as String?,
       targetWeight: json['targetWeight'] as int?,
       doneWorkouts:
@@ -98,78 +100,6 @@ class User {
       email: json['email'] as String,
       age: json['age'] as int,
       cancelToken: json['cancelToken'] as String?,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      '_id': id,
-      'customerId': customerId,
-      'token': token,
-      'refreshToken': refreshToken,
-      'subscriptionId': subscriptionId,
-      'targetWeight': targetWeight,
-
-      'status': status,
-      'type': type,
-      'caloriesPerDay': caloriesPerDay,
-      'hasPassword': hasPassword,
-      'lastLogin': lastLogin?.toIso8601String(),
-      'password': password,
-      'trainingPlan': trainingPlan.toJson(),
-      'startDate': startDate.toIso8601String(),
-      'firstName': firstName,
-      'lastName': lastName,
-      'email': email,
-      'age': age,
-      'cancelToken': cancelToken,
-    };
-  }
-
-  User copyWith({
-    String? customerId,
-    String? token,
-    String? refreshToken,
-    String? subscriptionId,
-    String? status,
-    String? type,
-    int? targetWeight,
-    int? caloriesPerDay,
-    bool? hasPassword,
-    DateTime? lastLogin,
-    String? password,
-    TrainingPlan? trainingPlan,
-    DateTime? startDate,
-    String? firstName,
-    List<CheckIn>? checkIns,
-    String? lastName,
-    String? email,
-    int? age,
-    String? cancelToken,
-  }) {
-    return User(
-      id: id,
-      targetWeight: targetWeight ?? this.targetWeight,
-      doneWorkouts: doneWorkouts,
-      caloriesLogs: caloriesLogs ?? caloriesLogs,
-      checkIns: checkIns ?? this.checkIns,
-      customerId: customerId ?? this.customerId,
-      token: token ?? this.token,
-      refreshToken: refreshToken ?? this.refreshToken,
-      subscriptionId: subscriptionId ?? this.subscriptionId,
-      status: status ?? this.status,
-      type: type ?? this.type,
-      caloriesPerDay: caloriesPerDay ?? this.caloriesPerDay,
-      hasPassword: hasPassword ?? this.hasPassword,
-      lastLogin: lastLogin ?? this.lastLogin,
-      password: password ?? this.password,
-      trainingPlan: trainingPlan ?? this.trainingPlan,
-      startDate: startDate ?? this.startDate,
-      firstName: firstName ?? this.firstName,
-      lastName: lastName ?? this.lastName,
-      email: email ?? this.email,
-      age: age ?? this.age,
-      cancelToken: cancelToken ?? this.cancelToken,
     );
   }
 }

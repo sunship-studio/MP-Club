@@ -13,6 +13,7 @@ ImageService imageService = ImageService();
 Future<File?> showBrowseFileSheet(
   BuildContext context, {
   bool showNavBarAfter = false,
+  String title = 'BROWSE FILE',
 }) {
   File? selectedFile;
   void setSelectedFile(File file) {
@@ -45,7 +46,7 @@ Future<File?> showBrowseFileSheet(
                   Row(
                     children: [
                       Text(
-                        'BROWSE FILE',
+                        title,
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: FontWeight.w600,

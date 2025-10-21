@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mpc_admin_app/app/models/User.dart';
+import 'package:mpc_admin_app/app/services/socket.dart';
 import 'package:mpc_admin_app/core/screens/chat.dart';
 import 'package:mpc_admin_app/core/screens/home.dart';
 import 'package:mpc_admin_app/core/screens/online_coaching.dart';
@@ -58,6 +59,9 @@ class MpcApp extends StatefulWidget {
 
 class _MpcAppState extends State<MpcApp> {
   void changeScreen(int index, {User? user}) {
+    if (index == 2) {
+      SocketService().connect("http://192.168.2.101:3500", admin_key);
+    }
     setState(() {
       currentIndex = index;
       this.user = user;

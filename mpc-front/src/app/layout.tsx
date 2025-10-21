@@ -4,7 +4,9 @@ import "./globals.css";
 
 
 
+import { DesktopHeader, MobileHeader } from "@/components/Header";
 import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -14,9 +16,6 @@ export const metadata: Metadata = {
   title: "Midlands Perfomance Club",
 
 };
-import localFont from 'next/font/local';
-import { DesktopHeader, MobileHeader } from "@/components/Header";
-import { DesktopFooter, MobileFooter } from "@/components/Footer";
 
 const goodTimes = localFont({
   src: '../../public/fonts/GoodTimes.otf',
@@ -29,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${goodTimes.className} h-full bg-white`}>
+    <html lang="en" className={`${inter.variable} ${goodTimes.className} h-full bg-white`} style={{ colorScheme: 'dark only' }}>
       <body className="font-inter antialiased flex flex-col min-h-screen">
         <MobileHeader />
         <DesktopHeader />

@@ -1,9 +1,8 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import logo from "../assets/logo.png";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 const MobileHeader = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -58,6 +57,13 @@ const MobileHeader = () => {
             >
               WAITING LIST
             </Link>
+              <Link
+              href="/online-coaching"
+              className="text-gray-800 py-2"
+              onClick={() => setIsOpen(false)}
+            >
+🛜 COACHING
+            </Link>
             <Link
               href="/plans"
               className="text-gray-800 py-2"
@@ -65,13 +71,7 @@ const MobileHeader = () => {
             >
               PLANS
             </Link>
-            <Link
-              href="#"
-              className="text-gray-800 py-2"
-              onClick={() => setIsOpen(false)}
-            >
-              FORUM
-            </Link>
+
             <Link href="/cancel" className="text-gray-800 py-2">
               <img
                 src="/assets/profile_1.png"
@@ -116,12 +116,13 @@ const DesktopHeader = () => {
           <a href="/waiting-list" className="hover:text-gray-400">
             WAITING LIST
           </a>
+            <a href="/online-coaching" className="hover:text-gray-400">
+              🛜 COACHING
+          </a>
           <a href="/plans" className="hover:text-gray-400">
             PLANS
           </a>
-          <a href="" className="hover:text-gray-400">
-            FORUM
-          </a>
+
           <a href="/cancel" className="hover:text-gray-400">
             <Image
               src="/assets/profile.png"
@@ -137,4 +138,5 @@ const DesktopHeader = () => {
   );
 };
 
-export { MobileHeader, DesktopHeader };
+export { DesktopHeader, MobileHeader };
+

@@ -1,12 +1,12 @@
 import { createAdapter } from "@socket.io/redis-adapter";
 import console from "console";
 import { Server as HTTPServer } from "http";
-import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { RateLimiterMemory } from "rate-limiter-flexible";
 import { createClient } from "redis";
 import { Server, Socket } from "socket.io";
 import { ChatController } from "../controllers/mobile/chat";
+import { verifyTokenInternal } from "../middleware/auth";
 
 interface ISocketUser {
   userId: string;
@@ -83,26 +83,36 @@ export class SocketService {
     this.io.use(async (socket, next) => {
       try {
         const token = socket.handshake.auth.token;
+        const refreshToken = socket.handshake.auth.refreshToken;
 
         if (!token) {
+          console.log("No token provided in handshake");
           return next(new Error("AUTH_REQUIRED"));
         }
         if (token == "shanempc113@") {
           socket.data.userId = socket.handshake.query.userId;
           socket.data.userType = "shane";
           socket.data.connectedAt = new Date();
+          console.log("Shane connected with ID:", socket.data.userId);
           return next();
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+        const decodedId = await verifyTokenInternal(token, refreshToken!);
+
+        if (!decodedId) {
+          console.log("Invalid token");
+          return next(new Error("INVALID_TOKEN"));
+        }
 
         // Attach user data to socket
-        socket.data.userId = decoded.id;
-        socket.data.userType = decoded.userType || "client";
+        socket.data.userId = decodedId;
+        socket.data.userType =  "client";
         socket.data.connectedAt = new Date();
 
         next();
       } catch (error: any) {
+
+        console.error("Socket authentication error:", error);
         next(
           new Error(
             error.name === "TokenExpiredError"
@@ -141,21 +151,23 @@ export class SocketService {
   private handleUserConnection(socket: Socket) {
     const { userId, userType } = socket.data;
 
-    // Store connected user
+
+
+    if (userType === "shane") {
+      socket.join("shane");
+      this.broadcastShaneStatus(true);
+    } else {
+          // Store connected user
     this.connectedUsers.set(userId, {
       userId,
       userType,
       socketId: socket.id,
       connectionTime: new Date(),
     });
-    console.log(socket.data);
+    console.log(userId);
+    console.log("Joined user room:", `user:${userId}` );
     // Join rooms
-    socket.join(`user:${userId}`);
-
-    if (userType === "shane") {
-      socket.join("shane");
-      this.broadcastShaneStatus(true);
-    } else {
+    socket.join(`user:${userId.id}`);
       // Notify Shane of client connection
       this.io.to("shane").emit("client:presence", {
         clientId: userId,
@@ -247,7 +259,7 @@ export class SocketService {
         this.io.to(recipientRoom).emit("message:new", messageData);
 
         // Clear typing
-        this.clearTyping(socket.data.userId, targetClientId);
+        this.clearTyping(socket.data.userId);
 
         // Success callback
         callback?.({ success: true, message: messageData });
@@ -312,8 +324,8 @@ export class SocketService {
     socket.on("typing:start", (data) => {
       const { clientId } = data;
       const fromShane = socket.data.userType === "shane";
-      const targetClientId = fromShane ? clientId : socket.data.userId;
-      const key = `${socket.data.userId}:${targetClientId}`;
+
+      const key = `${clientId}`;
 
       // Clear existing timeout
       const existing = this.typingStates.get(key);
@@ -323,21 +335,22 @@ export class SocketService {
 
       // Broadcast typing indicator
       const recipientRoom = fromShane ? `user:${clientId}` : "shane";
+      console.log("Emitting typing status to room:", recipientRoom  );
       this.io.to(recipientRoom).emit("typing:status", {
-        clientId: targetClientId,
-        userId: socket.data.userId,
+        clientId: clientId,
         isTyping: true,
         fromShane,
       });
 
       // Auto-clear after 3 seconds
       const timeout = setTimeout(() => {
-        this.clearTyping(socket.data.userId, targetClientId);
+        this.clearTyping(socket.data.userId);
       }, 3000);
 
       this.typingStates.set(key, {
         userId: socket.data.userId,
-        clientId: targetClientId,
+        clientId:clientId,
+
         timeout,
       });
     });
@@ -346,7 +359,7 @@ export class SocketService {
       const { clientId } = data;
       const fromShane = socket.data.userType === "shane";
       const targetClientId = fromShane ? clientId : socket.data.userId;
-      this.clearTyping(socket.data.userId, targetClientId);
+      this.clearTyping(socket.data.userId);
     });
   }
 
@@ -433,8 +446,8 @@ export class SocketService {
   }
 
   // Helper methods
-  private clearTyping(userId: string, clientId: string) {
-    const key = `${userId}:${clientId}`;
+  private clearTyping(userId: string) {
+    const key = `${userId}`;
     const state = this.typingStates.get(key);
 
     if (!state) return;
@@ -443,11 +456,11 @@ export class SocketService {
     this.typingStates.delete(key);
 
     const fromShane = this.connectedUsers.get(userId)?.userType === "shane";
-    const recipientRoom = fromShane ? `user:${clientId}` : "shane";
+    const recipientRoom = fromShane ? `user:${userId}` : "shane";
 
     this.io.to(recipientRoom).emit("typing:status", {
-      clientId,
-      userId,
+      clientId: userId,
+
       isTyping: false,
       fromShane,
     });

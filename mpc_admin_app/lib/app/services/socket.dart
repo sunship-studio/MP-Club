@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:mpc_admin_app/app/models/message.dart';
 import 'package:mpc_admin_app/app/models/pending_message.dart';
-
 import 'package:rxdart/rxdart.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -17,21 +16,22 @@ enum ConnectionStatus {
 
 class TypingIndicator {
   final String clientId;
-  final String userId;
+
   final bool isTyping;
   final bool fromShane;
 
   TypingIndicator({
     required this.clientId,
-    required this.userId,
+
     required this.isTyping,
     required this.fromShane,
   });
 
   factory TypingIndicator.fromJson(Map<String, dynamic> json) {
+    debugPrint('TypingIndicator fromJson: $json');
     return TypingIndicator(
       clientId: json['clientId'],
-      userId: json['userId'],
+
       isTyping: json['isTyping'],
       fromShane: json['fromShane'],
     );
@@ -58,6 +58,47 @@ class ReadReceipt {
   }
 }
 
+// New class to track client-specific unread counts
+class ClientUnreadCount {
+  final String clientId;
+  final String clientName;
+  final int unreadCount;
+  final DateTime? lastMessageTime;
+
+  ClientUnreadCount({
+    required this.clientId,
+    required this.clientName,
+    required this.unreadCount,
+    this.lastMessageTime,
+  });
+
+  factory ClientUnreadCount.fromJson(Map<String, dynamic> json) {
+    return ClientUnreadCount(
+      clientId: json['clientId'],
+      clientName: json['clientName'] ?? 'Unknown Client',
+      unreadCount: json['unreadCount'] ?? 0,
+      lastMessageTime:
+          json['lastMessageTime'] != null
+              ? DateTime.parse(json['lastMessageTime'])
+              : null,
+    );
+  }
+
+  ClientUnreadCount copyWith({
+    String? clientId,
+    String? clientName,
+    int? unreadCount,
+    DateTime? lastMessageTime,
+  }) {
+    return ClientUnreadCount(
+      clientId: clientId ?? this.clientId,
+      clientName: clientName ?? this.clientName,
+      unreadCount: unreadCount ?? this.unreadCount,
+      lastMessageTime: lastMessageTime ?? this.lastMessageTime,
+    );
+  }
+}
+
 class SocketService {
   static final SocketService _instance = SocketService._internal();
   factory SocketService() => _instance;
@@ -71,7 +112,14 @@ class SocketService {
   final _messageSubject = PublishSubject<Message>();
   final _typingSubject = PublishSubject<TypingIndicator>();
   final _readReceiptSubject = PublishSubject<ReadReceipt>();
-  final _unreadCountSubject = BehaviorSubject<int>.seeded(0);
+
+  // Changed: Now tracks unread counts per client
+  final _clientUnreadCountsSubject =
+      BehaviorSubject<Map<String, ClientUnreadCount>>.seeded({});
+
+  // Keep total unread count for convenience
+  final _totalUnreadCountSubject = BehaviorSubject<int>.seeded(0);
+
   final _shaneStatusSubject = BehaviorSubject<bool>.seeded(false);
 
   Timer? _reconnectTimer;
@@ -88,12 +136,38 @@ class SocketService {
   Stream<Message> get messageStream => _messageSubject.stream;
   Stream<TypingIndicator> get typingStream => _typingSubject.stream;
   Stream<ReadReceipt> get readReceiptStream => _readReceiptSubject.stream;
-  Stream<int> get unreadCountStream => _unreadCountSubject.stream;
+
+  // New: Stream of all client unread counts
+  Stream<Map<String, ClientUnreadCount>> get clientUnreadCountsStream =>
+      _clientUnreadCountsSubject.stream;
+
+  // Stream for specific client unread count
+  Stream<int> getClientUnreadCountStream(String clientId) {
+    return _clientUnreadCountsSubject.stream.map(
+      (counts) => counts[clientId]?.unreadCount ?? 0,
+    );
+  }
+
+  // Total unread count across all clients
+  Stream<int> get totalUnreadCountStream => _totalUnreadCountSubject.stream;
+
   Stream<bool> get shaneStatusStream => _shaneStatusSubject.stream;
 
   ConnectionStatus get status => _connectionSubject.value;
   bool get isConnected => _socket?.connected ?? false;
-  int get unreadCount => _unreadCountSubject.value;
+
+  // Get unread count for specific client
+  int getClientUnreadCount(String clientId) {
+    return _clientUnreadCountsSubject.value[clientId]?.unreadCount ?? 0;
+  }
+
+  // Get all client unread counts
+  Map<String, ClientUnreadCount> get allClientUnreadCounts =>
+      _clientUnreadCountsSubject.value;
+
+  // Total unread count
+  int get totalUnreadCount => _totalUnreadCountSubject.value;
+
   bool get isShaneOnline => _shaneStatusSubject.value;
 
   Future<void> connect(String serverUrl, String token) async {
@@ -141,23 +215,50 @@ class SocketService {
       _connectionSubject.add(ConnectionStatus.error);
     });
 
+    // Modified: Handle initial data with per-client unread counts
     _socket?.on('initial:data', (data) {
-      final unreadCount = data[0]['unreadCount'];
-      final shaneOnline = data[0]['isUserOnline'] ?? false;
-      if (unreadCount is int) {
-        _unreadCountSubject.add(unreadCount);
-      } else if (unreadCount is Map) {
-        _unreadCountSubject.add(unreadCount['total'] ?? 0);
+      final responseData = data[0];
+      final shaneOnline = responseData['isUserOnline'] ?? false;
+      print('Initial data received: $responseData');
+      // Handle different response formats
+      if (responseData['unreadCount'] != null) {
+        // New format: per-client unread counts
+        final clientCounts = <String, ClientUnreadCount>{};
+        final clientUnreadData =
+            responseData['unreadCount']['byClient'] as List<dynamic>;
+
+        for (var countData in clientUnreadData) {
+          final clientId = countData['_id'] as String;
+          clientCounts[clientId] = ClientUnreadCount.fromJson({
+            'clientId': clientId,
+            ...countData,
+          });
+        }
+
+        _updateClientUnreadCounts(clientCounts);
+      } else if (responseData['unreadCount'] != null) {
+        // Fallback: single unread count
+        final unreadCount = responseData['unreadCount'];
+        if (unreadCount is int) {
+          _totalUnreadCountSubject.add(unreadCount);
+        }
       }
+
       _shaneStatusSubject.add(shaneOnline);
     });
 
     _socket?.on('message:new', (data) {
       final message = Message.fromJson(data[0]);
       _messageSubject.add(message);
+
+      // Update unread count for the client who sent the message
+      if (!message.fromShane) {
+        _incrementClientUnreadCount(message.clientId);
+      }
     });
 
     _socket?.on('typing:status', (data) {
+      print('Typing status data: $data');
       final indicator = TypingIndicator.fromJson(data[0]);
       _typingSubject.add(indicator);
     });
@@ -165,17 +266,97 @@ class SocketService {
     _socket?.on('messages:read-receipt', (data) {
       final receipt = ReadReceipt.fromJson(data[0]);
       _readReceiptSubject.add(receipt);
+
+      // If Shane read messages, reset unread count for that client
+      if (receipt.byShane) {
+        _resetClientUnreadCount(receipt.clientId);
+      }
     });
 
+    // Modified: Handle per-client unread count updates
     _socket?.on('unread:update', (data) {
-      final count = data[0]['count'] ?? data[0]['total'] ?? 0;
-      _unreadCountSubject.add(count);
+      final updateData = data[0];
+
+      if (updateData['clientId'] != null) {
+        // Update for specific client
+        final clientId = updateData['clientId'] as String;
+        final count = updateData['count'] ?? updateData['unreadCount'] ?? 0;
+        _updateClientUnreadCount(clientId, count);
+      } else if (updateData['clientCounts'] != null) {
+        // Bulk update for multiple clients
+        final clientCounts = <String, ClientUnreadCount>{};
+        final clientCountsData =
+            updateData['clientCounts'] as Map<String, dynamic>;
+
+        clientCountsData.forEach((clientId, countData) {
+          clientCounts[clientId] = ClientUnreadCount.fromJson({
+            'clientId': clientId,
+            ...countData,
+          });
+        });
+
+        _updateClientUnreadCounts(clientCounts);
+      } else {
+        // Fallback: total count update
+        final count = updateData['count'] ?? updateData['total'] ?? 0;
+        _totalUnreadCountSubject.add(count);
+      }
     });
 
     _socket?.on('shane:presence', (data) {
       final isOnline = data[0]['online'] == true;
       _shaneStatusSubject.add(isOnline);
     });
+  }
+
+  // New methods to handle per-client unread counts
+  void _updateClientUnreadCounts(Map<String, ClientUnreadCount> newCounts) {
+    _clientUnreadCountsSubject.add(newCounts);
+
+    // Update total count
+    final total = newCounts.values.fold<int>(
+      0,
+      (sum, client) => sum + client.unreadCount,
+    );
+    _totalUnreadCountSubject.add(total);
+  }
+
+  void _updateClientUnreadCount(
+    String clientId,
+    int count, {
+    String? clientName,
+  }) {
+    final currentCounts = Map<String, ClientUnreadCount>.from(
+      _clientUnreadCountsSubject.value,
+    );
+
+    if (currentCounts.containsKey(clientId)) {
+      currentCounts[clientId] = currentCounts[clientId]!.copyWith(
+        unreadCount: count,
+      );
+    } else {
+      currentCounts[clientId] = ClientUnreadCount(
+        clientId: clientId,
+        clientName: clientName ?? 'Unknown Client',
+        unreadCount: count,
+        lastMessageTime: DateTime.now(),
+      );
+    }
+
+    _updateClientUnreadCounts(currentCounts);
+  }
+
+  void _incrementClientUnreadCount(String clientId, {String? clientName}) {
+    final currentCount = getClientUnreadCount(clientId);
+    _updateClientUnreadCount(
+      clientId,
+      currentCount + 1,
+      clientName: clientName,
+    );
+  }
+
+  void _resetClientUnreadCount(String clientId) {
+    _updateClientUnreadCount(clientId, 0);
   }
 
   void _attemptReconnect() {
@@ -245,6 +426,11 @@ class SocketService {
       ack: (response) {
         if (response['success'] == true) {
           completer.complete();
+
+          // Reset unread count for this client since Shane sent a message
+          if (pending.clientId != null) {
+            _resetClientUnreadCount(pending.clientId!);
+          }
         } else {
           completer.completeError(response['error'] ?? 'SEND_FAILED');
         }
@@ -326,10 +512,16 @@ class SocketService {
     List<String>? messageIds,
   }) async {
     if (!isConnected) return;
+
     _socket?.emitWithAck('messages:mark-read', {
       if (clientId != null) 'clientId': clientId,
       if (messageIds != null) 'messageIds': messageIds,
     });
+
+    // Immediately reset unread count for this client
+    if (clientId != null) {
+      _resetClientUnreadCount(clientId);
+    }
   }
 
   void disconnect() {
@@ -348,7 +540,8 @@ class SocketService {
     await _messageSubject.close();
     await _typingSubject.close();
     await _readReceiptSubject.close();
-    await _unreadCountSubject.close();
+    await _clientUnreadCountsSubject.close();
+    await _totalUnreadCountSubject.close();
     await _shaneStatusSubject.close();
   }
 }

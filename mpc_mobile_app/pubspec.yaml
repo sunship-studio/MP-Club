@@ -87,6 +87,7 @@ flutter:
     - assets/images/checkin.png
     - assets/images/training_plan.png
     - assets/images/tutorial.png
+    - assets/images/default_avatar.png
     - assets/images/home.svg
     - assets/images/barbell.svg
     - assets/images/movie.svg

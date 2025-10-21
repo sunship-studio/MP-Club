@@ -18,9 +18,9 @@ const User_1 = __importDefault(require("../../models/User"));
 class AuthController {
     static checkEmail(email) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("Checking email:", email);
+
             const user = yield User_1.default.findOne({ email: email.replace(/\s+/g, "") });
-            console.log("User found:", user);
+
             const hasPassword = user === null || user === void 0 ? void 0 : user.hasPassword;
             return { exists: user == null ? false : true, hasPassword: hasPassword };
         });
@@ -88,7 +88,7 @@ class AuthController {
     static getUser(token) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield User_1.default.findOne({ token: token });
-            console.log("User found in getUser:", user);
+
             return user;
         });
     }

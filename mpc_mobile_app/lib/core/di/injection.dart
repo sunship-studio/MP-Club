@@ -7,9 +7,11 @@ import 'package:mpc_mobile_app/core/storage/token.dart';
 import 'package:mpc_mobile_app/data/repositories/auth.dart';
 import 'package:mpc_mobile_app/data/repositories/calories.dart';
 import 'package:mpc_mobile_app/data/repositories/check_in.dart';
+import 'package:mpc_mobile_app/data/repositories/profile.dart';
 import 'package:mpc_mobile_app/data/repositories/workout.dart';
 import 'package:mpc_mobile_app/routes/auth.dart';
 import 'package:mpc_mobile_app/routes/main.dart';
+import 'package:mpc_mobile_app/services/socket.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final getIt = GetIt.instance;
@@ -50,6 +52,8 @@ Future<void> setupDependencies() async {
   getIt.registerSingleton<DioClient>(
     DioClient(getIt<Dio>(), getIt<TokenStorage>()),
   );
+  //  SOCKET SERVICE
+  getIt.registerLazySingleton<SocketService>(() => SocketService());
 
   // ==================== REPOSITORIES ====================
   // Singleton = One instance for entire app lifetime
@@ -71,6 +75,10 @@ Future<void> setupDependencies() async {
 
   getIt.registerLazySingleton<WorkoutRepository>(
     () => WorkoutRepository(dio: getIt<DioClient>()),
+  );
+
+  getIt.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepository(dioClient: getIt<DioClient>()),
   );
 
   // ROUTERS

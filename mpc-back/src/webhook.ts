@@ -1,9 +1,12 @@
-import Stripe from "stripe";
+import sgMail from "@sendgrid/mail";
 import { Request, Response } from "express";
-import { sendNotificationToAdmin } from "./services/notification";
-import User from "./models/User";
+import fs from "fs";
+import path from "path";
+import Stripe from "stripe";
 import PaymentSession from "./models/PaymentSession";
-
+import User from "./models/User";
+import { sendNotificationToAdmin } from "./services/notification";
+sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {});
 
 const handleWebhook = async (req: Request, res: Response) => {
@@ -30,7 +33,7 @@ const handleWebhook = async (req: Request, res: Response) => {
       console.log("Payment failed:", event.data.object);
       break;
     default:
-     
+
   }
 
   res.status(200).json({ received: true });
@@ -47,23 +50,23 @@ const completeTransaction = async (event: any) => {
   ).status;
 
   // Sending mail (Waiting for designers to create templates)
-  // const template_path = path.join(
-  //   __dirname,
-  //   "templates",
-  //   "online_success.html"
-  // );
-  // // // const templateSource = readHTMLFile(template_path);
-  // const template = Handlebars.compile(templateSource);
-  // const htmlToSend = template({
-  //   subtotal: "€200.00",
-  // });
-  // const mailOptions = {
-  //   from: process.env.MAIL_FROM,
-  //   to: paymentSession?.email,
-  //   subject: "Subscription Confirmation",
-  //   html: htmlToSend,
-  // };
-  // await transporter.sendMail(mailOptions);
+  const template_path = path.join(
+    __dirname,
+    "../templates",
+    "online_coaching_confirmation.html"
+  );
+  const templateSource = readHTMLFile(template_path);
+
+
+  const msg = {
+    from: "shanemahon@midlandsperformanceclub.ie",
+    to: paymentSession?.email,
+    subject: "Subscription Confirmation",
+    html: templateSource,
+  };
+
+  await sgMail.send(msg);
+   console.log('✅ Email sent successfully');
   const subscriber = await User.create({
     email: paymentSession?.email,
     firstName: paymentSession?.firstName,
@@ -82,5 +85,8 @@ const completeTransaction = async (event: any) => {
   console.log("Payment successful:", session);
 };
 
+const readHTMLFile = (filePath: string) => {
+  return fs.readFileSync(filePath, "utf8");
+};
 
 export { handleWebhook };

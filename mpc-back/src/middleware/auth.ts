@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
 
+const refreshSecret =   "b18e762f3a079f9bcdacf0ccce05770b14ceed959e01f246b1bc9e70debaa6d05537219bb00376aecf84510a8d17f18f0194e4829189a226f88b2595629697bb";
+const secret =  "a6a760517da71371b77e45ffc4900da5504f7824c0ef19d1b65ce6bb263dc4c103a21c44a70d5e5161274f11244cbdf1475176b97d40ea6ff692431841a0b9ff";
 
 const adminAppAuth = async (
   req: Request,
@@ -28,38 +30,32 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
     jwt.verify(
       authHeader,
-      "a6a760517da71371b77e45ffc4900da5504f7824c0ef19d1b65ce6bb263dc4c103a21c44a70d5e5161274f11244cbdf1475176b97d40ea6ff692431841a0b9ff"
+      secret
     );
-          res.setHeader("authorization", authHeader);
-      res.setHeader("x-refresh-token", refreshToken!);
-
     next();
   } catch (error) {
-    try {
+    if (error instanceof jwt.TokenExpiredError) {
+try {
       jwt.verify(
         refreshToken!,
-        "b18e762f3a079f9bcdacf0ccce05770b14ceed959e01f246b1bc9e70debaa6d05537219bb00376aecf84510a8d17f18f0194e4829189a226f88b2595629697bb"
+        refreshSecret
       );
       const decoded = jwt.decode(refreshToken!) as { id: string };
       const newToken = jwt.sign(
         { id: decoded.id },
-        "a6a760517da71371b77e45ffc4900da5504f7824c0ef19d1b65ce6bb263dc4c103a21c44a70d5e5161274f11244cbdf1475176b97d40ea6ff692431841a0b9ff",
+        secret,
         {
-          expiresIn: "1h",
+          expiresIn: "15m",
         }
       );
-      const newRefreshToken = jwt.sign(
-        { id: decoded.id },
-        "b18e762f3a079f9bcdacf0ccce05770b14ceed959e01f246b1bc9e70debaa6d05537219bb00376aecf84510a8d17f18f0194e4829189a226f88b2595629697bb",
-        { expiresIn: "7d" }
-      );
+
 
       res.setHeader("authorization", newToken);
-      res.setHeader("x-refresh-token", newRefreshToken);
+
 
       const user = await User.findById(decoded.id);
       user!.token = newToken;
-      user!.refreshToken = newRefreshToken;
+
 
       await user?.save();
 
@@ -71,11 +67,63 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
 
       next();
     } catch (error) {
+
       console.error("Token verification error:", error);
       res.status(401).json({ message: "Unauthorized" });
       return;
     }
+    }
+
   }
 };
 
-export { adminAppAuth, verifyToken };
+const verifyTokenInternal = async (token: string, refreshToken: string): Promise<string | null> => {
+   try {
+   jwt.verify(
+      token,
+      secret
+    );
+    return jwt.decode(token)as string | null;
+
+  } catch (error) {
+    try {
+      jwt.verify(
+        refreshToken!,
+        refreshSecret
+      );
+      const decoded = jwt.decode(refreshToken!) as { id: string };
+      const newToken = jwt.sign(
+        { id: decoded.id },
+        secret,
+        {
+          expiresIn: "15m",
+        }
+      );
+
+
+
+      const user = await User.findById(decoded.id);
+      user!.token = newToken;
+
+
+      await user?.save();
+
+      if (!user) {
+        console.log('no user found in verifyToken middleware');
+
+        return null;
+      }
+      return jwt.decode(newToken) as string | null;
+
+
+    } catch (error) {
+      console.error("Token verification error:", error);
+
+      return null;
+    }
+  }
+
+}
+
+export { adminAppAuth, refreshSecret, secret, verifyToken, verifyTokenInternal };
+

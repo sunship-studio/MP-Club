@@ -1,5 +1,7 @@
+import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import User from "../../models/User";
+import { refreshSecret, secret } from "../../middleware/auth";
+import User, { IUser } from "../../models/User";
 export class AuthController {
   static async checkEmail(
     email: string
@@ -52,15 +54,15 @@ export class AuthController {
     }
     const token = jwt.sign(
       { id: user._id },
-      "a6a760517da71371b77e45ffc4900da5504f7824c0ef19d1b65ce6bb263dc4c103a21c44a70d5e5161274f11244cbdf1475176b97d40ea6ff692431841a0b9ff",
+    secret,
       {
         expiresIn: "1h",
       }
     );
     const refreshToken = jwt.sign(
       { id: user._id },
-      "b18e762f3a079f9bcdacf0ccce05770b14ceed959e01f246b1bc9e70debaa6d05537219bb00376aecf84510a8d17f18f0194e4829189a226f88b2595629697bb",
-      { expiresIn: "7d" }
+      refreshSecret,
+      { expiresIn: "30d" }
     );
 
     user.token = token;
@@ -82,15 +84,15 @@ export class AuthController {
       // create and save jwt tokens
       const token = jwt.sign(
         { id: user._id },
-        "a6a760517da71371b77e45ffc4900da5504f7824c0ef19d1b65ce6bb263dc4c103a21c44a70d5e5161274f11244cbdf1475176b97d40ea6ff692431841a0b9ff",
+        secret,
         {
           expiresIn: "10s",
         }
       );
       const refreshToken = jwt.sign(
         { id: user._id },
-        "b18e762f3a079f9bcdacf0ccce05770b14ceed959e01f246b1bc9e70debaa6d05537219bb00376aecf84510a8d17f18f0194e4829189a226f88b2595629697bb",
-        { expiresIn: "7d" }
+        refreshSecret,
+        { expiresIn: "30d" }
       );
       user.token = token;
       user.refreshToken = refreshToken;
@@ -103,12 +105,20 @@ export class AuthController {
     return null;
   }
 
-  static async getUser(token: string) {
+  static async getUser(req: Request, res: Response){
+    const token = req.headers["authorization"] as string;
+    const refreshToken = req.headers["x-refresh-token"] as string;
 
+      let user = await User.findOne({token:token})
+      if (!user ) {
+        user = await User.findOne({refreshToken:refreshToken});
+      }
 
-    const user = await User.findOne({ token: token });
-    console.log("User found in getUser:", user);
-    return user;
+      if (!user) {
+        res.status(401).json({ message: "Unauthorized" });
+      }
+      res.json(user);
+
   }
 }
 

@@ -1,16 +1,12 @@
 import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mpc_admin_app/app/bloc/training%20plan/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/users/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/users/state.dart';
 import 'package:mpc_admin_app/app/models/User.dart';
-import 'package:mpc_admin_app/app/models/WaitingListEntry.dart';
-import 'package:mpc_admin_app/core/injection/get_it.dart';
 import 'package:mpc_admin_app/core/widgets/PlanEditor.dart';
 import 'package:mpc_admin_app/core/widgets/UserBox.dart';
-import 'package:mpc_admin_app/core/widgets/exerciseBox.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class OnlineCoaching extends StatelessWidget {
@@ -154,7 +150,7 @@ class CaloriesSet extends StatefulWidget {
 
 class _CaloriesSetState extends State<CaloriesSet> {
   bool isEditing = false;
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
   Color? color;
 
   @override
@@ -163,7 +159,7 @@ class _CaloriesSetState extends State<CaloriesSet> {
       child: Row(
         children: [
           isEditing
-              ? Container(
+              ? SizedBox(
                 width: 70,
                 child: TextField(
                   controller: _controller,
@@ -229,6 +225,130 @@ class _CaloriesSetState extends State<CaloriesSet> {
                 context.read<UsersCubit>().saveCalorieGoal(
                   widget.user.id,
                   newCalories!,
+                );
+              }
+            },
+            onTapDown: (details) {
+              setState(() {
+                color = Theme.of(context).primaryColor.withOpacity(0.8);
+              });
+            },
+            onTapUp: (details) {
+              setState(() {
+                color = null;
+              });
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: color ?? Theme.of(context).primaryColor,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(4),
+                child:
+                    isEditing
+                        ? Icon(Coolicons.check, size: 20, color: Colors.white)
+                        : Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: Icon(
+                            Coolicons.edit,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class WeightGoalSet extends StatefulWidget {
+  const WeightGoalSet({super.key, required this.user});
+  final User user;
+  @override
+  State<WeightGoalSet> createState() => _WeightGoalSetState();
+}
+
+class _WeightGoalSetState extends State<WeightGoalSet> {
+  bool isEditing = false;
+  final TextEditingController _controller = TextEditingController();
+  Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Row(
+        children: [
+          isEditing
+              ? SizedBox(
+                width: 70,
+                child: TextField(
+                  controller: _controller,
+                  keyboardType: TextInputType.number,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontFamily: 'SF-Pro',
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
+
+                  decoration: InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 0,
+                      horizontal: 0,
+                    ),
+
+                    hintStyle: TextStyle(
+                      fontSize: 16,
+                      fontFamily: 'SF-Pro',
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    border: InputBorder.none,
+                    hintText:
+                        widget.user.targetWeight == null
+                            ? "Enter weight goal"
+                            : widget.user.targetWeight.toString(),
+                  ),
+                ),
+              )
+              : Text(
+                widget.user.targetWeight == null
+                    ? "Not set"
+                    : widget.user.targetWeight.toString(),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontFamily: 'SF-Pro',
+                  color:
+                      widget.user.targetWeight == null
+                          ? Colors.red[800]
+                          : Colors.black,
+                  fontWeight:
+                      widget.user.targetWeight == null
+                          ? FontWeight.w700
+                          : FontWeight.w600,
+                ),
+              ),
+          !isEditing ? const SizedBox(width: 10) : Container(width: 2),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                isEditing = !isEditing;
+              });
+
+              if (!isEditing) {
+                int? newCalories;
+                if (_controller.text.isNotEmpty) {
+                  newCalories = int.tryParse(_controller.text);
+                } else {
+                  newCalories = null;
+                }
+                context.read<UsersCubit>().saveWeightGoal(
+                  widget.user.id,
+                  double.tryParse(_controller.text) ?? 0,
                 );
               }
             },

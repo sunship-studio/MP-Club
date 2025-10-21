@@ -7,6 +7,7 @@ export interface IUser extends Document {
   subscriptionId: string;
   status: string;
   type: string;
+  profilePictureUrl?: string;
   caloriesPerDay?: number;
   targetWeight?: number;
   doneWorkouts: [
@@ -89,6 +90,7 @@ export interface IUser extends Document {
 }
 
 const UserSchema = new Schema<IUser>({
+  profilePictureUrl: { type: String },
   customerId: { type: String, required: true },
   subscriptionId: { type: String, required: true },
   status: { type: String, required: true },

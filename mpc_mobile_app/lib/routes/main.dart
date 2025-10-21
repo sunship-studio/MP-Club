@@ -8,11 +8,13 @@ import 'package:mpc_mobile_app/core/di/injection.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/cubits/calories.dart';
 import 'package:mpc_mobile_app/cubits/check_in.dart';
+import 'package:mpc_mobile_app/cubits/profile.dart';
 import 'package:mpc_mobile_app/cubits/workout.dart';
 import 'package:mpc_mobile_app/data/models/TrainingDay.dart';
 import 'package:mpc_mobile_app/data/models/user.dart';
 import 'package:mpc_mobile_app/data/repositories/calories.dart';
 import 'package:mpc_mobile_app/data/repositories/check_in.dart';
+import 'package:mpc_mobile_app/data/repositories/profile.dart';
 import 'package:mpc_mobile_app/data/repositories/workout.dart';
 import 'package:mpc_mobile_app/presentation/screens/active_workout.dart';
 import 'package:mpc_mobile_app/presentation/screens/calorties.dart';
@@ -47,7 +49,14 @@ class MainRouter {
                 routes: [
                   GoRoute(
                     path: '/profile',
-                    builder: (context, state) => ProfileScreen(),
+                    builder:
+                        (context, state) => BlocProvider(
+                          create:
+                              (context) => ProfileCubit(
+                                profileRepository: getIt<ProfileRepository>(),
+                              ),
+                          child: ProfileScreen(),
+                        ),
                   ),
                   GoRoute(
                     path: '/chat',

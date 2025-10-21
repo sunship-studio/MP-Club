@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
-import transporter from "../../config/mailer";
+
 import stripe from "../../config/stripe";
 import PaymentSession from "../../models/PaymentSession";
 import OnlineSubscriber from "../../models/User";
@@ -94,7 +94,7 @@ export default class OnlineCoachingController {
         html: htmlToSend,
       };
 
-      await transporter.sendMail(mailOptions);
+
       res.status(200);
 
       console.log("Cancellation email sent to:", email);
