@@ -84,10 +84,12 @@ const OnlineCoachingInformation = () => {
         );
         const stripe = await stripePromise;
         const { sessionId } = response;
-        setState({ status: "initial" });
-        const result = await stripe?.redirectToCheckout({
+        console.log("Session ID:", sessionId);
+          const result = await stripe?.redirectToCheckout({
           sessionId: sessionId,
         });
+        setState({ status: "initial" });
+
 
 
 
