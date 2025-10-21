@@ -1,23 +1,23 @@
+import sgMail from "@sendgrid/mail";
 import bodyParser from "body-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import express, { Express } from "express";
+import http from "http";
+import path from "path";
 import connectToDatabase from "./config/database";
 import adminAppRouter from "./routes/admin_app";
 import authRouter from "./routes/mobile_app/auth";
-import SocketService from "./services/socket";
-import { handleWebhook } from "./webhook";
-
-import sgMail from "@sendgrid/mail";
-import http from "http";
-import path from "path";
 import caloriesRouter from "./routes/mobile_app/calories";
 import chatRouter from "./routes/mobile_app/chat";
 import checkInRouter from "./routes/mobile_app/check_in";
 import profileRouter from "./routes/mobile_app/profile";
 import workoutRouter from "./routes/mobile_app/workout";
 import onlineCoachingRouter from "./routes/online_coaching";
+import plansRouter from "./routes/plans";
 import waitingListRouter from "./routes/waiting_list";
+import SocketService from "./services/socket";
+import { handleWebhook } from "./webhook";
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
 // Load environment variables
@@ -69,7 +69,7 @@ app.post(
 );
 
 import fs from "fs";
-import plansRouter from "./routes/plans";
+
 const readHTMLFile = (filePath: string) => {
   return fs.readFileSync(filePath, "utf8");
 };
