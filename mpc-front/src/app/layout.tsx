@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${goodTimes.className} h-full bg-white` } >
     <head>
-         <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://checkout.stripe.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.stripe.com; frame-src https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com; connect-src 'self' https://mp-club-production.up.railway.app https://api.stripe.com https://checkout.stripe.com https://m.stripe.com; img-src 'self' data: https: https://*.stripe.com; font-src 'self' https://fonts.gstatic.com data:;"></meta>
+         <meta httpEquiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://checkout.stripe.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://checkout.stripe.com; frame-src https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com; connect-src 'self' https://mp-club-production.up.railway.app http://localhost:3500 https://api.stripe.com https://checkout.stripe.com https://m.stripe.com; img-src 'self' data: https: https://*.stripe.com; font-src 'self' https://fonts.gstatic.com data:;"></meta>
     </head>
       <body className="font-inter antialiased flex flex-col min-h-screen">
         <MobileHeader />

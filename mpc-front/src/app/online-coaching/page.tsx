@@ -5,7 +5,7 @@ import WhatsIncluded from "@/components/online-coaching/WhatsIncluded";
 const OnlineCoaching = () => {
   return (
     <div className="flex flex-col items-center justify-start px-5 md:w-full">
-      <h1 className="text-3xl font-bold mt-6">Online Coaching</h1>
+      <h1 className="text-3xl font-bold mt-6">Online Coaching 📲</h1>
       <span className="md:hidden text-lg font-medium text-center mb-3">
         Unlock personalized coaching, exclusive content, custom meal programs
         and more. <br />

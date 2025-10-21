@@ -15,11 +15,12 @@ const WhatsIncludedItem = ({ icon, text }: { icon: string; text: string }) => {
 
 const WhatsIncluded = () => {
   const items = [
-    { icon: "1", text: "Weekly Check-Ins" },
+      { icon: "5", text: "Personal Mobile App" },
+    { icon: "1", text: "Check-Ins" },
     { icon: "2", text: "Progress Tracking" },
-    { icon: "3", text: "Video Feedback" },
-    { icon: "4", text: "Custom workouts" },
-    { icon: "5", text: "Nutrition plans" },
+    { icon: "3", text: "Video Tutorials (soon)" },
+    { icon: "4", text: "Custom training plan" },
+
   ];
   return (
     <div className="flex flex-col items-start justify-start w-full ">
@@ -39,7 +40,7 @@ const WhatsIncluded = () => {
             <div className="flex flex-col w-full space-y-3">
                 {items.slice(3).map((item, index) => (
                     <WhatsIncludedItem key={index} icon={item.icon} text={item.text} />
-                ))} 
+                ))}
             </div>
       </div>
     </div>

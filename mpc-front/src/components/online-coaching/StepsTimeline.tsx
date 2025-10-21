@@ -8,16 +8,11 @@ const StepsTimeline = () => {
     },
     {
       image: "/assets/online-coaching/steps/2.png",
-      title: "Receive workouts",
+      title: "Receive mobile app access",
       description:
-        "Get a tailored Excel sheet with detailed sets, reps, and instructions for every exercise.",
+        "Get a tailored mobile app where you can train, contact your coach, and track progress.",
     },
-    {
-      image: "/assets/online-coaching/steps/3.png",
-      title: "Nutrition",
-      description:
-        "Follow a custom meal plan designed to meet your goals and keep you fueled.",
-    },
+
     {
       image: "/assets/online-coaching/steps/4.png",
       title: "Get Feedback & Adjustments",
