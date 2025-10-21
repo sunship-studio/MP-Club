@@ -68,36 +68,34 @@ const OnlineCoachingInformation = () => {
       return false;
     }
   };
+async function handleSubmit() {
+  console.log("Form data", formData);
+  const isValid = validateForm();
 
-  async function handleSubmit() {
+  if (isValid) {
+    console.log("Form Working");
+    setState({ status: "loading" });
     console.log("Form data", formData);
-    const isValid = validateForm();
 
-    if (isValid) {
-        console.log("Form Working");
-      setState({ status: "loading" });
-      console.log("Form data", formData);
-      try {
-        const response = await apiService.post<{ sessionId: string }>(
-          "/online-coaching/create-checkout-session",
-          formData
-        );
-        const stripe = await stripePromise;
-        const { sessionId } = response;
-        console.log("Session ID:", sessionId);
-          const result = await stripe?.redirectToCheckout({
-          sessionId: sessionId,
-        });
-        setState({ status: "initial" });
+    try {
+      const response = await apiService.post<{ url: string }>(
+        "/online-coaching/create-checkout-session",
+        formData
+      );
 
-
-
-
-      } catch (error) {
-        setState({ status: "error", error: "Error submitting form" });
+      // Directly redirect to the Stripe Checkout URL
+      if (response.url) {
+        window.location.href = response.url;
+      } else {
+        throw new Error("No checkout URL returned");
       }
+
+    } catch (error) {
+      console.error("Checkout error:", error);
+      setState({ status: "error", error: "Error submitting form" });
     }
   }
+}
   switch (state.status) {
     case "initial":
       return (
