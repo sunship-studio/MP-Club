@@ -1,7 +1,7 @@
 "use client";
 import apiService from "@/services/api.service";
-import React, { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
+import React, { useState } from "react";
 const stripePromise = loadStripe(
  process.env.NODE_ENV == "production" ?  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string : process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY as string
 );
@@ -101,6 +101,8 @@ const WorkoutSplitPlans: React.FC = () => {
       ],
     },
   ];
+
+  let [isLoading, setIsLoading] = useState(false);
 
   const [selectedPlan, setSelectedPlan] = useState<(typeof plans)[0] | null>(
     null
@@ -203,28 +205,43 @@ const WorkoutSplitPlans: React.FC = () => {
               </ul>
               <div className="flex space-x-4">
                 <button
-                  onClick={() => setSelectedPlan(null)}
+                  onClick={() => {
+                    setSelectedPlan(null);
+                    setIsLoading(false);
+                  }}
                   className="w-1/2 py-3 bg-gray-100 border-1 font-semibold text-gray-800 rounded-lg hover:bg-gray-400 transition cursor-pointer"
                 >
                   Close
                 </button>
+                {isLoading && (
+                  <div className="w-1/2 py-3 bg-gray-100 border-1 font-semibold text-gray-800 rounded-lg hover:bg-gray-400 transition cursor-pointer text-center flex items-center justify-center">
+                    Loading...
+                  </div>
+                )}
+                {!isLoading && (
                 <button
                   className="w-1/2 py-3 bg-[#077fb6]  font-semibold text-white rounded-lg hover:bg-[#077fb6b3] transition cursor-pointer"
                   onClick={async () => {
+                    setIsLoading(true);
                     const response = await apiService.post<{
-                      sessionId: string;
+                      url: string;
                     }>("/plans/create-checkout-session", {
                       priceId: selectedPlan.priceId,
                     });
-                    const sessionId = response.sessionId;
-                    const stripe = await stripePromise;
-                    const result = await stripe?.redirectToCheckout({
-                      sessionId: sessionId,
-                    });
+                    await stripePromise;
+                          if (response.url) {
+        window.location.href = response.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+
+
+
                   }}
+
                 >
                   Purchase Plan
-                </button>
+                </button>)}
               </div>
             </div>
           </div>

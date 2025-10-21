@@ -4,8 +4,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express, { Express } from "express";
 import http from "http";
-import path from "path";
 import connectToDatabase from "./config/database";
+import { handleWebhook } from "./online_coaching_webhook";
 import adminAppRouter from "./routes/admin_app";
 import authRouter from "./routes/mobile_app/auth";
 import caloriesRouter from "./routes/mobile_app/calories";
@@ -17,7 +17,7 @@ import onlineCoachingRouter from "./routes/online_coaching";
 import plansRouter from "./routes/plans";
 import waitingListRouter from "./routes/waiting_list";
 import SocketService from "./services/socket";
-import { handleWebhook } from "./webhook";
+
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
 // Load environment variables
@@ -69,29 +69,24 @@ app.post(
 );
 
 import fs from "fs";
+import { handlePlanWebhook } from "./plan_webhook";
 
 const readHTMLFile = (filePath: string) => {
   return fs.readFileSync(filePath, "utf8");
 };
 
+app.post(
+  "/plan_webhook",
+  bodyParser.raw({ type: "application/json" }),
+
+  async (req, res) => {
+    handlePlanWebhook(req, res);
+  }
+);
+
 
 app.post("/", async (req, res) => {
- const template_path = path.join(
-    __dirname,
-    "../templates",
-    "online_coaching_confirmation.html"
-  );
-  const templateSource = readHTMLFile(template_path);
 
-
-  const msg = {
-    from: "shanemahon@midlandsperformanceclub.ie",
-    to: "kamryydev@gmail.com",
-    subject: "Subscription Confirmation",
-    html: templateSource,
-  };
-
-  await sgMail.send(msg);
    console.log('✅ Email sent successfully');
 
    res.json({ message: "Template test email sent" });

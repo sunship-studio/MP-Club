@@ -20,6 +20,11 @@ const WhatsIncludedSection = () => {
 
     ]
     const online_features = [
+         {
+            image: "/assets/home/main_6.png",
+            title: "Personalized mobile app",
+            description: "Get a tailored mobile app where you can train based on your custom plan, contact your coach, and track progress."
+        },
         {
             image: "/assets/home/main_4.png",
             title: "Custom workouts you can do anywhere",
@@ -30,11 +35,7 @@ const WhatsIncludedSection = () => {
             title: "Weekly Check-Ins & Progress Tracking",
             description: "Stay accountable with regular updates, program adjustments, and expert guidance."
         },
-        {
-            image: "/assets/home/main_6.png",
-            title: "Video Feedback on Form & Technique",
-            description: "Submit your lifts for analysis to ensure proper execution and long-term improvement."
-        },]
+       ]
 
     return (<>
         <h1 className="text-3xl md:text-3xl font-semibold mb-8">What's included</h1>

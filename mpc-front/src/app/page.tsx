@@ -1,9 +1,5 @@
-import { DesktopFooter, MobileFooter } from "@/components/Footer";
-import { DesktopHeader, MobileHeader } from "@/components/Header";
-import FeaturedCard from "@/components/home/FeatureCard";
 import MembershipCard from "@/components/home/MembershipCard";
 import WhatsIncludedSection from "@/components/home/WhatsIncludedSection";
-import Image from "next/image";
 
 export default function Home() {
   return (
@@ -27,9 +23,10 @@ export default function Home() {
             option={1}
             title="Online Coaching"
             points={[
+              "Personalized coaching via mobile app. 📲",
+              "Personalized training plan.",
               "Train anytime, anywhere.",
-              "Customized workout & diet plans.",
-              "Weekly check-ins & progress tracking.",
+              "Check-ins & progress tracking.",
             ]}
           />
         </div>

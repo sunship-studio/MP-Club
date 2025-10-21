@@ -32,16 +32,11 @@ export default class PlansController {
       // Store the session ID in your database or perform any other necessary actions
 
       res.status(200).json({
-        sessionId: session.id,
+        url: session.url,
       });
     } catch (error) {
       console.error("Error creating subscription:", error);
       res.status(500).json({ error: "Failed to create subscription" });
     }
-  }
-
-  async handleWebhook(req: any, res: any) {
-    // Logic to handle webhook events from Stripe
-    res.status(200).send("Webhook received");
   }
 }
