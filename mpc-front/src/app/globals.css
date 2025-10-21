@@ -41,3 +41,97 @@ body {
     @apply w-6 h-6 rounded-full bg-[#118CC3] cursor-pointer border-0;
   }
 }
+
+
+/* Force dark mode globally */
+:root {
+  color-scheme: dark only;
+
+  /* Your dark color variables */
+  --background: #0a0d14;
+  --text: #ffffff;
+  --primary: #118CC3;
+  --secondary: #ffffff;
+  --border: #27272a;
+  --muted: #71717a;
+}
+
+html {
+  color-scheme: dark only;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter)  var(--font-goodtimes);
+}
+
+/* Force dark mode even if user prefers light */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: dark only;
+  }
+
+  html,
+  body {
+    background-color: var(--background);
+    color: var(--text);
+  }
+
+  * {
+    color-scheme: dark only;
+  }
+}
+
+input {
+  background-color: var(--text);
+}
+
+
+
+
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+  background-color: var(--primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Ensure all your custom components use these colors */
+#root {
+  min-height: 100vh;
+  background-color: var(--background);
+  color: var(--text);
+}
+
+/* iOS Safari specific - prevent auto light mode */
+@supports (-webkit-touch-callout: none) {
+  html {
+    color-scheme: dark only;
+  }
+}
+
+/* Scrollbar styling for dark mode */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--secondary);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}

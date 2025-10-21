@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${goodTimes.className} h-full bg-white`} style={{ colorScheme: 'dark only' }}>
+    <html lang="en" className={`${inter.variable} ${goodTimes.className} h-full bg-white` } >
       <body className="font-inter antialiased flex flex-col min-h-screen">
         <MobileHeader />
         <DesktopHeader />
