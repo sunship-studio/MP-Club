@@ -3,7 +3,7 @@ import apiService from "@/services/api.service";
 import React, { useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
+ process.env.NODE_ENV == "production" ?  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string : process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY as string
 );
 const WorkoutSplitPlans: React.FC = () => {
   const plans = [
@@ -125,7 +125,7 @@ const WorkoutSplitPlans: React.FC = () => {
             {/* Colored overlay layer */}
             <div
               className={`
-              absolute inset-0 z-10 
+              absolute inset-0 z-10
               ${plan.overlayOpacity}
             `}
             ></div>

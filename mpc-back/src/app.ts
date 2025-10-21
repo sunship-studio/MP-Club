@@ -47,6 +47,7 @@ app.use('/web', bodyParser.json());
 
 app.use('/web/online-coaching', onlineCoachingRouter);
 app.use('/web/waiting-list', waitingListRouter);
+app.use('/web/plans', plansRouter);
 
 
 app.use("/mobile-app/auth", authRouter);
@@ -68,6 +69,7 @@ app.post(
 );
 
 import fs from "fs";
+import plansRouter from "./routes/plans";
 const readHTMLFile = (filePath: string) => {
   return fs.readFileSync(filePath, "utf8");
 };
