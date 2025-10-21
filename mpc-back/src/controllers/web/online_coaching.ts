@@ -21,7 +21,7 @@ export default class OnlineCoachingController {
         mode: "subscription",
         line_items: [
           {
-            price: process.env.STRIPE_PRICE_ID,
+            price: process.env.NODE_ENV == "production" ? process.env.STRIPE_PRICE_ID : process.env.STRIPE_TEST_PRICE_ID,
             quantity: 1,
           },
         ],
