@@ -51,7 +51,7 @@ export default class OnlineCoachingController {
         });
 
       res.status(200).json({
-        sessionId: session.id,
+        url: session.url,
       });
     } catch (error) {
       console.error("Error creating subscription:", error);
