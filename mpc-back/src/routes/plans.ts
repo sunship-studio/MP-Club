@@ -8,7 +8,7 @@ import bodyParser from "body-parser";
 import console from "console";
 import fs from "fs";
 import path from "path";
-import { sendTrainingPlanEmail } from "../plan_webhook";
+import { sendTrainingPlanEmail } from "../webhook/plan_webhook";
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 // Plans Router
 const plansRouter = express.Router();

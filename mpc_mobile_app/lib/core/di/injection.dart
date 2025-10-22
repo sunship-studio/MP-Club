@@ -9,6 +9,7 @@ import 'package:mpc_mobile_app/data/repositories/calories.dart';
 import 'package:mpc_mobile_app/data/repositories/check_in.dart';
 import 'package:mpc_mobile_app/data/repositories/profile.dart';
 import 'package:mpc_mobile_app/data/repositories/workout.dart';
+import 'package:mpc_mobile_app/main.dart';
 import 'package:mpc_mobile_app/routes/auth.dart';
 import 'package:mpc_mobile_app/routes/main.dart';
 import 'package:mpc_mobile_app/services/socket.dart';
@@ -32,7 +33,10 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<Dio>(() {
     final dio = Dio(
       BaseOptions(
-        baseUrl: 'http://localhost:3500/mobile-app',
+        baseUrl:
+            debugMode
+                ? 'http://172.20.10.12:3500/mobile-app'
+                : 'https://mp-club-production.up.railway.app/mobile-app',
         connectTimeout: Duration(seconds: 10),
         receiveTimeout: Duration(seconds: 10),
         headers: {

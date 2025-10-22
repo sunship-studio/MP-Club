@@ -6,6 +6,7 @@ import 'package:mpc_mobile_app/core/di/injection.dart';
 import 'package:mpc_mobile_app/core/storage/token.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/cubits/auth.dart';
+import 'package:mpc_mobile_app/main.dart';
 import 'package:mpc_mobile_app/presentation/widgets/profile_avatar.dart';
 import 'package:mpc_mobile_app/routes/main.dart';
 import 'package:mpc_mobile_app/services/socket.dart';
@@ -23,7 +24,9 @@ class _ChatTrainerCardState extends State<ChatTrainerCard> {
     final token = await getIt<TokenStorage>().getAccessToken() ?? '';
     final refreshToken = await getIt<TokenStorage>().getRefreshToken() ?? '';
     await _socketService.connect(
-      'http://192.168.2.101:3500',
+      debugMode
+          ? 'http://172.20.10.12:3500'
+          : 'wss://mp-club-production.up.railway.app',
       token,
       refreshToken,
     );
@@ -65,7 +68,7 @@ class _ChatTrainerCardState extends State<ChatTrainerCard> {
                   ),
                   Text(
                     snapshot.hasData && snapshot.data! > 0
-                        ? "You have ${snapshot.data} unread messages"
+                        ? "${snapshot.data} unread messages"
                         : "No unread messages",
                     style: TextStyle(
                       color:
@@ -73,7 +76,10 @@ class _ChatTrainerCardState extends State<ChatTrainerCard> {
                               ? AppColors.redColor.withValues(alpha: 0.8)
                               : AppColors.lightTextColor.withValues(alpha: 0.6),
                       fontSize: 12.sp,
-                      fontWeight: FontWeight.w400,
+                      fontWeight:
+                          snapshot.hasData && snapshot.data! > 0
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                       fontFamily: 'Inter',
                       letterSpacing: -0.3,
                     ),

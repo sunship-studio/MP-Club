@@ -3,9 +3,9 @@ import { Request, Response } from "express";
 import fs from "fs";
 import path from "path";
 import Stripe from "stripe";
-import PaymentSession from "./models/PaymentSession";
-import User from "./models/User";
-import { sendNotificationToAdmin } from "./services/notification";
+import PaymentSession from "../models/PaymentSession";
+import User from "../models/User";
+import { sendNotificationToAdmin } from "../services/notification";
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {});
 

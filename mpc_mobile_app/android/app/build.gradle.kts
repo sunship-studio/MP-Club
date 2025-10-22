@@ -7,8 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.mpc_mobile_app"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 35  // or your current version
+    ndkVersion = "27.0.12077973"  // Add or update this line
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

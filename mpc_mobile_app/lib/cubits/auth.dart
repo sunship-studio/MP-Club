@@ -39,9 +39,9 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> setPassword(String email, String newPassword) async {
+  Future<void> setPassword(String email, String password) async {
     emit(AuthLoading());
-    authRepository.setPassword(email, newPassword).then((result) async {
+    authRepository.setPassword(email, password).then((result) async {
       if (result.success) {
         emit(SetPasswordSuccess());
         loadUser();
@@ -80,6 +80,28 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthUnauthenticated());
     }
   }
+
+  Future<void> setNewPassword(String token, String password) async {
+    emit(AuthLoading());
+    final user = await authRepository.setNewPassword(token, password);
+    if (user != null) {
+      emit(SetNewPasswordSuccess());
+      emit(AuthAuthenticated(user: user));
+    } else {
+      emit(SetNewPasswordError('Error resetting password'));
+    }
+  }
+
+  Future<void> forgotPassword(String email) async {
+    emit(ForgotPasswordLoading());
+    final result = await authRepository.forgotPassword(email);
+    if (result.success) {
+      emit(ForgotPasswordSuccess());
+      emit(AuthUnauthenticated());
+    } else {
+      emit(ForgotPasswordError(result.message ?? 'Error sending reset link'));
+    }
+  }
 }
 
 class AuthState {
@@ -109,6 +131,10 @@ class SetNewPasswordError extends AuthState {
 // Forgot password
 class ForgotPasswordSuccess extends AuthState {
   const ForgotPasswordSuccess();
+}
+
+class ForgotPasswordLoading extends AuthState {
+  const ForgotPasswordLoading();
 }
 
 class ForgotPasswordError extends AuthState {

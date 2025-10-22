@@ -34,6 +34,15 @@ class AuthRepository {
     return AuthResult(success: response.statusCode == 200, data: response.data);
   }
 
+  Future<AuthResult> forgotPassword(String email) async {
+    final response = await dio.post('/auth/forgot-password', {'email': email});
+    return AuthResult(
+      success: response.statusCode == 200,
+      message: response.data['message'],
+      data: response.data,
+    );
+  }
+
   Future<AuthResult> setPassword(String email, String newPassword) async {
     final response = await dio.post('/auth/set-password', {
       'email': email,
@@ -44,6 +53,14 @@ class AuthRepository {
       message: response.data['message'],
       data: response.data,
     );
+  }
+
+  Future<User?> setNewPassword(String token, String password) async {
+    final response = await dio.post('/auth/new-password', {
+      'token': token,
+      'password': password,
+    });
+    return response.statusCode == 200 ? User.fromJson(response.data) : null;
   }
 
   Future<User> getUser() async {

@@ -375,7 +375,7 @@ export class SocketService {
         // Notify sender
         const senderRoom = fromShane ? `user:${clientId}` : "shane";
         this.io.to(senderRoom).emit("messages:read-receipt", {
-          clientId: targetClientId,
+          clientId: targetClientId.id,
           readAt: new Date(),
           byShane: fromShane,
           messageIds: messageIds || [],
@@ -383,6 +383,7 @@ export class SocketService {
 
         // Update unread counts
         await this.updateUnreadCounts(targetClientId);
+        await this.updateUnreadCounts(clientId);
 
         callback?.({ success: true });
       } catch (error: any) {

@@ -92,6 +92,7 @@ class SocketService {
     String token,
     String refreshToken,
   ) async {
+    print("Is Connected: $isConnected");
     if (isConnected) {
       debugPrint('Socket already connected');
       return;
@@ -120,6 +121,7 @@ class SocketService {
     _socket?.onConnect((_) {
       debugPrint('✅ Socket connected');
       _connectionSubject.add(ConnectionStatus.connected);
+      _socket!.connected = true;
       _reconnectAttempts = 0;
       _reconnectTimer?.cancel();
       _processMessageQueue();
@@ -286,7 +288,6 @@ class SocketService {
         if (response['success'] == true) {
           final messages =
               (response['messages'] as List).map((m) {
-                print("message: $m");
                 print("attachment: ${m['attachment']}");
                 return Message.fromJson(m);
               }).toList();

@@ -60,7 +60,12 @@ class MpcApp extends StatefulWidget {
 class _MpcAppState extends State<MpcApp> {
   void changeScreen(int index, {User? user}) {
     if (index == 2) {
-      SocketService().connect("http://192.168.2.101:3500", admin_key);
+      SocketService().connect(
+        debug
+            ? 'http://localhost:3500'
+            : "wss://mp-club-production.up.railway.app",
+        admin_key,
+      );
     }
     setState(() {
       currentIndex = index;

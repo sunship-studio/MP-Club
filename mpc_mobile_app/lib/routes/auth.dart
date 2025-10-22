@@ -23,11 +23,15 @@ class AuthRouter {
           ),
           GoRoute(
             path: 'forgot_password',
-            builder: (context, state) => ForgotPasswordScreen(),
+            builder:
+                (context, state) =>
+                    ForgotPasswordScreen(email: state.extra as String),
           ),
           GoRoute(
             path: 'new_password',
-            builder: (context, state) => NewPasswordScreen(),
+            builder:
+                (context, state) =>
+                    NewPasswordScreen(token: state.extra as String),
           ),
           GoRoute(
             path: 'welcome',

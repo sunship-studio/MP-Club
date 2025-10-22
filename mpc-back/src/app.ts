@@ -5,7 +5,6 @@ import dotenv from "dotenv";
 import express, { Express } from "express";
 import http from "http";
 import connectToDatabase from "./config/database";
-import { handleWebhook } from "./online_coaching_webhook";
 import adminAppRouter from "./routes/admin_app";
 import authRouter from "./routes/mobile_app/auth";
 import caloriesRouter from "./routes/mobile_app/calories";
@@ -17,6 +16,7 @@ import onlineCoachingRouter from "./routes/online_coaching";
 import plansRouter from "./routes/plans";
 import waitingListRouter from "./routes/waiting_list";
 import SocketService from "./services/socket";
+import { handleWebhook } from "./webhook/online_coaching_webhook";
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
@@ -69,7 +69,7 @@ app.post(
 );
 
 import fs from "fs";
-import { handlePlanWebhook } from "./plan_webhook";
+import { handlePlanWebhook } from "./webhook/plan_webhook";
 
 const readHTMLFile = (filePath: string) => {
   return fs.readFileSync(filePath, "utf8");

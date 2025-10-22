@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
-import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 
 class CircularButton extends StatefulWidget {
@@ -12,6 +11,7 @@ class CircularButton extends StatefulWidget {
     required this.dark,
     required this.onTap,
     this.color,
+    this.isLoading,
     this.textColor,
     this.borderColor,
   });
@@ -21,6 +21,7 @@ class CircularButton extends StatefulWidget {
   String label;
   Widget? icon;
   bool dark;
+  bool? isLoading;
   Future<void> Function() onTap;
   @override
   State<CircularButton> createState() => _CircularButtonState();
@@ -86,7 +87,7 @@ class _CircularButtonState extends State<CircularButton> {
             ],
           ),
           child:
-              _isLoading
+              _isLoading || (widget.isLoading ?? false)
                   ? Image.asset('assets/images/loading.gif', height: 18)
                   : Row(
                     mainAxisSize: MainAxisSize.min,

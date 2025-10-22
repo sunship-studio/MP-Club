@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
-import 'package:mpc_mobile_app/main.dart';
-import 'package:mpc_mobile_app/presentation/screens/login.dart';
+import 'package:mpc_mobile_app/cubits/auth.dart';
 import 'package:mpc_mobile_app/presentation/widgets/back_button.dart';
 import 'package:mpc_mobile_app/presentation/widgets/circular_button.dart';
 import 'package:mpc_mobile_app/presentation/widgets/onboarding/onboarding_input.dart';
 
 class NewPasswordScreen extends StatelessWidget {
-  const NewPasswordScreen({super.key});
-
+  NewPasswordScreen({super.key, required this.token});
+  TextEditingController passwordController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  String token;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,65 +23,80 @@ class NewPasswordScreen extends StatelessWidget {
           bottom: bottomPadding(context),
         ),
 
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            MpcBackButton(),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              MpcBackButton(onTap: () {}),
 
-            SizedBox(height: 10.h),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "NEW PASSWORD",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20.sp,
-                      letterSpacing: -0.6,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: 'Inter',
+              SizedBox(height: 10.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "NEW PASSWORD",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20.sp,
+                        letterSpacing: -0.6,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Inter',
+                      ),
                     ),
-                  ),
 
-                  SizedBox(height: 8),
-                  Text(
-                    "Enter your new password below to regain access to your account.",
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Inter',
+                    SizedBox(height: 8),
+                    Text(
+                      "Enter your new password below to regain access to your account.",
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Inter',
+                      ),
                     ),
-                  ),
-                  SizedBox(height: verticalPadding),
-                  OnboardingInput(
-                    label: "Password",
-                    hintText: "Input Password",
-                    password: true,
-                  ),
-                  SizedBox(height: verticalPadding),
-                  OnboardingInput(
-                    label: "Repeat New Password",
-                    hintText: "Input Password",
-                    password: true,
-                  ),
-                  SizedBox(height: verticalPadding),
-                  CircularButton(
-                    label: "Update Password",
-                    dark: false,
-                    onTap: () async {
-                    
-                    },
-                  ),
-                ],
+                    SizedBox(height: verticalPadding),
+                    OnboardingInput(
+                      label: "Password",
+                      hintText: "Input Password",
+                      password: true,
+                      controller: passwordController,
+                    ),
+                    SizedBox(height: verticalPadding),
+                    OnboardingInput(
+                      validator:
+                          (value) => Constants.repeatPasswordValidator(
+                            value,
+                            passwordController.text,
+                          ),
+                      label: "Repeat New Password",
+                      hintText: "Input Password",
+                      password: true,
+                    ),
+                    SizedBox(height: verticalPadding),
+                    CircularButton(
+                      label: "Update Password",
+                      dark: false,
+                      isLoading:
+                          context.watch<AuthCubit>().state is AuthLoading,
+                      onTap: () async {
+                        if (_formKey.currentState!.validate()) {
+                          context.read<AuthCubit>().setNewPassword(
+                            token,
+                            passwordController.text,
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
-    ;
   }
 }

@@ -50,6 +50,7 @@ class ReadReceipt {
   });
 
   factory ReadReceipt.fromJson(Map<String, dynamic> json) {
+    print('ReadReceipt fromJson: $json');
     return ReadReceipt(
       clientId: json['clientId'],
       readAt: DateTime.parse(json['readAt']),

@@ -1,3 +1,4 @@
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -21,7 +22,95 @@ class _LoginScreenState extends State<LoginScreen> {
   final bool _showPassword = false;
   String? _email;
   final TextEditingController _emailController = TextEditingController();
+  final bool _deeomLinkHandled = false;
   final TextEditingController _passwordController = TextEditingController();
+  // Track processed links to avoid duplicates
+  final Set<String> _processedLinks = {};
+  final AppLinks _appLinks = AppLinks();
+  final bool _initialLinkProcessed = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _handleIncomingLinks();
+  }
+
+  void _handleIncomingLinks() {
+    _appLinks.uriLinkStream.listen((Uri? uri) {
+      if (uri != null) {
+        print('🔗 Incoming link: $uri');
+
+        // Skip if this is a duplicate (already processed as initial link)
+        final linkKey = uri.toString();
+        if (_processedLinks.contains(linkKey)) {
+          print('⏭️ Skipping duplicate link');
+          return;
+        }
+
+        _handleDeepLink(uri);
+      }
+    });
+  }
+
+  void _handleDeepLink(Uri uri) {
+    final linkKey = uri.toString();
+
+    // Check if already processed
+    if (_processedLinks.contains(linkKey)) {
+      print('⏭️ Link already processed: $linkKey');
+      return;
+    }
+
+    // Mark as processed
+    _processedLinks.add(linkKey);
+
+    // Clean up old processed links (keep last 10)
+    if (_processedLinks.length > 10) {
+      _processedLinks.remove(_processedLinks.first);
+    }
+
+    print('Processing deep link: $uri');
+
+    // Wait for navigator to be ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navigateToDeepLink(uri);
+    });
+  }
+
+  void _navigateToDeepLink(Uri uri) {
+    if (context.mounted == false) {
+      print('⚠️ Navigator not ready, retrying...');
+      Future.delayed(Duration(milliseconds: 500), () {
+        _navigateToDeepLink(uri);
+      });
+      return;
+    }
+
+    // Parse the deep link
+    if (uri.host == 'reset-password' || uri.path == '/reset-password') {
+      final token = uri.queryParameters['token'];
+
+      if (token != null && token.isNotEmpty) {
+        // Check if we're already on the reset password screen
+        final currentRoute = ModalRoute.of(context)?.settings.name;
+        if (currentRoute == '/login/new_password') {
+          print('⏭️ Already on reset password screen, skipping navigation');
+          return;
+        }
+        print(
+          '✅ Navigating to reset password with token: ${token.substring(0, 10)}...',
+        );
+
+        // Navigate
+        context.go('/login/new_password', extra: token);
+      } else {
+        print('❌ No token found in deep link');
+      }
+    } else {
+      print('❌ Unknown deep link path: ${uri.host}${uri.path}');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -160,33 +249,41 @@ class _LoginScreenState extends State<LoginScreen> {
                                   state is EmailCheckSuccess && state.exists ||
                                           state is AuthError ||
                                           state is AuthLoading
-                                      ? Container(
-                                        key: ValueKey('password'),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            OnboardingInput(
-                                              controller: _passwordController,
-                                              label: "Password",
-                                              hintText: "Input Password",
-                                            ),
-                                            SizedBox(height: 10),
-                                            Text(
-                                              "Forgot Password?",
-                                              style: TextStyle(
-                                                color: Colors.white.withValues(
-                                                  alpha: 1,
-                                                ),
-                                                decoration:
-                                                    TextDecoration.underline,
-                                                decorationColor: Colors.white,
-                                                fontSize: 14.sp,
-                                                fontWeight: FontWeight.w500,
-                                                letterSpacing: -0.6,
+                                      ? GestureDetector(
+                                        onTap: () {
+                                          // Navigate to forgot password screen
+                                          context.go(
+                                            '/login/forgot_password',
+                                            extra: _emailController.text,
+                                          );
+                                        },
+                                        child: Container(
+                                          key: ValueKey('password'),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.end,
+                                            children: [
+                                              OnboardingInput(
+                                                controller: _passwordController,
+                                                label: "Password",
+                                                hintText: "Input Password",
                                               ),
-                                            ),
-                                          ],
+                                              SizedBox(height: 10),
+                                              Text(
+                                                "Forgot Password?",
+                                                style: TextStyle(
+                                                  color: Colors.white
+                                                      .withValues(alpha: 1),
+                                                  decoration:
+                                                      TextDecoration.underline,
+                                                  decorationColor: Colors.white,
+                                                  fontSize: 14.sp,
+                                                  fontWeight: FontWeight.w500,
+                                                  letterSpacing: -0.6,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       )
                                       : SizedBox.shrink(key: ValueKey('empty')),

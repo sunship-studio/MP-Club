@@ -11,10 +11,11 @@ import 'package:mpc_mobile_app/data/repositories/auth.dart';
 import 'package:mpc_mobile_app/routes/auth.dart';
 import 'package:mpc_mobile_app/routes/main.dart';
 
+bool debugMode = true;
+
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await setupDependencies();
-
   runApp(MpcApp());
 }
 
@@ -56,7 +57,8 @@ class AuthStateHandler extends StatelessWidget {
           // User is not authenticated - Show auth flow
           AuthUnauthenticated() ||
           EmailCheckSuccess() ||
-          EmailCheckLoading() => _buildAuthApp(),
+          EmailCheckLoading() ||
+          ForgotPasswordLoading() => _buildAuthApp(),
 
           // Error checking auth - treat as unauthenticated
           AuthError() => _buildAuthApp(),
@@ -80,12 +82,6 @@ class AuthStateHandler extends StatelessWidget {
             children: [
               Image.asset('assets/images/logo.png', width: 180.w),
               SizedBox(height: 20.h),
-              // CircularProgressIndicator(
-              //   color: AppColors.blueColor,
-              //   strokeWidth: 6.h,
-              //   valueColor: AlwaysStoppedAnimation<Color>(AppColors.blueColor),
-              // ),
-              // SizedBox(height: 20.h),
               Text(
                 'Loading...',
                 style: TextStyle(

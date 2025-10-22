@@ -13,6 +13,7 @@ import 'package:mpc_mobile_app/core/storage/token.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/data/models/message.dart';
 import 'package:mpc_mobile_app/data/models/user.dart';
+import 'package:mpc_mobile_app/main.dart';
 import 'package:mpc_mobile_app/presentation/widgets/chat/divider.dart';
 import 'package:mpc_mobile_app/presentation/widgets/chat/header.dart';
 import 'package:mpc_mobile_app/presentation/widgets/chat/message.dart';
@@ -76,7 +77,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     final token = await getIt<TokenStorage>().getAccessToken() ?? '';
     final refreshToken = await getIt<TokenStorage>().getRefreshToken() ?? '';
     await _socketService.connect(
-      'http://192.168.2.101:3500',
+      debugMode
+          ? 'http://172.20.10.12:3500'
+          : 'wss://mp-club-production.up.railway.app',
       token,
       refreshToken,
     );
@@ -336,16 +339,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   ///
 
   Future<void> _markMessagesAsRead() async {
-    final hasUnread = _messages.any((m) {
-      bool isFromOtherPerson = widget.isAdmin ? !m.fromShane : m.fromShane;
-      return isFromOtherPerson && m.status.read == null;
-    });
-
-    if (hasUnread) {
-      await _socketService.markMessagesAsRead(
-        clientId: widget.isAdmin ? widget.user.id : null,
-      );
-    }
+    await _socketService.markMessagesAsRead(
+      clientId: widget.isAdmin ? widget.user.id : null,
+    );
   }
 
   ///

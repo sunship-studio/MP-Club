@@ -18,6 +18,7 @@ class OnboardingInput extends StatefulWidget {
     this.enabled = true,
     required this.label,
     required this.hintText,
+
     this.password = false,
     this.controller,
   });

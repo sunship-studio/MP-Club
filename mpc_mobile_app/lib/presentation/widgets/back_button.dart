@@ -5,15 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:mpc_mobile_app/core/constants.dart';
 
 class MpcBackButton extends StatefulWidget {
-  const MpcBackButton({super.key});
+  MpcBackButton({super.key, this.onTap});
+  Function()? onTap;
 
   @override
   State<MpcBackButton> createState() => _MpcBackButtonState();
 }
 
 class _MpcBackButtonState extends State<MpcBackButton> {
-  Function()? onTap;
-
   bool _isPressed = false;
 
   @override
@@ -25,7 +24,11 @@ class _MpcBackButtonState extends State<MpcBackButton> {
         setState(() => _isPressed = false);
         // Your action here
       },
-      onTap: () => context.pop(),
+      onTap:
+          () => {
+            context.pop(),
+            if (widget.onTap != null) {widget.onTap!()},
+          },
       onTapCancel: () => setState(() => _isPressed = false),
       child: Container(
         padding: EdgeInsets.all(horizontalPadding.w),

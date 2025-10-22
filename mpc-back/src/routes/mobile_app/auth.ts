@@ -32,6 +32,40 @@ authRouter.post("/set-password", async (req, res) => {
   });
 });
 
+authRouter.post("/new-password", async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) {
+    res.status(400).json({ message: "Token and password are required" });
+    return;
+  }
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  console.log("Token hash:", tokenHash);
+  const dbToken = await PasswordResetToken.findOne({
+    token: tokenHash,
+    used: false
+  });
+  if (!dbToken) {
+    res.status(400).json({ message: "Invalid or expired token" });
+    return;
+  }
+  const user = await User.findById(dbToken.userId);
+
+  if (!user) {
+    console.error("User not found for ID:", dbToken.userId);
+    res.status(404).json({ message: "User not found" });
+    return;
+  }
+
+
+  if (user) {
+  const result = await AuthController.setPassword(user.email, password);
+  res.setHeader("authorization", result?.token || "");
+  res.setHeader("x-refresh-token", result?.refreshToken || "");
+  res.json(user);
+  }
+
+});
+
 authRouter.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const tokens = await AuthController.login(email, password);
@@ -87,7 +121,7 @@ try {
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     const expiry = Date.now() + 3600000; // 1 hour
 
-    PasswordResetToken.create({
+    await PasswordResetToken.create({
       userId: user._id,
       token: hashedToken,
       expiry: expiry,
@@ -139,6 +173,12 @@ async function sendPasswordResetEmail(email: string, link: string): Promise<void
     from: 'forgot_password@midlandsperformanceclub.ie',
     subject: 'Password Reset Request',
     html: template,
+    tracking_settings: {
+        click_tracking: {
+          enable: false,
+          enable_text: false
+        }
+      },
   };
 
   await sgMail.send(msg);

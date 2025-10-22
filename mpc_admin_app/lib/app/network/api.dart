@@ -5,7 +5,7 @@ class ApiService {
   static String baseUrl =
       debug
           ? 'http://localhost:3500/admin-app'
-          : 'https://mpc-back-d6547de592cb.herokuapp.com/admin-app';
+          : 'https://mp-club-production.up.railway.app/admin-app';
 
   Dio dio = Dio();
 
