@@ -113,7 +113,7 @@ class _ButtonState extends State<Button> {
         state as AuthAuthenticated;
         return GestureDetector(
           onTap: () {
-            navBarKey.currentState?.toggleNavBar();
+            navBarKey.currentState?.turnOffNavBar();
             getIt<MainRouter>().router.push('/home/chat', extra: state.user);
           },
           onTapDown: (details) => setState(() => _isPressed = true),

@@ -209,7 +209,7 @@ class _CheckInButtonState extends State<CheckInButton> {
     return GestureDetector(
       onTap: () async {
         navBarKey.currentState?.switchPage(3);
-        navBarKey.currentState?.toggleNavBar();
+
         context.push('/check_in/submit');
         setState(() {});
       },

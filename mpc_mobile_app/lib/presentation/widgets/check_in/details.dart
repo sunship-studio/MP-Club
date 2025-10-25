@@ -182,9 +182,7 @@ class _CheckInDetailsState extends State<CheckInDetails> {
                                 borderRadius: BorderRadius.circular(10.r),
                                 image: DecorationImage(
                                   fit: BoxFit.cover,
-                                  image: AssetImage(
-                                    'assets/images/training_plan.png',
-                                  ),
+                                  image: NetworkImage(widget.checkIn.imageUrl!),
                                 ),
                               ),
                             ),

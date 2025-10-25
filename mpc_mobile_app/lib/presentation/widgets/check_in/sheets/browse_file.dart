@@ -1,11 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
-import 'package:mpc_mobile_app/routes/main.dart';
 import 'package:mpc_mobile_app/services/image.dart';
 
 ImageService imageService = ImageService();
@@ -14,19 +15,17 @@ Future<File?> showBrowseFileSheet(
   BuildContext context, {
   bool showNavBarAfter = false,
   String title = 'BROWSE FILE',
-}) {
-  File? selectedFile;
-  void setSelectedFile(File file) {
-    selectedFile = file;
-  }
+  Function? setFile,
+}) async {
+  final completer = Completer<File?>();
 
-  return showModalBottomSheet(
+  showModalBottomSheet<File?>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
 
     builder:
-        (context) => Wrap(
+        (sheetContext) => Wrap(
           children: [
             Container(
               width: double.infinity,
@@ -93,9 +92,18 @@ Future<File?> showBrowseFileSheet(
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TakePhotoButton(setSelectedFile: setSelectedFile),
+                      TakePhotoButton(
+                        setSelectedFile: (file) {
+                          completer.complete(file);
+                        },
+                      ),
                       SizedBox(height: 12.h),
-                      ChooseFromGalleryButton(setSelectedFile: setSelectedFile),
+                      ChooseFromGalleryButton(
+                        setSelectedFile: (value) {
+                          completer.complete(value);
+                          sheetContext.pop();
+                        },
+                      ),
                     ],
                   ),
                 ],
@@ -103,13 +111,10 @@ Future<File?> showBrowseFileSheet(
             ),
           ],
         ),
-  ).then((value) {
-    print("Selected file: $value");
-    if (showNavBarAfter) {
-      navBarKey.currentState?.toggleNavBar();
-    }
-    return selectedFile;
-  });
+  );
+
+  final result = await completer.future;
+  return result;
 }
 
 class TakePhotoButton extends StatefulWidget {
@@ -141,13 +146,13 @@ class _TakePhotoButtonState extends State<TakePhotoButton> {
           _isPressed = false;
         });
       },
-      onTap: () {
-        imageService.pickImageFromCamera().then((file) {
-          if (file != null) {
-            widget.setSelectedFile(file);
-            Navigator.pop(context, file);
-          }
-        });
+      onTap: () async {
+        final file = await imageService.pickImageFromCamera();
+        await Future.delayed(Duration(milliseconds: 500));
+        print("TAKE PHOTO FILE: $file");
+        if (file != null) {
+          widget.setSelectedFile(file);
+        }
       },
 
       child: AnimatedScale(
@@ -255,13 +260,11 @@ class _ChooseFromGalleryButtonState extends State<ChooseFromGalleryButton> {
           _isPressed = false;
         });
       },
-      onTap: () {
-        imageService.pickImageFromGallery().then((file) {
-          if (file != null) {
-            widget.setSelectedFile(file);
-            Navigator.pop(context, file);
-          }
-        });
+      onTap: () async {
+        final file = await imageService.pickImageFromGallery();
+        if (file != null) {
+          widget.setSelectedFile(file);
+        }
       },
 
       child: AnimatedScale(

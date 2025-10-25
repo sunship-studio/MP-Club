@@ -1,20 +1,21 @@
 import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/models/User.dart';
+import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/theme/app_colors.dart';
 import 'package:mpc_admin_app/core/widgets/profile_avatar.dart';
 
 class ChatScreenHeader extends StatelessWidget {
-  ChatScreenHeader({
+  const ChatScreenHeader({
     super.key,
     required this.buildConnectionIndicator,
     required this.isOnline,
     required this.lastSeenText,
-    required this.changeScreen,
     required this.user,
   });
-  Function changeScreen;
+
   final Widget Function() buildConnectionIndicator;
   final bool isOnline;
   final User user;
@@ -23,12 +24,12 @@ class ChatScreenHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white),
+      decoration: const BoxDecoration(color: Colors.white),
       child: Row(
         children: [
           GestureDetector(
             onTap: () {
-              changeScreen(2);
+              context.go(RouteNames.onlineCoaching);
             },
             behavior: HitTestBehavior.translucent,
             child: Container(

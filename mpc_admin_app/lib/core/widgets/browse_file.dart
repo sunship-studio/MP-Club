@@ -1,8 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mpc_admin_app/app/services/image.dart';
 import 'package:mpc_admin_app/core/theme/app_colors.dart';
 
@@ -11,19 +12,18 @@ ImageService imageService = ImageService();
 Future<File?> showBrowseFileSheet(
   BuildContext context, {
   bool showNavBarAfter = false,
-}) {
-  File? selectedFile;
-  void setSelectedFile(File file) {
-    selectedFile = file;
-  }
+  String title = 'BROWSE FILE',
+  Function? setFile,
+}) async {
+  final completer = Completer<File?>();
 
-  return showModalBottomSheet(
+  showModalBottomSheet<File?>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
 
     builder:
-        (context) => Wrap(
+        (sheetContext) => Wrap(
           children: [
             Container(
               width: double.infinity,
@@ -31,7 +31,7 @@ Future<File?> showBrowseFileSheet(
                 top: 8.h,
                 left: 25.w,
 
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24.h,
+                bottom: MediaQuery.of(context).padding.bottom + 16.h,
               ),
               decoration: BoxDecoration(
                 color: AppColors.lightScaffoldColor,
@@ -43,7 +43,7 @@ Future<File?> showBrowseFileSheet(
                   Row(
                     children: [
                       Text(
-                        'BROWSE FILE',
+                        title,
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontWeight: FontWeight.w600,
@@ -90,9 +90,18 @@ Future<File?> showBrowseFileSheet(
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TakePhotoButton(setSelectedFile: setSelectedFile),
+                      TakePhotoButton(
+                        setSelectedFile: (file) {
+                          completer.complete(file);
+                        },
+                      ),
                       SizedBox(height: 12.h),
-                      ChooseFromGalleryButton(setSelectedFile: setSelectedFile),
+                      ChooseFromGalleryButton(
+                        setSelectedFile: (value) {
+                          completer.complete(value);
+                          Navigator.of(context).pop();
+                        },
+                      ),
                     ],
                   ),
                 ],
@@ -100,11 +109,10 @@ Future<File?> showBrowseFileSheet(
             ),
           ],
         ),
-  ).then((value) {
-    print("Selected file: $value");
+  );
 
-    return selectedFile;
-  });
+  final result = await completer.future;
+  return result;
 }
 
 class TakePhotoButton extends StatefulWidget {
@@ -136,13 +144,13 @@ class _TakePhotoButtonState extends State<TakePhotoButton> {
           _isPressed = false;
         });
       },
-      onTap: () {
-        imageService.pickImageFromCamera().then((file) {
-          if (file != null) {
-            widget.setSelectedFile(file);
-            Navigator.pop(context, file);
-          }
-        });
+      onTap: () async {
+        final file = await imageService.pickImageFromCamera();
+        await Future.delayed(Duration(milliseconds: 500));
+        print("TAKE PHOTO FILE: $file");
+        if (file != null) {
+          widget.setSelectedFile(file);
+        }
       },
 
       child: AnimatedScale(
@@ -248,13 +256,11 @@ class _ChooseFromGalleryButtonState extends State<ChooseFromGalleryButton> {
           _isPressed = false;
         });
       },
-      onTap: () {
-        imageService.pickImageFromGallery().then((file) {
-          if (file != null) {
-            widget.setSelectedFile(file);
-            Navigator.pop(context, file);
-          }
-        });
+      onTap: () async {
+        final file = await imageService.pickImageFromGallery();
+        if (file != null) {
+          widget.setSelectedFile(file);
+        }
       },
 
       child: AnimatedScale(

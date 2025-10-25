@@ -2,7 +2,6 @@ import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mpc_admin_app/app/bloc/training%20plan/cubit.dart';
-import 'package:mpc_admin_app/app/models/Exercise.dart';
 import 'package:mpc_admin_app/app/models/UserExercise.dart';
 
 class ExerciseBox extends StatefulWidget {
@@ -52,7 +51,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
               highlightColor: Colors.transparent,
               focusColor: Colors.transparent,
               hoverColor: Colors.transparent,
-              onLongPress: expandWidget,
+              onTap: expandWidget,
               child: Container(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,7 +122,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Container(
+                                      SizedBox(
                                         width: 50,
 
                                         child: TextField(
@@ -158,7 +157,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                         width: 1,
                                         color: Colors.grey[400],
                                       ),
-                                      Container(
+                                      SizedBox(
                                         width: 50,
 
                                         child: TextField(
@@ -285,6 +284,11 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                               Container(
                                 width: 30,
                                 height: 30,
+
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).primaryColor,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                                 child: Center(
                                   child: Text(
                                     "${i + 1}",
@@ -295,11 +299,6 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                       fontSize: 16,
                                     ),
                                   ),
-                                ),
-
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).primaryColor,
-                                  borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
                               SizedBox(width: 12),
@@ -476,7 +475,7 @@ class _NumberInputState extends State<NumberInput> {
               ),
               SizedBox(width: 10),
               Text(
-                "${value}",
+                "$value",
                 style: TextStyle(
                   fontSize: 12,
                   fontFamily: 'SF-Pro',

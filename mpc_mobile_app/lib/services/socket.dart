@@ -288,7 +288,6 @@ class SocketService {
         if (response['success'] == true) {
           final messages =
               (response['messages'] as List).map((m) {
-                print("attachment: ${m['attachment']}");
                 return Message.fromJson(m);
               }).toList();
           completer.complete(messages);
@@ -321,6 +320,9 @@ class SocketService {
     String? clientId,
     List<String>? messageIds,
   }) async {
+    print(
+      'Marking messages as read: clientId=$clientId, messageIds=$messageIds',
+    );
     if (!isConnected) return;
     _socket?.emitWithAck('messages:mark-read', {
       if (clientId != null) 'clientId': clientId,

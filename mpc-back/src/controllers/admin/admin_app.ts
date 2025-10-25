@@ -1,25 +1,23 @@
-import { Request, Response } from "express";
-import Exercise from "../../models/Exercise";
-import User from "../../models/User";
-import { WaitingListEntry } from "../../models/WaitingListEntry";
+import { Request, Response } from 'express';
+import Exercise from '../../models/Exercise';
+import User from '../../models/User';
+import { WaitingListEntry } from '../../models/WaitingListEntry';
 export default class AdminAppController {
   public async getAllExercises(req: Request, res: Response): Promise<Response> {
     try {
       const exercises = await Exercise.find();
       return res.status(200).json(exercises);
     } catch (error) {
-      console.error("Error fetching exercises:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error('Error fetching exercises:', error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
   }
-
-
 
   public async getWaitingList(req: Request, res: Response): Promise<Response> {
     try {
       const waitingList = await WaitingListEntry.find();
       if (!waitingList || waitingList.length === 0) {
-        return res.status(404).json({ message: "No entries found" });
+        return res.status(404).json({ message: 'No entries found' });
       }
       // Sort the waiting list by createdAt in descending order
       waitingList.sort((a, b) => {
@@ -28,8 +26,8 @@ export default class AdminAppController {
 
       return res.status(200).json(waitingList);
     } catch (error) {
-      console.error("Error fetching waiting list:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error('Error fetching waiting list:', error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
   }
 
@@ -41,28 +39,27 @@ export default class AdminAppController {
       const { userId, trainingPlan } = req.body;
       const user = await User.findById(userId);
       if (!user) {
-
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ message: 'User not found' });
       }
-      console.log("Training Plan to be saved:", trainingPlan.days[0].exercises);
+      console.log('Training Plan to be saved:', trainingPlan.days[0].exercises);
       user.trainingPlan = trainingPlan;
       user.trainingPlan.lastUpdated = new Date();
       await user.save();
-      return res.status(200).json({ message: "Training plan saved" });
+      return res.status(200).json({ message: 'Training plan saved' });
     } catch (error) {
-      console.error("Error saving training plan:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error('Error saving training plan:', error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
   }
 
   public async getUsers(req: Request, res: Response): Promise<Response> {
     try {
       const subscriptions = await User.find();
-      console.log("Subscriptions:", subscriptions);
+      console.log('Subscriptions:', subscriptions);
       return res.status(200).json(subscriptions);
     } catch (error) {
-      console.error("Error fetching online subscriptions:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error('Error fetching online subscriptions:', error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
   }
 
@@ -71,11 +68,11 @@ export default class AdminAppController {
     res: Response
   ): Promise<Response> {
     try {
-      const users = await User.find({ type: "online_coaching" });
+      const users = await User.find({ type: 'online_coaching' });
       return res.status(200).json(users);
     } catch (error) {
-      console.error("Error fetching online coaching users:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error('Error fetching online coaching users:', error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
   }
 
@@ -87,14 +84,14 @@ export default class AdminAppController {
       const { id } = req.body;
       const entry = await WaitingListEntry.findById(id);
       if (!entry) {
-        return res.status(404).json({ message: "Entry not found" });
+        return res.status(404).json({ message: 'Entry not found' });
       }
-      entry.approvalStatus = "rejected";
+      entry.approvalStatus = 'rejected';
       await entry.save();
-      return res.status(200).json({ message: "Entry rejected" });
+      return res.status(200).json({ message: 'Entry rejected' });
     } catch (error) {
-      console.error("Error rejecting waiting list entry:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error('Error rejecting waiting list entry:', error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
   }
 
@@ -106,15 +103,15 @@ export default class AdminAppController {
       const { id } = req.body;
       const entry = await WaitingListEntry.findById(id);
       if (!entry) {
-        return res.status(404).json({ message: "Entry not found" });
+        return res.status(404).json({ message: 'Entry not found' });
       }
-      entry.approvalStatus = "approved";
+      entry.approvalStatus = 'approved';
       entry.approvedDate = new Date();
       await entry.save();
-      return res.status(200).json({ message: "Entry approved" });
+      return res.status(200).json({ message: 'Entry approved' });
     } catch (error) {
-      console.error("Error approving waiting list entry:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error('Error approving waiting list entry:', error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
   }
   public async saveUserCalories(
@@ -125,14 +122,14 @@ export default class AdminAppController {
       const { id, calories } = req.body;
       const user = await User.findById(id);
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json({ message: 'User not found' });
       }
       user.caloriesPerDay = calories;
       await user.save();
-      return res.status(200).json({ message: "Calories updated" });
+      return res.status(200).json({ message: 'Calories updated' });
     } catch (error) {
-      console.error("Error updating user calories:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error('Error updating user calories:', error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
   }
 
@@ -140,24 +137,45 @@ export default class AdminAppController {
     req: Request,
     res: Response
   ): Promise<Response> {
-
     try {
       const { id, targetWeight } = req.body;
       const user = await User.findById(id);
       if (!user) {
-        console.log("User not found with id:", id);
-        return res.status(404).json({ message: "User not found" });
+        console.log('User not found with id:', id);
+        return res.status(404).json({ message: 'User not found' });
       }
       user.targetWeight = targetWeight;
       await user.save();
-      return res.status(200).json({ message: "Target weight updated" });
+      return res.status(200).json({ message: 'Target weight updated' });
     } catch (error) {
-      console.error("Error updating user target weight:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error('Error updating user target weight:', error);
+      return res.status(500).json({ message: 'Internal server error' });
     }
-
   }
 
+  public async addSubscriber(req: Request, res: Response): Promise<Response> {
+    try {
+      const { email, firstName, lastName, age } = req.body;
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'User already exists' });
+      }
+      const newUser = await User.create({
+        email,
+        firstName,
+        lastName,
+        age,
+        type: 'online_coaching',
+        customerId: 'manual_subscriber',
+        subscriptionId: 'manual_subscriber',
+        status: 'active',
+        startDate: new Date(),
+      });
 
-
+      return res.status(200).json({ message: 'Subscriber added' });
+    } catch (error) {
+      console.error('Error adding subscriber:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
 }

@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/bloc/training%20plan/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/training%20plan/state.dart';
 import 'package:mpc_admin_app/app/models/TrainingPlan.dart';
 import 'package:mpc_admin_app/app/models/User.dart';
+import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/widgets/ExerciseBox.dart';
 import 'package:mpc_admin_app/core/widgets/SuggestedExercise.dart';
 
 TextEditingController _searchController = TextEditingController();
 
 class PlanEditor extends StatefulWidget {
-  PlanEditor({super.key, required this.user, required this.togglePlanEditor});
-  final Function togglePlanEditor;
-  User user;
+  const PlanEditor({super.key, required this.user});
+  final User user;
 
   @override
   State<PlanEditor> createState() => _PlanEditorState();
 }
 
 class _PlanEditorState extends State<PlanEditor> {
-  bool _nameOfPlanIsEmpty = true;
+  final bool _nameOfPlanIsEmpty = true;
 
   int selectedDay = 0;
   void selectDay(int index) {
@@ -38,20 +39,20 @@ class _PlanEditorState extends State<PlanEditor> {
               children: [
                 Text(
                   "Error: ${state.message}",
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontFamily: 'SF-Pro',
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () async {
                     context.read<TrainingPlanCubit>().savePlan(widget.user);
-                    widget.togglePlanEditor(widget.user);
+                    context.go(RouteNames.onlineCoaching);
                   },
-                  child: Text("Retry"),
+                  child: const Text("Retry"),
                 ),
               ],
             ),
@@ -172,13 +173,10 @@ class _PlanEditorState extends State<PlanEditor> {
                                       ),
                                   itemCount: 5,
                                   shrinkWrap: true,
-                                  physics: NeverScrollableScrollPhysics(),
+                                  physics: const NeverScrollableScrollPhysics(),
                                 ),
-                            SizedBox(height: 20),
-                            SaveButton(
-                              user: widget.user,
-                              togglePlanEditor: widget.togglePlanEditor,
-                            ),
+                            const SizedBox(height: 20),
+                            SaveButton(user: widget.user),
                           ],
                         ),
                       ),
@@ -200,7 +198,7 @@ class _PlanEditorState extends State<PlanEditor> {
 }
 
 class TrainingPlanNameInput extends StatefulWidget {
-  TrainingPlanNameInput({super.key});
+  const TrainingPlanNameInput({super.key});
 
   @override
   State<TrainingPlanNameInput> createState() => _TrainingPlanNameInputState();
@@ -227,15 +225,16 @@ class _TrainingPlanNameInputState extends State<TrainingPlanNameInput> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 4),
+      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: TextField(
         controller: _nameController,
+
         onChanged: (value) {},
         textAlignVertical: TextAlignVertical.center,
         textAlign: TextAlign.center,
         decoration: InputDecoration(
           border: InputBorder.none,
-
+          isDense: true,
           hintText: 'name of the plan',
           hintStyle: TextStyle(
             fontSize: 18,
@@ -250,8 +249,7 @@ class _TrainingPlanNameInputState extends State<TrainingPlanNameInput> {
 }
 
 class SaveButton extends StatefulWidget {
-  SaveButton({super.key, required this.user, required this.togglePlanEditor});
-  Function togglePlanEditor;
+  const SaveButton({super.key, required this.user});
 
   final User user;
 
@@ -288,11 +286,11 @@ class _SaveButtonState extends State<SaveButton> {
         );
 
         context.read<TrainingPlanCubit>().savePlan(widget.user);
-        widget.togglePlanEditor(widget.user);
+        context.go(RouteNames.onlineCoaching);
       },
       child: AnimatedScale(
         scale: _isPressed ? 0.95 : 1.0,
-        duration: Duration(milliseconds: 100),
+        duration: const Duration(milliseconds: 100),
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 12),
           width: double.infinity,
@@ -339,6 +337,7 @@ class ExercisesSearchBar extends StatelessWidget {
         },
         textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
+          isDense: true,
           prefixIcon: Icon(Icons.search, color: Colors.grey[900], size: 32),
           border: InputBorder.none,
           hintText: 'Search exercises',
@@ -368,20 +367,20 @@ class DayNameInput extends StatefulWidget {
 }
 
 class _DayNameInputState extends State<DayNameInput> {
-  TextEditingController _dayNameController = TextEditingController();
+  final TextEditingController _dayNameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     _dayNameController.text =
         widget.trainingPlan.days[widget.selectedDay].name ??
-        'Day ' + (widget.selectedDay + 1).toString();
+        'Day ${widget.selectedDay + 1}';
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 4),
+      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: TextField(
         controller: _dayNameController,
         onChanged: (value) {
@@ -390,9 +389,11 @@ class _DayNameInputState extends State<DayNameInput> {
             value,
           );
         },
+
         textAlignVertical: TextAlignVertical.center,
         textAlign: TextAlign.center,
         decoration: InputDecoration(
+          isDense: true,
           border: InputBorder.none,
 
           hintText: 'name of the day',
@@ -422,10 +423,7 @@ class DaySelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        color: Colors.white,
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
       child: Row(
         children: [
           Expanded(
@@ -465,7 +463,7 @@ class DaySelector extends StatelessWidget {
                               ),
                               padding: EdgeInsets.all(8.0),
                               child: Text(
-                                "Day " + (entry.key + 1).toString(),
+                                "Day ${entry.key + 1}",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 18,

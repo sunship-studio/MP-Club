@@ -1,47 +1,46 @@
 import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/bloc/training%20plan/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/users/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/users/state.dart';
 import 'package:mpc_admin_app/app/models/User.dart';
+import 'package:mpc_admin_app/app/models/checkin.dart';
+import 'package:mpc_admin_app/core/router/route_names.dart';
+import 'package:mpc_admin_app/core/theme/app_colors.dart';
 import 'package:mpc_admin_app/core/widgets/PlanEditor.dart';
 import 'package:mpc_admin_app/core/widgets/UserBox.dart';
+import 'package:mpc_admin_app/core/widgets/check-ins/checkpoint_card.dart';
+import 'package:mpc_admin_app/core/widgets/check-ins/details.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class OnlineCoaching extends StatelessWidget {
-  OnlineCoaching({
+  const OnlineCoaching({
     super.key,
-    required this.togglePlanEditor,
-    required this.changeScreen,
-    required this.planEditor,
+    this.planEditor = false,
+    this.checkIns = false,
     this.user,
   });
-  final Function togglePlanEditor;
-  final Function changeScreen;
-  bool planEditor;
-  User? user;
+
+  final bool checkIns;
+  final bool planEditor;
+  final User? user;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<UsersCubit>(
       create: (context) => UsersCubit()..loadUsers(),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
         child: BlocBuilder<UsersCubit, UsersState>(
           builder: (context, state) {
-            if (state is UsersLoadingState) {
-              return Center(
-                child: CircularProgressIndicator(
-                  color: Color.fromARGB(255, 19, 157, 221),
-                  strokeWidth: 2,
-                ),
-              );
-            } else if (state is UsersErrorState) {
+            if (state is UsersErrorState) {
               return Center(
                 child: Text(
                   "Contact Igor: ${state.error}",
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontFamily: 'SF-Pro',
                     color: Colors.white,
@@ -49,47 +48,103 @@ class OnlineCoaching extends StatelessWidget {
                   ),
                 ),
               );
-            } else if (state is UsersLoadedState) {
-              if (state.currentSubscribers.isEmpty) {
-                return Center(
-                  child: Text(
-                    "No entries found",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontFamily: 'SF-Pro',
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                );
+            } else if (state is UsersLoadedState ||
+                state is UsersLoadingState) {
+              if (checkIns) {
+                return Checkpoints(user: user!);
               }
               if (planEditor) {
                 return BlocProvider(
                   create: (context) => TrainingPlanCubit()..init(user!),
-                  child: PlanEditor(
-                    user: user!,
-                    togglePlanEditor: togglePlanEditor,
-                  ),
+                  child: PlanEditor(user: user!),
                 );
               }
               return RefreshIndicator(
                 onRefresh: () async {
                   context.read<UsersCubit>().loadUsers();
                 },
-                child: ListView.builder(
-                  padding: EdgeInsets.only(),
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: state.currentSubscribers.length,
-                  itemBuilder: (context, index) {
-                    final subscriber = state.currentSubscribers[index];
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          "CURRENT SUBSCRIBERS",
+                          style: TextStyle(
+                            color: AppColors.lightTextColor,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Inter',
+                            letterSpacing: -0.4,
+                          ),
+                        ),
+                        Spacer(),
+                        IconButton(
+                          onPressed: () {
+                            context.read<UsersCubit>().loadUsers();
+                          },
+                          icon: Icon(
+                            Coolicons.refresh,
+                            color: AppColors.lightTextColor,
+                            size: 20.w,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            context.go(RouteNames.addSubscriber);
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.black87,
+                            ),
+                            child: Icon(
+                              Coolicons.plus,
+                              color: AppColors.lightTextColor,
+                              size: 20.w,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (state is UsersLoadingState) ...[
+                      Expanded(
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: Color.fromARGB(255, 19, 157, 221),
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      ),
+                    ] else if (state is UsersLoadedState) ...[
+                      if (state.currentSubscribers.isEmpty)
+                        Padding(
+                          padding: EdgeInsets.only(top: 50.h),
+                          child: Text(
+                            "No subscribers found",
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontFamily: 'SF-Pro',
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
 
-                    return UserBox(
-                      changeScreen: changeScreen,
-                      user: subscriber,
-                      togglePlanEditor: togglePlanEditor,
-                    );
-                  },
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.only(),
+                          shrinkWrap: true,
+                          itemCount: state.currentSubscribers.length,
+                          itemBuilder: (context, index) {
+                            final subscriber = state.currentSubscribers[index];
+
+                            return UserBox(user: subscriber);
+                          },
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               );
             } else {
@@ -381,6 +436,96 @@ class _WeightGoalSetState extends State<WeightGoalSet> {
                           ),
                         ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class Checkpoints extends StatelessWidget {
+  const Checkpoints({super.key, required this.user});
+
+  final User user;
+
+  Future<void> _showDetailsModal(
+    BuildContext context,
+    CheckIn checkIn,
+    User user,
+  ) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (context.mounted) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        isDismissible: true,
+        builder: (context) => CheckInDetails(checkIn: checkIn, user: user),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(
+        minHeight: MediaQuery.of(context).size.height * 0.6,
+      ),
+      padding: EdgeInsets.symmetric(vertical: 12.h),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(12.r),
+          topRight: Radius.circular(12.r),
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(
+                "${user.firstName.toUpperCase()} CHECKPOINTS",
+                style: TextStyle(
+                  color: AppColors.lightTextColor,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Inter',
+                  letterSpacing: -0.4,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 5.h),
+          if (user.checkIns.isEmpty)
+            Expanded(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.only(top: 50.h),
+                  child: Text(
+                    "No check-ins available",
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontFamily: 'SF-Pro',
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.only(top: 8.h),
+              itemCount: user.checkIns.length,
+              itemBuilder: (context, index) {
+                final checkIn = user.checkIns.reversed.toList()[index];
+                return CheckpointCard(
+                  onTap: () {
+                    _showDetailsModal(context, checkIn, user);
+                  },
+                  checkIn: checkIn,
+                );
+              },
             ),
           ),
         ],

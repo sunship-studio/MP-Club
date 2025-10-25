@@ -18,6 +18,7 @@ import 'package:mpc_mobile_app/presentation/widgets/chat/divider.dart';
 import 'package:mpc_mobile_app/presentation/widgets/chat/header.dart';
 import 'package:mpc_mobile_app/presentation/widgets/chat/message.dart';
 import 'package:mpc_mobile_app/presentation/widgets/check_in/sheets/browse_file.dart';
+import 'package:mpc_mobile_app/routes/main.dart';
 import 'package:mpc_mobile_app/services/socket.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -55,9 +56,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
     _initializeChat();
     _setupListeners();
     _scrollController.addListener(_onScroll);
+    @override
+    void initState() {
+      super.initState();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        navBarKey.currentState?.turnOffNavBar();
+      });
+    }
   }
 
   ///
@@ -103,8 +112,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _messages.insert(0, message);
       });
 
-      if ((widget.isAdmin && !message.fromShane) ||
-          (!widget.isAdmin && message.fromShane)) {
+      if (message.fromShane) {
         _markMessagesAsRead();
       }
 
@@ -339,9 +347,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   ///
 
   Future<void> _markMessagesAsRead() async {
-    await _socketService.markMessagesAsRead(
-      clientId: widget.isAdmin ? widget.user.id : null,
-    );
+    await _socketService.markMessagesAsRead(clientId: widget.user.id);
   }
 
   ///
@@ -635,6 +641,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   if (selectedFile != null) {
                     _setSelectedFile(selectedFile);
                   }
+
+                  print("Selected file: $selectedFile");
                 },
                 child: Container(
                   padding: EdgeInsets.all(8.w),
@@ -645,13 +653,41 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
                 ),
               ),
-              Container(
-                padding: EdgeInsets.all(8.w),
-                child: Icon(
-                  CupertinoIcons.paperclip,
-                  size: 20.w,
-                  color: AppColors.darkTextColor.withValues(alpha: 0.5),
-                ),
+              Gap(12.w),
+              Stack(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8.w),
+                    margin: EdgeInsets.only(left: 6.w),
+                    child: Icon(
+                      CupertinoIcons.mic,
+                      size: 24.w,
+                      color: AppColors.darkTextColor.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.all(8.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.darkScaffoldColor.withValues(
+                        alpha: 0.35,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Container(
+                      padding: EdgeInsets.all(4.w),
+                      child: Center(
+                        child: Text(
+                          "Soon",
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               Gap(12.w),
               Text(
@@ -680,6 +716,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _readReceiptSubscription?.cancel();
     _connectionSubscription?.cancel();
     _presenceSubscription?.cancel();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      navBarKey.currentState?.turnOnNavBar();
+    });
     super.dispose();
   }
 }

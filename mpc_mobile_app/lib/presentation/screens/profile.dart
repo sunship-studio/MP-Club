@@ -87,7 +87,7 @@ class ProfileScreen extends StatelessWidget {
                                   radius: 35.w,
                                   user: authState.user,
                                   onTap: () {
-                                    navBarKey.currentState?.toggleNavBar();
+                                    navBarKey.currentState?.turnOffNavBar();
                                     showBrowseFileSheet(
                                       context,
                                       title: 'CHANGE PROFILE PICTURE',
@@ -114,7 +114,7 @@ class ProfileScreen extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Albert Einstein',
+                                      "${authState.user.firstName} ${authState.user.lastName}",
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 20.sp,
@@ -140,7 +140,7 @@ class ProfileScreen extends StatelessWidget {
                                             MainAxisAlignment.center,
                                         children: [
                                           Text(
-                                            " 🛜 Online Coaching",
+                                            "🛜 Online Coaching",
                                             style: TextStyle(
                                               color: Colors.white.withValues(
                                                 alpha: 1,
@@ -156,8 +156,9 @@ class ProfileScreen extends StatelessWidget {
                                       "Expires Dec 2025",
                                       style: TextStyle(
                                         fontSize: 12.sp,
-                                        color: AppColors.lightScaffoldColor
-                                            .withValues(alpha: 0.5),
+                                        // color: AppColors.lightScaffoldColor
+                                        //     .withValues(alpha: 0.5),
+                                        color: Colors.transparent,
                                       ),
                                     ),
                                   ],

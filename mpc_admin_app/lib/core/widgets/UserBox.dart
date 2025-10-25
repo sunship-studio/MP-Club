@@ -1,20 +1,17 @@
 import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/models/User.dart';
 import 'package:mpc_admin_app/app/services/socket.dart';
+import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/screens/online_coaching.dart';
 
 class UserBox extends StatefulWidget {
-  UserBox({
-    super.key,
-    required this.user,
-    required this.togglePlanEditor,
-    required this.changeScreen,
-  });
-  final Function togglePlanEditor;
-  final Function changeScreen;
-  User user;
+  const UserBox({super.key, required this.user});
+
+  final User user;
+
   @override
   State<UserBox> createState() => _UserBoxState();
 }
@@ -270,7 +267,7 @@ class _UserBoxState extends State<UserBox> {
                           children: [
                             GestureDetector(
                               onTap: () {
-                                widget.changeScreen(3, user: widget.user);
+                                context.go(RouteNames.chat, extra: widget.user);
                               },
                               child: Container(
                                 decoration: BoxDecoration(
@@ -327,24 +324,12 @@ class _UserBoxState extends State<UserBox> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          "Training Plan:",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontFamily: 'SF-Pro',
-                            color: Colors.black,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            TrainingPlanButton(
-                              user: widget.user,
-                              togglePlanEditor: widget.togglePlanEditor,
-                            ),
-                          ],
-                        ),
+
+                        Row(children: [TrainingPlanButton(user: widget.user)]),
+
+                        const SizedBox(height: 12),
+
+                        Row(children: [CheckInsButton(user: widget.user)]),
                         SizedBox(height: 8),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,13 +377,10 @@ class _UserBoxState extends State<UserBox> {
 }
 
 class TrainingPlanButton extends StatefulWidget {
-  const TrainingPlanButton({
-    super.key,
-    required this.togglePlanEditor,
-    this.user,
-  });
-  final Function togglePlanEditor;
+  const TrainingPlanButton({super.key, this.user});
+
   final User? user;
+
   @override
   State<TrainingPlanButton> createState() => _TrainingPlanButtonState();
 }
@@ -410,7 +392,7 @@ class _TrainingPlanButtonState extends State<TrainingPlanButton> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        widget.togglePlanEditor(widget.user!);
+        context.go(RouteNames.planEditor, extra: widget.user);
       },
       onTapDown: (details) {
         setState(() {
@@ -431,6 +413,56 @@ class _TrainingPlanButtonState extends State<TrainingPlanButton> {
         child: Center(
           child: Text(
             "Edit training plan 🏋️‍♂️",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+              fontFamily: 'SF-Pro',
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class CheckInsButton extends StatefulWidget {
+  const CheckInsButton({super.key, this.user});
+
+  final User? user;
+
+  @override
+  State<CheckInsButton> createState() => _CheckInsButtonState();
+}
+
+class _CheckInsButtonState extends State<CheckInsButton> {
+  Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        context.go(RouteNames.checkIns, extra: widget.user);
+      },
+      onTapDown: (details) {
+        setState(() {
+          color = Theme.of(context).primaryColor.withOpacity(0.8);
+        });
+      },
+      onTapUp: (details) {
+        setState(() {
+          color = null;
+        });
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: color ?? Theme.of(context).primaryColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        child: Center(
+          child: Text(
+            "View Check-Ins 📅",
             style: TextStyle(
               fontSize: 16,
               color: Colors.white,

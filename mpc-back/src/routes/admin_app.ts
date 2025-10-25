@@ -1,7 +1,7 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response } from 'express';
 
-import AdminAppController from "../controllers/admin/admin_app";
-import { adminAppAuth } from "../middleware/auth";
+import AdminAppController from '../controllers/admin/admin_app';
+import { adminAppAuth } from '../middleware/auth';
 
 // Mobile App Router
 const adminAppRouter = express.Router();
@@ -9,20 +9,20 @@ const adminAppController = new AdminAppController();
 
 // Route to get the waiting list
 adminAppRouter.get(
-  "/waiting-list",
+  '/waiting-list',
   adminAppAuth,
   async (req: Request, res: Response) => {
     await adminAppController.getWaitingList(req, res);
   }
 );
 
-adminAppRouter.get("/exercises", async (req: Request, res: Response) => {
+adminAppRouter.get('/exercises', async (req: Request, res: Response) => {
   await adminAppController.getAllExercises(req, res);
 });
 
 // Route to get online subscriptions
 adminAppRouter.get(
-  "/online-users",
+  '/online-users',
 
   adminAppAuth,
   async (req: Request, res: Response) => {
@@ -31,7 +31,7 @@ adminAppRouter.get(
 );
 
 adminAppRouter.post(
-  "/waiting-list/reject",
+  '/waiting-list/reject',
   adminAppAuth,
   async (req: Request, res: Response) => {
     await adminAppController.rejectWaitingList(req, res);
@@ -39,7 +39,7 @@ adminAppRouter.post(
 );
 
 adminAppRouter.post(
-  "/waiting-list/accept",
+  '/waiting-list/accept',
   adminAppAuth,
   async (req: Request, res: Response) => {
     await adminAppController.acceptWaitingList(req, res);
@@ -47,10 +47,10 @@ adminAppRouter.post(
 );
 
 adminAppRouter.post(
-  "/user-calories",
+  '/user-calories',
   adminAppAuth,
   async (req: Request, res: Response) => {
-    console.log("Received request to save user calories:", req.body);
+    console.log('Received request to save user calories:', req.body);
     await adminAppController.saveUserCalories(req, res);
   }
 );
@@ -59,19 +59,27 @@ adminAppRouter.post(
   '/user-target-weight',
   adminAppAuth,
   async (req: Request, res: Response) => {
-    console.log("Received request to save user target weight:", req.body);
+    console.log('Received request to save user target weight:', req.body);
     await adminAppController.saveUserTargetWeight(req, res);
   }
 );
 
 adminAppRouter.post(
-  "/save-training-plan",
+  '/save-training-plan',
   adminAppAuth,
   async (req: Request, res: Response) => {
-    console.log("Received request to save training plan:", req.body);
+    console.log('Received request to save training plan:', req.body);
     await adminAppController.saveTrainingPlan(req, res);
   }
 );
 
+adminAppRouter.post(
+  '/add-subscriber',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    console.log('Received request to add subscriber:', req.body);
+    await adminAppController.addSubscriber(req, res);
+  }
+);
 
 export default adminAppRouter;

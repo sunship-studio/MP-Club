@@ -11,9 +11,13 @@ import 'package:mpc_mobile_app/data/repositories/auth.dart';
 import 'package:mpc_mobile_app/routes/auth.dart';
 import 'package:mpc_mobile_app/routes/main.dart';
 
-bool debugMode = true;
+bool debugMode = false;
 
 void main(List<String> args) async {
+  FlutterError.onError = (FlutterErrorDetails details) {
+    print('Error: ${details.exception}');
+    print('Stack: ${details.stack}');
+  };
   WidgetsFlutterBinding.ensureInitialized();
   await setupDependencies();
   runApp(MpcApp());

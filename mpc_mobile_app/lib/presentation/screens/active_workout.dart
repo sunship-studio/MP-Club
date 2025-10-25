@@ -59,6 +59,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
 
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      navBarKey.currentState?.turnOffNavBar();
+    });
   }
 
   void startRestPeriod(int seconds) {
@@ -164,6 +167,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      navBarKey.currentState?.turnOnNavBar();
+    });
     _timer?.cancel();
     _controller.dispose(); // ⚠️ You're missing this!
     _animationController.dispose(); // Add if you use animation
@@ -196,18 +202,16 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
               //   ),
               // ),
               // Overlay content
-              Expanded(
-                child: Center(
-                  child: Container(
-                    child: Text(
-                      "Soon you'll be able to see the video here :)",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.center,
+              Center(
+                child: Container(
+                  child: Text(
+                    "Soon you'll be able to see the video here :)",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w600,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
               ),
@@ -221,7 +225,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                             showStopWorkoutDialog(context, () {
                               context.pop();
                               Navigator.of(context).pop();
-                              navBarKey.currentState!.toggleNavBar();
                             });
                           },
                           behavior: HitTestBehavior.translucent,
@@ -647,7 +650,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                                 await _controller.pause();
                                                 context.pop();
                                                 navBarKey.currentState!
-                                                    .toggleNavBar();
+                                                    .turnOnNavBar();
                                                 ScaffoldMessenger.of(
                                                   context,
                                                 ).clearSnackBars();
@@ -698,44 +701,42 @@ class TipBox extends StatelessWidget {
   int exercisesLength;
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        margin: EdgeInsets.only(top: topPadding(context).h + 60.h),
-        padding: EdgeInsets.symmetric(horizontal: horizontalPadding.w),
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: Column(
-            children: [
-              Container(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    for (var i = 0; i < exercisesLength; i++)
-                      i != 0
-                          ? Icon(
-                            Icons.arrow_upward_rounded,
-                            size: 28.w,
-                            color: Colors.white.withValues(alpha: 0.8),
-                          )
-                          : SizedBox(width: 28.w, height: 28.w),
-                  ],
+    return Container(
+      margin: EdgeInsets.only(top: topPadding(context).h + 60.h),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding.w),
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Column(
+          children: [
+            Container(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  for (var i = 0; i < exercisesLength; i++)
+                    i != 0
+                        ? Icon(
+                          Icons.arrow_upward_rounded,
+                          size: 28.w,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        )
+                        : SizedBox(width: 28.w, height: 28.w),
+                ],
+              ),
+            ),
+            Gap(4.h),
+            Container(
+              child: Text(
+                "Here you can switch/skip exercises",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.4,
+                  fontFamily: 'Inter',
                 ),
               ),
-              Gap(4.h),
-              Container(
-                child: Text(
-                  "Here you can switch/skip exercises",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.4,
-                    fontFamily: 'Inter',
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

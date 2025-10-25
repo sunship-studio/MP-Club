@@ -18,10 +18,32 @@ import 'package:mpc_mobile_app/presentation/widgets/header.dart';
 import 'package:mpc_mobile_app/routes/main.dart';
 import 'package:mpc_mobile_app/services/snack_bar.dart';
 
-class SubmitCheckInScreen extends StatelessWidget {
-  SubmitCheckInScreen({super.key});
+class SubmitCheckInScreen extends StatefulWidget {
+  const SubmitCheckInScreen({super.key});
+
+  @override
+  State<SubmitCheckInScreen> createState() => _SubmitCheckInScreenState();
+}
+
+class _SubmitCheckInScreenState extends State<SubmitCheckInScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      navBarKey.currentState?.turnOffNavBar();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      navBarKey.currentState?.turnOnNavBar();
+    });
+    super.dispose();
+  }
 
   final TextEditingController _weightController = TextEditingController();
+
   final TextEditingController _noteController = TextEditingController();
 
   @override
@@ -34,7 +56,7 @@ class SubmitCheckInScreen extends StatelessWidget {
               context: context,
               message: "Check-In submitted successfully!",
             );
-            navBarKey.currentState!.toggleNavBar();
+
             context.read<AuthCubit>().loadUser();
             context.pop();
           } else if (state is CheckInError) {
@@ -52,254 +74,264 @@ class SubmitCheckInScreen extends StatelessWidget {
                 child: CircularProgressIndicator(color: AppColors.blueColor),
               );
             }
-            return Column(
-              children: [
-                MpcHeader(
-                  onBack:
-                      () => {
-                        navBarKey.currentState!.toggleNavBar(),
-                        context.pop(),
-                      },
-                  label: "SUBMIT CHECK-IN",
-                  backgroundColor: AppColors.darkScaffoldColor,
-                  suffix: Icon(
-                    Coolicons.info_circle_outline,
-                    size: 24.w,
-                    color: Colors.white,
+            return GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Column(
+                children: [
+                  MpcHeader(
+                    onBack: () => {context.pop()},
+                    label: "SUBMIT CHECK-IN",
+                    backgroundColor: AppColors.darkScaffoldColor,
+                    suffix: Icon(
+                      Coolicons.info_circle_outline,
+                      size: 24.w,
+                      color: Colors.white,
+                    ),
+                    onSuffixTap: () => context.push('/check_in/info'),
                   ),
-                  onSuffixTap: () => context.push('/check_in/info'),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 24.h,
-                    horizontal: horizontalPadding,
-                  ),
-                  width: double.infinity,
-                  decoration: BoxDecoration(color: AppColors.darkScaffoldColor),
-                  child: Column(
-                    children: [
-                      Text(
-                        "Weight Update/kg",
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.greyTextColor.withAlpha(179),
-                        ),
-                      ),
-
-                      TextField(
-                        controller: _weightController,
-                        keyboardType: TextInputType.number,
-                        style: TextStyle(
-                          fontSize: 58.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.zero,
-                          hintText: "0",
-                          hintStyle: TextStyle(
-                            fontSize: 58.sp,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.darkCardColor,
-                          ),
-                          border: InputBorder.none,
-                        ),
-                      ),
-                      Container(
-                        width: double.infinity,
-                        height: 2.h,
-                        color: AppColors.darkCardColor,
-                      ),
-                    ],
-                  ),
-                ),
-
-                Expanded(
-                  child: Container(
+                  Container(
                     padding: EdgeInsets.symmetric(
                       vertical: 24.h,
                       horizontal: horizontalPadding,
                     ),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: AppColors.darkScaffoldColor,
+                    ),
                     child: Column(
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Notes / Mood (Optional)",
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.darkTextColor.withValues(
-                                  alpha: 0.8,
-                                ),
-                              ),
-                            ),
-                            Gap(4.h),
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8.r),
-                                border: Border.all(
-                                  width: 1,
-                                  color: AppColors.greyTextColor.withValues(
-                                    alpha: 0.4,
-                                  ),
-                                ),
-                              ),
-                              child: TextField(
-                                controller: _noteController,
-                                maxLines: 3,
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w400,
-                                  color: AppColors.darkTextColor,
-                                ),
-                                decoration: InputDecoration(
-                                  contentPadding: EdgeInsets.all(12.w),
-                                  hintText: "Placeholder",
-                                  hintStyle: TextStyle(
-                                    fontSize: 14.sp,
-                                    fontWeight: FontWeight.w400,
-                                    color: AppColors.greyTextColor,
-                                  ),
-                                  border: InputBorder.none,
-                                ),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          "Weight Update/kg",
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.greyTextColor.withAlpha(179),
+                          ),
                         ),
-                        Gap(16.h),
 
-                        state is CheckInImagePicked
-                            ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Uploaded Photo",
-                                  style: TextStyle(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.darkTextColor.withValues(
-                                      alpha: 0.8,
-                                    ),
-                                  ),
-                                ),
-                                Gap(8.h),
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8.r),
-                                  child: Image.file(
-                                    File(state.imagePath),
-                                    width: double.infinity,
-                                    height: 200.h,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ],
-                            )
-                            : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Upload Photo",
-                                  style: TextStyle(
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.darkTextColor.withValues(
-                                      alpha: 0.8,
-                                    ),
-                                  ),
-                                ),
-                                Gap(4.h),
-                                DottedBorder(
-                                  options: RoundedRectDottedBorderOptions(
-                                    radius: Radius.circular(8.r),
-                                    color: AppColors.greyTextColor.withValues(
-                                      alpha: 0.4,
-                                    ),
-                                    strokeWidth: 1,
+                        TextField(
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.done,
+                          onEditingComplete:
+                              () => FocusScope.of(context).unfocus(),
+                          controller: _weightController,
 
-                                    dashPattern: [6, 6],
-                                  ),
-                                  child: Container(
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(8.r),
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 26.h,
-                                      horizontal: 12.w,
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        SvgPicture.asset(
-                                          "assets/images/photo.svg",
-                                          width: 26,
-                                        ),
-                                        Gap(8.h),
-                                        Text(
-                                          "Progress Photo Upload",
-                                          style: TextStyle(
-                                            fontSize: 14.sp,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Gap(4.h),
-                                        Text(
-                                          "Accepted formats: PNG, JPG, PDF",
-                                          style: TextStyle(
-                                            fontSize: 12.sp,
-                                            fontWeight: FontWeight.w400,
-                                            color: AppColors.darkScaffoldColor
-                                                .withValues(alpha: 0.6),
-                                          ),
-                                        ),
-                                        Gap(16.h),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            TakePhotoButton(),
-                                            Gap(8.w),
-                                            BrowseGalleryButton(),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          style: TextStyle(
+                            fontSize: 58.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.zero,
+                            hintText: "0",
+                            hintStyle: TextStyle(
+                              fontSize: 58.sp,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.darkCardColor,
                             ),
-                        Spacer(),
-                        BlocBuilder<AuthCubit, AuthState>(
-                          builder: (context, authState) {
-                            authState as AuthAuthenticated;
-                            return CircularButton(
-                              label: "Submit Check-In",
-                              dark: false,
-                              onTap: () async {
-                                context.read<CheckInCubit>().submitCheckIn(
-                                  userId: authState.user.id,
-                                  weight: _weightController.text,
-                                  note:
-                                      _noteController.text.isNotEmpty
-                                          ? _noteController.text
-                                          : null,
-                                  imagePath:
-                                      state is CheckInImagePicked
-                                          ? state.imagePath
-                                          : null,
-                                );
-                              },
-                            );
-                          },
+                            border: InputBorder.none,
+                          ),
+                        ),
+                        Container(
+                          width: double.infinity,
+                          height: 2.h,
+                          color: AppColors.darkCardColor,
                         ),
                       ],
                     ),
                   ),
-                ),
-              ],
+
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 24.h,
+                        horizontal: horizontalPadding,
+                      ),
+                      child: ListView(
+                        physics: NeverScrollableScrollPhysics(),
+                        padding: EdgeInsets.only(),
+                        shrinkWrap: true,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Notes / Mood (Optional)",
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.darkTextColor.withValues(
+                                    alpha: 0.8,
+                                  ),
+                                ),
+                              ),
+                              Gap(4.h),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  border: Border.all(
+                                    width: 1,
+                                    color: AppColors.greyTextColor.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                  ),
+                                ),
+                                child: TextField(
+                                  controller: _noteController,
+                                  maxLines: 3,
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w400,
+                                    color: AppColors.darkTextColor,
+                                  ),
+                                  decoration: InputDecoration(
+                                    contentPadding: EdgeInsets.all(12.w),
+                                    hintText: "Placeholder",
+                                    hintStyle: TextStyle(
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w400,
+                                      color: AppColors.greyTextColor,
+                                    ),
+                                    border: InputBorder.none,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Gap(16.h),
+
+                          state is CheckInImagePicked
+                              ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Uploaded Photo",
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.darkTextColor.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                    ),
+                                  ),
+                                  Gap(8.h),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    child: Image.file(
+                                      File(state.imagePath),
+                                      width: double.infinity,
+                                      height: 200.h,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ],
+                              )
+                              : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Upload Photo",
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.darkTextColor.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                    ),
+                                  ),
+                                  Gap(4.h),
+                                  DottedBorder(
+                                    options: RoundedRectDottedBorderOptions(
+                                      radius: Radius.circular(8.r),
+                                      color: AppColors.greyTextColor.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      strokeWidth: 1,
+
+                                      dashPattern: [6, 6],
+                                    ),
+                                    child: Container(
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          8.r,
+                                        ),
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 26.h,
+                                        horizontal: 12.w,
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          SvgPicture.asset(
+                                            "assets/images/photo.svg",
+                                            width: 26,
+                                          ),
+                                          Gap(8.h),
+                                          Text(
+                                            "Progress Photo Upload",
+                                            style: TextStyle(
+                                              fontSize: 14.sp,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          Gap(4.h),
+                                          Text(
+                                            "Accepted formats: PNG, JPG, PDF",
+                                            style: TextStyle(
+                                              fontSize: 12.sp,
+                                              fontWeight: FontWeight.w400,
+                                              color: AppColors.darkScaffoldColor
+                                                  .withValues(alpha: 0.6),
+                                            ),
+                                          ),
+                                          Gap(16.h),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              TakePhotoButton(),
+                                              Gap(8.w),
+                                              BrowseGalleryButton(),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          Gap(24.h),
+                          BlocBuilder<AuthCubit, AuthState>(
+                            builder: (context, authState) {
+                              authState as AuthAuthenticated;
+                              return CircularButton(
+                                label: "Submit Check-In",
+                                dark: false,
+                                onTap: () async {
+                                  context.read<CheckInCubit>().submitCheckIn(
+                                    userId: authState.user.id,
+                                    weight: _weightController.text,
+                                    note:
+                                        _noteController.text.isNotEmpty
+                                            ? _noteController.text
+                                            : null,
+                                    imagePath:
+                                        state is CheckInImagePicked
+                                            ? state.imagePath
+                                            : null,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         ),

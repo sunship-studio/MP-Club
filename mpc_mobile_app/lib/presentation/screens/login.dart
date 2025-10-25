@@ -267,6 +267,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 controller: _passwordController,
                                                 label: "Password",
                                                 hintText: "Input Password",
+                                                password: true,
                                               ),
                                               SizedBox(height: 10),
                                               Text(

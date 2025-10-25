@@ -1,4 +1,3 @@
-import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -163,9 +162,15 @@ class MpcAppNavBar extends StatefulWidget {
 }
 
 class MpcAppNavBarState extends State<MpcAppNavBar> {
-  void toggleNavBar() {
+  void turnOffNavBar() {
     setState(() {
-      showNavBar = !showNavBar;
+      showNavBar = false;
+    });
+  }
+
+  void turnOnNavBar() {
+    setState(() {
+      showNavBar = true;
     });
   }
 
@@ -180,10 +185,11 @@ class MpcAppNavBarState extends State<MpcAppNavBar> {
   int selectedIndex = 0;
   @override
   Widget build(BuildContext context) {
+    final keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
     return Stack(
       children: [
         if (widget.child != null) widget.child!,
-        if (showNavBar)
+        if (showNavBar && !keyboardVisible)
           Align(
             alignment: Alignment.bottomCenter,
             child: MpcNavBar(

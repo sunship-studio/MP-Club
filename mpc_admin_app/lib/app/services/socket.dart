@@ -513,7 +513,9 @@ class SocketService {
     List<String>? messageIds,
   }) async {
     if (!isConnected) return;
-
+    print(
+      'Marking messages as read: clientId=$clientId, messageIds=$messageIds',
+    );
     _socket?.emitWithAck('messages:mark-read', {
       if (clientId != null) 'clientId': clientId,
       if (messageIds != null) 'messageIds': messageIds,

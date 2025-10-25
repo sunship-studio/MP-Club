@@ -15,7 +15,7 @@ class WaitingList extends StatelessWidget {
     return BlocProvider<WaitingListCubit>(
       create: (context) => WaitingListCubit()..loadWaitingList(),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: 20),
         child: BlocBuilder<WaitingListCubit, WaitingListState>(
           builder: (context, state) {
             if (state is WaitingListLoadingState) {
@@ -55,76 +55,73 @@ class WaitingList extends StatelessWidget {
                 onRefresh: () async {
                   context.read<WaitingListCubit>().loadWaitingList();
                 },
-                child: SingleChildScrollView(
-                  physics: AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (state.waitingList.any(
-                        (entry) => entry.approvalStatus == "pending",
-                      ))
-                        Text(
-                          "Pending:",
+                child: ListView(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  children: [
+                    if (state.waitingList.any(
+                      (entry) => entry.approvalStatus == "pending",
+                    ))
+                      Text(
+                        "Pending:",
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontFamily: 'SF-Pro',
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    if (state.waitingList.any(
+                      (entry) => entry.approvalStatus == "pending",
+                    ))
+                      const SizedBox(height: 10),
+                    ListView.builder(
+                      padding: EdgeInsets.only(),
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: state.waitingList.length,
+                      itemBuilder: (context, index) {
+                        final entry = state.waitingList[index];
+                        if (entry.approvalStatus == "pending") {
+                          print(entry);
+                          return WaitingListEntryBox(entry: entry);
+                        } else {
+                          return Container();
+                        }
+                      },
+                    ),
+                    if (state.waitingList.any(
+                      (entry) => entry.approvalStatus == "pending",
+                    ))
+                      const SizedBox(height: 10),
+                    state.waitingList.any(
+                          (entry) => entry.approvalStatus == "approved",
+                        )
+                        ? Text(
+                          "Accepted:",
                           style: TextStyle(
                             fontSize: 26,
                             fontFamily: 'SF-Pro',
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
                           ),
-                        ),
-                      if (state.waitingList.any(
-                        (entry) => entry.approvalStatus == "pending",
-                      ))
-                        const SizedBox(height: 10),
-                      ListView.builder(
-                        padding: EdgeInsets.only(),
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: state.waitingList.length,
-                        itemBuilder: (context, index) {
-                          final entry = state.waitingList[index];
-                          if (entry.approvalStatus == "pending") {
-                            print(entry);
-                            return WaitingListEntryBox(entry: entry);
-                          } else {
-                            return Container();
-                          }
-                        },
-                      ),
-                      if (state.waitingList.any(
-                        (entry) => entry.approvalStatus == "pending",
-                      ))
-                        const SizedBox(height: 10),
-                      state.waitingList.any(
-                            (entry) => entry.approvalStatus == "approved",
-                          )
-                          ? Text(
-                            "Accepted:",
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontFamily: 'SF-Pro',
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          )
-                          : Container(),
-                      const SizedBox(height: 10),
-                      ListView.builder(
-                        padding: EdgeInsets.only(),
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: state.waitingList.length,
-                        itemBuilder: (context, index) {
-                          final entry = state.waitingList[index];
-                          if (entry.approvalStatus == "approved") {
-                            return WaitingListEntryBox(entry: entry);
-                          } else {
-                            return Container();
-                          }
-                        },
-                      ),
-                    ],
-                  ),
+                        )
+                        : Container(),
+                    const SizedBox(height: 10),
+                    ListView.builder(
+                      padding: EdgeInsets.only(),
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: state.waitingList.length,
+                      itemBuilder: (context, index) {
+                        final entry = state.waitingList[index];
+                        if (entry.approvalStatus == "approved") {
+                          return WaitingListEntryBox(entry: entry);
+                        } else {
+                          return Container();
+                        }
+                      },
+                    ),
+                  ],
                 ),
               );
             } else {
@@ -279,10 +276,9 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                               icon: Icon(Coolicons.copy),
                               iconSize: 20,
                               style: ButtonStyle(
-                                backgroundColor:
-                                    MaterialStateProperty.all<Color>(
-                                      Colors.white,
-                                    ),
+                                backgroundColor: WidgetStateProperty.all<Color>(
+                                  Colors.white,
+                                ),
                                 padding:
                                     WidgetStateProperty.all<EdgeInsetsGeometry>(
                                       const EdgeInsets.symmetric(
@@ -291,7 +287,7 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                                       ),
                                     ),
 
-                                shape: MaterialStateProperty.all<
+                                shape: WidgetStateProperty.all<
                                   RoundedRectangleBorder
                                 >(
                                   RoundedRectangleBorder(
@@ -399,19 +395,17 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                                 );
                               },
                               style: ButtonStyle(
-                                backgroundColor:
-                                    MaterialStateProperty.all<Color>(
-                                      Color.fromRGBO(54, 169, 222, 1),
-                                    ),
-                                padding: MaterialStateProperty.all<
-                                  EdgeInsetsGeometry
-                                >(
-                                  const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                    horizontal: 25,
-                                  ),
+                                backgroundColor: WidgetStateProperty.all<Color>(
+                                  Color.fromRGBO(54, 169, 222, 1),
                                 ),
-                                shape: MaterialStateProperty.all<
+                                padding:
+                                    WidgetStateProperty.all<EdgeInsetsGeometry>(
+                                      const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                        horizontal: 25,
+                                      ),
+                                    ),
+                                shape: WidgetStateProperty.all<
                                   RoundedRectangleBorder
                                 >(
                                   RoundedRectangleBorder(
@@ -438,17 +432,16 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                               },
                               style: ButtonStyle(
                                 backgroundColor: WidgetStateProperty.all<Color>(
-                                  const Color.fromARGB(255, 172, 77, 77)!,
+                                  const Color.fromARGB(255, 172, 77, 77),
                                 ),
-                                padding: MaterialStateProperty.all<
-                                  EdgeInsetsGeometry
-                                >(
-                                  const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                    horizontal: 28,
-                                  ),
-                                ),
-                                shape: MaterialStateProperty.all<
+                                padding:
+                                    WidgetStateProperty.all<EdgeInsetsGeometry>(
+                                      const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                        horizontal: 28,
+                                      ),
+                                    ),
+                                shape: WidgetStateProperty.all<
                                   RoundedRectangleBorder
                                 >(
                                   RoundedRectangleBorder(

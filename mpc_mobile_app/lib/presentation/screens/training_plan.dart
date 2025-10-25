@@ -15,7 +15,6 @@ import 'package:mpc_mobile_app/presentation/widgets/profile_avatar.dart';
 import 'package:mpc_mobile_app/presentation/widgets/training_plan/days_selector.dart';
 import 'package:mpc_mobile_app/presentation/widgets/training_plan/exercises.dart';
 import 'package:mpc_mobile_app/presentation/widgets/training_plan/focused_body_parts.dart';
-import 'package:mpc_mobile_app/routes/main.dart';
 import 'package:mpc_mobile_app/services/snack_bar.dart';
 
 class TrainingPlanScreen extends StatefulWidget {
@@ -250,7 +249,7 @@ void showWorkoutDialog(
             ),
             onPressed: () {
               Navigator.pop(context);
-              navBarKey.currentState?.toggleNavBar();
+
               context.push(
                 '/training_plan/workout',
                 extra:

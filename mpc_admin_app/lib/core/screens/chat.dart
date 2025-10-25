@@ -22,13 +22,8 @@ import 'package:mpc_admin_app/main.dart';
 class ChatScreen extends StatefulWidget {
   final bool isAdmin; // true for Shane's app, false for client app
   final User? user;
-  Function changeScreen;
-  ChatScreen({
-    super.key,
-    required this.user,
-    this.isAdmin = false,
-    required this.changeScreen,
-  });
+
+  const ChatScreen({super.key, required this.user, this.isAdmin = false});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -105,8 +100,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         _messages.insert(0, message);
       });
 
-      if ((widget.isAdmin && !message.fromShane) ||
-          (!widget.isAdmin && message.fromShane)) {
+      if (!message.fromShane) {
         _markMessagesAsRead();
       }
 
@@ -366,11 +360,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       return isFromOtherPerson && m.status.read == null;
     });
 
-    if (hasUnread) {
-      await _socketService.markMessagesAsRead(
-        clientId: widget.isAdmin ? widget.user!.id : null,
-      );
-    }
+    await _socketService.markMessagesAsRead(clientId: widget.user!.id);
   }
 
   ///
@@ -397,7 +387,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         children: [
           ChatScreenHeader(
             user: widget.user!,
-            changeScreen: widget.changeScreen,
             buildConnectionIndicator: _buildConnectionIndicator,
             isOnline: _isOnline,
             lastSeenText: _lastSeenText,
@@ -671,7 +660,42 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
                 ),
               ),
-
+              Gap(12.w),
+              Stack(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(8.w),
+                    margin: EdgeInsets.only(left: 6.w),
+                    child: Icon(
+                      CupertinoIcons.mic,
+                      size: 24.w,
+                      color: AppColors.darkTextColor.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.all(8.w),
+                    decoration: BoxDecoration(
+                      color: AppColors.darkScaffoldColor.withValues(
+                        alpha: 0.35,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Container(
+                      padding: EdgeInsets.all(4.w),
+                      child: Center(
+                        child: Text(
+                          "Soon",
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               Gap(12.w),
               Text(
                 "Submit check-in 📝",
