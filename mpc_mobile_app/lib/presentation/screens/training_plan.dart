@@ -8,6 +8,7 @@ import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/cubits/auth.dart';
 import 'package:mpc_mobile_app/cubits/workout.dart';
+import 'package:mpc_mobile_app/data/models/user.dart';
 import 'package:mpc_mobile_app/data/models/workout.dart';
 import 'package:mpc_mobile_app/presentation/widgets/circular_button.dart';
 import 'package:mpc_mobile_app/presentation/widgets/header.dart';
@@ -43,56 +44,65 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: BlocListener<WorkoutCubit, WorkoutState>(
-        listener: (context, state) {
-          if (state is WorkoutLogged) {
-            SnackBarService.show(
-              context: context,
-              message: "Workout logged successfully!",
-              isError: false,
-              isNavBar: true,
-              isFloating: true,
-            );
-          } else if (state is WorkoutError) {
-            SnackBarService.show(
-              context: context,
-              message: state.message,
-              isError: true,
-              isNavBar: true,
-              isFloating: true,
-            );
+      floatingActionButton: BlocBuilder<AuthCubit, AuthState>(
+        builder: (context, authState) {
+          authState as AuthAuthenticated;
+          User user = authState.user;
+          if (user.trainingPlan.days.isEmpty) {
+            return SizedBox.shrink();
           }
-        },
-        child: Container(
-          margin: EdgeInsets.only(bottom: 50.h),
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding.w),
-          child: CircularButton(
-            borderColor: Colors.grey[800],
-            label: "Start/Log Workout",
-            dark: true,
-            color: AppColors.darkScaffoldColor,
-
-            onTap: () async {
-              print("Start/Log Workout tapped");
-              showWorkoutDialog(context, selectedDayIndex, () {
-                context.pop();
-                final workoutDay =
-                    (context.read<AuthCubit>().state as AuthAuthenticated)
-                        .user
-                        .trainingPlan
-                        .days[selectedDayIndex];
-                context.read<WorkoutCubit>().logWorkout(
-                  Workout(workout: workoutDay, date: DateTime.now()),
-                  (context.read<AuthCubit>().state as AuthAuthenticated)
-                      .user
-                      .id,
+          return BlocListener<WorkoutCubit, WorkoutState>(
+            listener: (context, state) {
+              if (state is WorkoutLogged) {
+                SnackBarService.show(
+                  context: context,
+                  message: "Workout logged successfully!",
+                  isError: false,
+                  isNavBar: true,
+                  isFloating: true,
                 );
-
-                print('Option 1 selected');
-              });
+              } else if (state is WorkoutError) {
+                SnackBarService.show(
+                  context: context,
+                  message: state.message,
+                  isError: true,
+                  isNavBar: true,
+                  isFloating: true,
+                );
+              }
             },
-          ),
-        ),
+            child: Container(
+              margin: EdgeInsets.only(bottom: 50.h),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding.w),
+              child: CircularButton(
+                borderColor: Colors.grey[800],
+                label: "Start/Log Workout",
+                dark: true,
+                color: AppColors.darkScaffoldColor,
+
+                onTap: () async {
+                  print("Start/Log Workout tapped");
+                  showWorkoutDialog(context, selectedDayIndex, () {
+                    context.pop();
+                    final workoutDay =
+                        (context.read<AuthCubit>().state as AuthAuthenticated)
+                            .user
+                            .trainingPlan
+                            .days[selectedDayIndex];
+                    context.read<WorkoutCubit>().logWorkout(
+                      Workout(workout: workoutDay, date: DateTime.now()),
+                      (context.read<AuthCubit>().state as AuthAuthenticated)
+                          .user
+                          .id,
+                    );
+
+                    print('Option 1 selected');
+                  });
+                },
+              ),
+            ),
+          );
+        },
       ),
       body: Column(
         children: [
@@ -102,31 +112,57 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
             textColor: AppColors.darkTextColor,
             back: false,
           ),
-          BlocBuilder<WorkoutCubit, WorkoutState>(
-            builder: (context, state) {
-              if (state is WorkoutLoading) {
+          BlocBuilder<AuthCubit, AuthState>(
+            builder: (context, authState) {
+              authState as AuthAuthenticated;
+              User user = authState.user;
+              if (user.trainingPlan.days.isEmpty) {
                 return Expanded(
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.blueColor,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding.w,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "No training plan assigned. but don't worry, your coach will assign one soon! 🫡",
+                          style: TextStyle(
+                            color: AppColors.darkTextColor,
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        Gap(bottomPadding(context) + 40.h),
+                      ],
                     ),
                   ),
                 );
               }
-              return Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.only(
-                    bottom: bottomPadding(context) + 100.h,
-                  ),
-                  child: BlocBuilder<AuthCubit, AuthState>(
-                    bloc: BlocProvider.of<AuthCubit>(context)..loadUser(),
-                    builder: (context, state) {
-                      state as AuthAuthenticated;
-                      dayNames.clear();
-                      for (var day in state.user.trainingPlan.days) {
-                        dayNames.add(day.name);
-                      }
-                      return Column(
+              return BlocBuilder<WorkoutCubit, WorkoutState>(
+                builder: (context, state) {
+                  if (state is WorkoutLoading) {
+                    return Expanded(
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.blueColor,
+                        ),
+                      ),
+                    );
+                  }
+
+                  dayNames.clear();
+                  for (var day in user.trainingPlan.days) {
+                    dayNames.add(day.name);
+                  }
+
+                  return Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.only(
+                        bottom: bottomPadding(context) + 100.h,
+                      ),
+                      child: Column(
                         children: [
                           Container(
                             width: double.infinity,
@@ -152,7 +188,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      state.user.trainingPlan.name,
+                                      user.trainingPlan.name,
                                       style: TextStyle(
                                         fontSize: 20.sp,
                                         fontWeight: FontWeight.w600,
@@ -175,7 +211,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                                         ),
                                         Spacer(),
                                         Text(
-                                          "updated ${state.user.trainingPlan.lastUpdated != null ? "${state.user.trainingPlan.lastUpdated!.day} ${Constants.months[state.user.trainingPlan.lastUpdated!.month - 1]}" : "N/A"}",
+                                          "updated ${user.trainingPlan.lastUpdated != null ? "${user.trainingPlan.lastUpdated!.day} ${Constants.months[user.trainingPlan.lastUpdated!.month - 1]}" : "N/A"}",
                                           style: TextStyle(
                                             fontSize: 10.sp,
                                             fontWeight: FontWeight.w500,
@@ -189,7 +225,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                                 ),
                                 Gap(20.h),
                                 FocusedBodyParts(
-                                  bodyParts: state.user.trainingPlan.bodyParts!,
+                                  bodyParts: user.trainingPlan.bodyParts!,
                                 ),
                                 Gap(20.h),
                                 DaysSelector(
@@ -201,8 +237,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                                 ExercisesList(
                                   days: dayNames,
                                   exercises:
-                                      state
-                                          .user
+                                      user
                                           .trainingPlan
                                           .days[selectedDayIndex]
                                           .exercises,
@@ -212,10 +247,10 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                             ),
                           ),
                         ],
-                      );
-                    },
-                  ),
-                ),
+                      ),
+                    ),
+                  );
+                },
               );
             },
           ),

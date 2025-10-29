@@ -64,11 +64,15 @@ class CaloriesProgress extends StatelessWidget {
                 ],
               ),
 
-              LinearProgressIndicator(
-                value: getUserTodayCalories(user) / user.caloriesPerDay!,
-                backgroundColor: Colors.black38,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.redColor),
-              ),
+              user.caloriesPerDay == null
+                  ? SizedBox.shrink()
+                  : LinearProgressIndicator(
+                    value: getUserTodayCalories(user) / user.caloriesPerDay!,
+                    backgroundColor: Colors.black38,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.redColor,
+                    ),
+                  ),
 
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,8 +88,11 @@ class CaloriesProgress extends StatelessWidget {
                     ),
                   ),
                   Gap(4),
+
                   Text(
-                    "Max ${user.caloriesPerDay} kcal",
+                    user.caloriesPerDay == null
+                        ? "Max calories not set"
+                        : "Max ${user.caloriesPerDay} kcal",
                     style: TextStyle(
                       color: AppColors.greyTextColor.withValues(alpha: 0.6),
                       fontSize: 11.sp,

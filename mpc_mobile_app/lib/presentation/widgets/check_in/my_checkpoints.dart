@@ -90,17 +90,6 @@ class Checkpoints extends StatelessWidget {
                       letterSpacing: -0.4,
                     ),
                   ),
-                  Spacer(),
-                  Text(
-                    "More Details",
-                    style: TextStyle(
-                      color: AppColors.greyTextColor,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Inter',
-                      letterSpacing: -0.3,
-                    ),
-                  ),
                 ],
               ),
               Gap(5.h),
@@ -117,6 +106,25 @@ class Checkpoints extends StatelessWidget {
                   child: BlocBuilder<AuthCubit, AuthState>(
                     builder: (context, state) {
                       state as AuthAuthenticated;
+                      if (state.user.checkIns.isEmpty) {
+                        return Center(
+                          child: Container(
+                            margin: EdgeInsets.only(
+                              bottom: bottomPadding(context),
+                            ),
+                            child: Text(
+                              "No checkpoints available. Start logging your progress! 🏋📈",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: AppColors.darkTextColor,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ),
+                        );
+                      }
                       return ListView.builder(
                         padding: EdgeInsets.only(top: 16.h),
                         itemCount: state.user.checkIns.length,

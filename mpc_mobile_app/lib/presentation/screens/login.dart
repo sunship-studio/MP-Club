@@ -9,6 +9,7 @@ import 'package:mpc_mobile_app/cubits/auth.dart';
 import 'package:mpc_mobile_app/presentation/widgets/circular_button.dart';
 import 'package:mpc_mobile_app/presentation/widgets/onboarding/onboarding_input.dart';
 import 'package:mpc_mobile_app/services/snack_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -363,15 +364,28 @@ class _LoginScreenState extends State<LoginScreen> {
                         letterSpacing: -0.6,
                       ),
                     ),
-                    Text(
-                      "Private Website",
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 1),
-                        fontSize: 12.sp,
-                        decoration: TextDecoration.underline,
-                        decorationColor: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: -0.6,
+                    GestureDetector(
+                      onTap: () async {
+                        final url = Uri.parse(
+                          'https://www.midlandsperformanceclub.ie/online-coaching',
+                        );
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      },
+                      child: Text(
+                        "Private Website",
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 1),
+                          fontSize: 12.sp,
+                          decoration: TextDecoration.underline,
+                          decorationColor: Colors.white,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: -0.6,
+                        ),
                       ),
                     ),
                   ],

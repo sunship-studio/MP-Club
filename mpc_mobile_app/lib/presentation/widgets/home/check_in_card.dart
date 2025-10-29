@@ -29,7 +29,13 @@ class CheckInCard extends StatelessWidget {
             DateTime.now().year,
           );
 
-          CheckIn lastCheckIn = (state.user.checkIns as List<CheckIn>).last;
+          CheckIn? lastCheckIn;
+
+          if (state.user.checkIns.isNotEmpty) {
+            lastCheckIn = state.user.checkIns.reduce(
+              (a, b) => a.date.isAfter(b.date) ? a : b,
+            );
+          }
 
           return Container(
             padding: EdgeInsets.all(16.w),
@@ -68,89 +74,92 @@ class CheckInCard extends StatelessWidget {
                   height: 1.h,
                   color: Colors.grey.withValues(alpha: 0.2),
                 ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ...[
-                      if (lastCheckIn.imageUrl != null)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(7.r),
-                          child: Image.network(
-                            lastCheckIn.imageUrl!,
-                            width: 100.w,
-                            height: 100.w,
-                            fit: BoxFit.cover,
+                if (state.user.checkIns.isNotEmpty) ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ...[
+                        if (lastCheckIn!.imageUrl != null)
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(7.r),
+                            child: Image.network(
+                              lastCheckIn.imageUrl!,
+                              width: 100.w,
+                              height: 100.w,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        if (lastCheckIn.imageUrl != null) Gap(16.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        lastCheckIn.weight.toStringAsFixed(0),
+                                        style: TextStyle(
+                                          color: AppColors.lightTextColor,
+                                          fontSize: 26.sp,
+                                          fontWeight: FontWeight.w700,
+                                          fontFamily: 'Inter',
+                                          letterSpacing: -1.8,
+                                          height: 1,
+                                        ),
+                                      ),
+                                      Gap(4),
+                                      Text(
+                                        "kg",
+                                        style: TextStyle(
+                                          color: AppColors.greyTextColor
+                                              .withValues(alpha: 0.6),
+                                          fontSize: 14.sp,
+                                          fontWeight: FontWeight.w500,
+                                          fontFamily: 'Inter',
+                                          letterSpacing: -0.6,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    "${lastCheckIn.date.day} ${Constants.shortMonths[lastCheckIn.date.month - 1]}",
+                                    style: TextStyle(
+                                      color: AppColors.greyTextColor.withValues(
+                                        alpha: 0.6,
+                                      ),
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w400,
+                                      fontFamily: 'Inter',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Gap(8.h),
+                              Text(
+                                lastCheckIn.note ?? "No notes added.",
+                                style: TextStyle(
+                                  color: AppColors.lightTextColor,
+                                  fontSize: 11.sp,
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.w400,
+                                  fontFamily: 'Inter',
+                                ),
+                                textAlign: TextAlign.left,
+                              ),
+                            ],
                           ),
                         ),
-                      if (lastCheckIn.imageUrl != null) Gap(16.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      lastCheckIn.weight.toStringAsFixed(0),
-                                      style: TextStyle(
-                                        color: AppColors.lightTextColor,
-                                        fontSize: 26.sp,
-                                        fontWeight: FontWeight.w700,
-                                        fontFamily: 'Inter',
-                                        letterSpacing: -1.8,
-                                        height: 1,
-                                      ),
-                                    ),
-                                    Gap(4),
-                                    Text(
-                                      "kg",
-                                      style: TextStyle(
-                                        color: AppColors.greyTextColor
-                                            .withValues(alpha: 0.6),
-                                        fontSize: 14.sp,
-                                        fontWeight: FontWeight.w500,
-                                        fontFamily: 'Inter',
-                                        letterSpacing: -0.6,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const Spacer(),
-                                Text(
-                                  "${lastCheckIn.date.day} ${Constants.shortMonths[lastCheckIn.date.month - 1]}",
-                                  style: TextStyle(
-                                    color: AppColors.greyTextColor.withValues(
-                                      alpha: 0.6,
-                                    ),
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w400,
-                                    fontFamily: 'Inter',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Gap(8.h),
-                            Text(
-                              lastCheckIn.note ?? "No notes added.",
-                              style: TextStyle(
-                                color: AppColors.lightTextColor,
-                                fontSize: 11.sp,
-                                fontStyle: FontStyle.italic,
-                                fontWeight: FontWeight.w400,
-                                fontFamily: 'Inter',
-                              ),
-                              textAlign: TextAlign.left,
-                            ),
-                          ],
-                        ),
-                      ),
+                      ],
                     ],
-                  ],
-                ),
-                SizedBox(height: 16.h),
+                  ),
+                  SizedBox(height: 16.h),
+                ],
+
                 CheckInButton(),
               ],
             ),

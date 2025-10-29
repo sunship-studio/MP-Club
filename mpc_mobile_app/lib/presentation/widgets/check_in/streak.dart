@@ -10,6 +10,9 @@ class CheckInStreak extends StatelessWidget {
   User user;
   int getNumberOfDaysStreak() {
     int streak = 0;
+    if (user.checkIns.isEmpty) {
+      return 0;
+    }
     if (user.checkIns.last.date.day == DateTime.now().day &&
         user.checkIns.last.date.month == DateTime.now().month &&
         user.checkIns.last.date.year == DateTime.now().year) {

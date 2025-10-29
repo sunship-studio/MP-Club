@@ -31,7 +31,8 @@ class AuthCubit extends Cubit<AuthState> {
       emit(
         EmailCheckSuccess(
           exists: response.data!['exists'],
-          hasPassword: response.data!['hasPassword'],
+          hasPassword:
+              response.data!['hasPassword'] ?? response.data!['exists'],
         ),
       );
     } else {
