@@ -35,6 +35,7 @@ class AuthCubit extends Cubit<AuthState> {
               response.data!['hasPassword'] ?? response.data!['exists'],
         ),
       );
+      emit(AuthUnauthenticated());
     } else {
       emit(EmailCheckError(response.message ?? 'Error checking email'));
     }

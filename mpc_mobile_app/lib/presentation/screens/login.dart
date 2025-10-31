@@ -116,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.darkScaffoldColor,
+      backgroundColor: Color.fromRGBO(4, 6, 14, 1),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is EmailCheckSuccess &&

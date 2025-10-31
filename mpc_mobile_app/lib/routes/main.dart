@@ -27,6 +27,7 @@ import 'package:mpc_mobile_app/presentation/screens/submit_checkin.dart';
 import 'package:mpc_mobile_app/presentation/screens/training_plan.dart';
 
 GlobalKey<MpcAppNavBarState> navBarKey = GlobalKey<MpcAppNavBarState>();
+bool showNavBar = true;
 
 class MainRouter {
   MainRouter();
@@ -181,7 +182,6 @@ class MpcAppNavBarState extends State<MpcAppNavBar> {
     });
   }
 
-  bool showNavBar = true;
   int selectedIndex = 0;
   @override
   Widget build(BuildContext context) {

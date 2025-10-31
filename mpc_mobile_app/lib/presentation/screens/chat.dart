@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/di/injection.dart';
 import 'package:mpc_mobile_app/core/network/dio.dart';
@@ -690,12 +691,17 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ],
               ),
               Gap(12.w),
-              Text(
-                "Submit check-in 📝",
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.blueColor.withValues(alpha: 0.9),
+              GestureDetector(
+                onTap: () {
+                  context.push('/check_in/submit');
+                },
+                child: Text(
+                  "Submit check-in 📝",
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.blueColor.withValues(alpha: 0.9),
+                  ),
                 ),
               ),
             ],

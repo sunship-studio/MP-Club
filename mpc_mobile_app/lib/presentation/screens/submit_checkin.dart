@@ -30,14 +30,16 @@ class _SubmitCheckInScreenState extends State<SubmitCheckInScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      navBarKey.currentState?.turnOffNavBar();
+      if (showNavBar) navBarKey.currentState?.turnOffNavBar();
     });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      navBarKey.currentState?.turnOnNavBar();
+      if (!showNavBar) {
+        navBarKey.currentState?.turnOnNavBar();
+      }
     });
     super.dispose();
   }

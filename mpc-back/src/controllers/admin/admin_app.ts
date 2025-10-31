@@ -1,7 +1,11 @@
+import sgMail from '@sendgrid/mail';
 import { Request, Response } from 'express';
+import fs from 'fs';
+import path from 'path';
 import Exercise from '../../models/Exercise';
 import User from '../../models/User';
 import { WaitingListEntry } from '../../models/WaitingListEntry';
+sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 export default class AdminAppController {
   public async getAllExercises(req: Request, res: Response): Promise<Response> {
     try {
@@ -152,8 +156,27 @@ export default class AdminAppController {
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
-
+  readHTMLFile = (filePath: string) => {
+    return fs.readFileSync(filePath, 'utf8');
+  };
   public async addSubscriber(req: Request, res: Response): Promise<Response> {
+    // Sending mail (Waiting for designers to create templates)
+    const template_path = path.join(
+      __dirname,
+      '../templates',
+      'online_coaching_confirmation.html'
+    );
+    const templateSource = this.readHTMLFile(template_path);
+
+    const msg = {
+      from: 'shanemahon@midlandsperformanceclub.ie',
+      to: req.body.email,
+      subject: 'Subscription Confirmation',
+      html: templateSource,
+    };
+
+    await sgMail.send(msg);
+    console.log('✅ Email sent successfully');
     try {
       const { email, firstName, lastName, age } = req.body;
       const existingUser = await User.findOne({ email });

@@ -1,8 +1,8 @@
 name: mpc_mobile_app
-description: "A new Flutter project."
+description: 'A new Flutter project.'
 
-publish_to: "none"
-version: 1.0.1+4
+publish_to: 'none'
+version: 1.0.1+6
 
 environment:
   sdk: ^3.7.2
@@ -43,7 +43,6 @@ dev_dependencies:
   flutter_native_splash: ^2.3.10
   flutter_lints: ^5.0.0
 
-
 flutter:
   uses-material-design: true
   assets:
@@ -75,12 +74,12 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/app-icon.png"
-  adaptive_icon_background: "#0A0D14"     # Background color for Android adaptive icon
+  image_path: 'assets/app-icon.png'
+  adaptive_icon_background: '#0A0D14' # Background color for Android adaptive icon
 
 flutter_native_splash:
-  color: "#0A0D14"
+  color: '#0A0D14'
   image: assets/splash-icon.png
   android_12:
     image: assets/splash-icon.png
-    color: "#0A0D14"
+    color: '#0A0D14'
