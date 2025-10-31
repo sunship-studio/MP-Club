@@ -163,7 +163,7 @@ export default class AdminAppController {
     // Sending mail (Waiting for designers to create templates)
     const template_path = path.join(
       __dirname,
-      '../templates',
+      '../../../templates',
       'online_coaching_confirmation.html'
     );
     const templateSource = this.readHTMLFile(template_path);
