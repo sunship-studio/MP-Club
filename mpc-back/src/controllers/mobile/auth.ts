@@ -1,20 +1,20 @@
-import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import { refreshSecret, secret } from "../../middleware/auth";
-import User, { IUser } from "../../models/User";
+import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
+import { refreshSecret, secret } from '../../middleware/auth';
+import User, { IUser } from '../../models/User';
 export class AuthController {
   static async checkEmail(
     email: string
   ): Promise<{ exists: boolean; hasPassword: boolean }> {
-    console.log("Checking email:", email);
-    const user = await User.findOne({ email: email.replace(/\s+/g, "") });
-    console.log("User found:", user);
+    console.log('Checking email:', email);
+    const user = await User.findOne({ email: email.replace(/\s+/g, '') });
+    console.log('User found:', user);
     const hasPassword = user?.hasPassword;
-    return { exists: user == null ? false : true, hasPassword: hasPassword!};
+    return { exists: user == null ? false : true, hasPassword: hasPassword! };
   }
 
   static async hashPassword(password: string): Promise<string> {
-    const bcrypt = require("bcrypt");
+    const bcrypt = require('bcrypt');
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     return hashedPassword;
@@ -24,7 +24,7 @@ export class AuthController {
     password: string,
     hashedPassword: string
   ): Promise<boolean> {
-    const bcrypt = require("bcrypt");
+    const bcrypt = require('bcrypt');
     return await bcrypt.compare(password, hashedPassword);
   }
 
@@ -52,18 +52,12 @@ export class AuthController {
     if (!user) {
       return null;
     }
-    const token = jwt.sign(
-      { id: user._id },
-    secret,
-      {
-        expiresIn: "1h",
-      }
-    );
-    const refreshToken = jwt.sign(
-      { id: user._id },
-      refreshSecret,
-      { expiresIn: "30d" }
-    );
+    const token = jwt.sign({ id: user._id }, secret, {
+      expiresIn: '1h',
+    });
+    const refreshToken = jwt.sign({ id: user._id }, refreshSecret, {
+      expiresIn: '30d',
+    });
 
     user.token = token;
     user.refreshToken = refreshToken;
@@ -78,22 +72,16 @@ export class AuthController {
     token: string;
     refreshToken: string;
   } | null> {
-    const user = await User.findOne({ email: email.replace(/\s+/g, "") });
+    const user = await User.findOne({ email: email.replace(/\s+/g, '') });
     if (user && user.password) {
       const isMatch = await this.verifyPassword(password, user.password);
       // create and save jwt tokens
-      const token = jwt.sign(
-        { id: user._id },
-        secret,
-        {
-          expiresIn: "10s",
-        }
-      );
-      const refreshToken = jwt.sign(
-        { id: user._id },
-        refreshSecret,
-        { expiresIn: "30d" }
-      );
+      const token = jwt.sign({ id: user._id }, secret, {
+        expiresIn: '10s',
+      });
+      const refreshToken = jwt.sign({ id: user._id }, refreshSecret, {
+        expiresIn: '30d',
+      });
       user.token = token;
       user.refreshToken = refreshToken;
       await user.save();
@@ -105,20 +93,220 @@ export class AuthController {
     return null;
   }
 
-  static async getUser(req: Request, res: Response){
-    const token = req.headers["authorization"] as string;
-    const refreshToken = req.headers["x-refresh-token"] as string;
+  static async getUser(req: Request, res: Response) {
+    const token = req.headers['authorization'] as string;
+    const refreshToken = req.headers['x-refresh-token'] as string;
 
-      let user = await User.findOne({token:token})
-      if (!user ) {
-        user = await User.findOne({refreshToken:refreshToken});
+    let user = await User.findOne({ token: token });
+    if (!user) {
+      user = await User.findOne({ refreshToken: refreshToken });
+    }
+
+    if (!user) {
+      res.status(401).json({ message: 'Unauthorized' });
+    }
+    res.json(user);
+  }
+
+  static async createAccountWithAppleSubscription(userData: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    age: number;
+    targetWeight?: number;
+    appleReceiptData: string;
+    subscriptionId: string;
+  }): Promise<{
+    success: boolean;
+    message?: string;
+    token?: string;
+
+    refreshToken?: string;
+    user?: IUser;
+  }> {
+    try {
+      const {
+        email,
+        firstName,
+        lastName,
+        age,
+        targetWeight,
+        appleReceiptData,
+        subscriptionId,
+      } = userData;
+
+      // Check if user already exists
+      const existingUser = await User.findOne({
+        email: email.replace(/\s+/g, ''),
+      });
+
+      if (existingUser) {
+        return {
+          success: false,
+          message: 'User with this email already exists',
+        };
       }
 
-      if (!user) {
-        res.status(401).json({ message: "Unauthorized" });
-      }
-      res.json(user);
+      // Verify Apple subscription receipt
+      const subscriptionValid = await this.verifyAppleReceipt(
+        appleReceiptData,
+        subscriptionId
+      );
 
+      if (!subscriptionValid.valid) {
+        return {
+          success: false,
+          message: subscriptionValid.message || 'Invalid Apple subscription',
+        };
+      }
+      console.log('Apple subscription verified successfully', userData);
+
+      // Create new user with Apple subscription
+      const newUser = new User({
+        email: email.replace(/\s+/g, ''),
+        firstName,
+        lastName,
+        age,
+        targetWeight,
+        customerId: `apple_${Date.now()}`, // Generate unique customer ID for Apple users
+        subscriptionId: subscriptionId,
+        status: 'active',
+        type: 'apple_subscription',
+        hasPassword: false,
+        startDate: new Date(),
+      });
+
+      // Generate JWT tokens
+      const token = jwt.sign({ id: newUser._id }, secret, { expiresIn: '1h' });
+
+      const refreshToken = jwt.sign({ id: newUser._id }, refreshSecret, {
+        expiresIn: '30d',
+      });
+
+      newUser.token = token;
+      newUser.refreshToken = refreshToken;
+
+      await newUser.save();
+
+      return {
+        success: true,
+        message: 'Account created successfully',
+        token,
+        refreshToken,
+        user: newUser,
+      };
+    } catch (error) {
+      console.error('Error creating account with Apple subscription:', error);
+      return {
+        success: false,
+        message: 'Failed to create account',
+      };
+    }
+  }
+
+  static async verifyAppleReceipt(
+    receiptData: string,
+    subscriptionId: string
+  ): Promise<{ valid: boolean; message?: string }> {
+    try {
+      // Apple App Store receipt verification
+      const isProduction = process.env.NODE_ENV === 'production';
+      const verifyURL = isProduction
+        ? 'https://buy.itunes.apple.com/verifyReceipt'
+        : 'https://sandbox.itunes.apple.com/verifyReceipt';
+
+      const requestBody = {
+        'receipt-data': receiptData,
+        password: process.env.APPLE_SHARED_SECRET || '',
+        'exclude-old-transactions': true,
+      };
+
+      const response = await fetch(verifyURL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const result = await response.json();
+
+      // Handle sandbox fallback for production environment
+      if (result.status === 21007 && isProduction) {
+        // Receipt is from sandbox, retry with sandbox URL
+        const sandboxResponse = await fetch(
+          'https://sandbox.itunes.apple.com/verifyReceipt',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          }
+        );
+
+        const sandboxResult = await sandboxResponse.json();
+        return this.processAppleReceiptResult(sandboxResult, subscriptionId);
+      }
+
+      return this.processAppleReceiptResult(result, subscriptionId);
+    } catch (error) {
+      console.error('Error verifying Apple receipt:', error);
+      return {
+        valid: false,
+        message: 'Failed to verify Apple receipt',
+      };
+    }
+  }
+
+  private static processAppleReceiptResult(
+    result: any,
+    subscriptionId: string
+  ): { valid: boolean; message?: string } {
+    if (result.status !== 0) {
+      const statusMessages: { [key: number]: string } = {
+        21000: 'The App Store could not read the JSON object you provided',
+        21002: 'The data in the receipt-data property was malformed or missing',
+        21003: 'The receipt could not be authenticated',
+        21004:
+          'The shared secret you provided does not match the shared secret on file',
+        21005: 'The receipt server is not currently available',
+        21006: 'This receipt is valid but the subscription has expired',
+        21007: 'This receipt is from the sandbox environment',
+        21008: 'This receipt is from the production environment',
+      };
+
+      return {
+        valid: false,
+        message:
+          statusMessages[result.status] ||
+          `Apple receipt verification failed with status ${result.status}`,
+      };
+    }
+
+    // Check if receipt contains the expected subscription
+    const receipt = result.receipt;
+    const latestReceiptInfo = result.latest_receipt_info || [];
+
+    // Look for active subscription matching the provided subscription ID
+    const activeSubscription = latestReceiptInfo.find(
+      (info: any) =>
+        info.product_id === subscriptionId &&
+        new Date(parseInt(info.expires_date_ms)) > new Date()
+    );
+
+    if (!activeSubscription) {
+      return {
+        valid: false,
+        message:
+          'No active subscription found for the provided subscription ID',
+      };
+    }
+
+    return {
+      valid: true,
+      message: 'Apple subscription verified successfully',
+    };
   }
 }
 

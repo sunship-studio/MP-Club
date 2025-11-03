@@ -2,7 +2,7 @@ name: mpc_admin_app
 description: 'A new Flutter project.'
 publish_to: 'none'
 
-version: 1.0.1+5
+version: 1.0.1+9
 
 environment:
   sdk: ^3.7.2

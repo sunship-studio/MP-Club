@@ -1,9 +1,10 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from 'mongoose';
 
 export interface IUser extends Document {
   customerId: string;
   token?: string;
   refreshToken?: string;
+  fcmToken?: string; // Firebase Cloud Messaging token for push notifications
   subscriptionId: string;
   status: string;
   type: string;
@@ -37,21 +38,19 @@ export interface IUser extends Document {
   ];
   checkIns: [
     {
-
       date: Date;
       weight: number;
       imageUrl?: string | null;
       note?: string | null;
-
     }
-  ],
+  ];
   caloriesLogs: [
     {
       date: Date;
       calories: number;
       note?: string | null;
     }
-  ],
+  ];
   hasPassword?: boolean;
   lastLogin?: Date;
   password?: string;
@@ -102,15 +101,15 @@ const UserSchema = new Schema<IUser>({
   token: { type: String },
   targetWeight: { type: Number },
   refreshToken: { type: String },
+  fcmToken: { type: String }, // Firebase Cloud Messaging token
   checkIns: [
     {
-      id: { type: Schema.Types.ObjectId, },
+      id: { type: Schema.Types.ObjectId },
       date: { type: Date, required: true },
       weight: { type: Number, required: true },
       imageUrl: { type: String },
       note: { type: String },
     },
-
   ],
   caloriesLogs: [
     {
@@ -123,7 +122,6 @@ const UserSchema = new Schema<IUser>({
   doneWorkouts: {
     type: [
       {
-
         date: { type: Date, required: true },
         workout: {
           name: { type: String, required: true },
@@ -194,5 +192,5 @@ const UserSchema = new Schema<IUser>({
 
 // Export the model and return your IUser interface
 // @ts-ignore
-const User = mongoose.model<IUser>("User", UserSchema);
+const User = mongoose.model<IUser>('User', UserSchema);
 export default User;

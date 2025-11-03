@@ -69,6 +69,48 @@ class AuthRepository {
     return User.fromJson(response.data);
     throw Exception('Failed to load user data');
   }
+
+  /// Create account with Apple subscription
+  Future<AuthResult> createAccountWithAppleSubscription({
+    String?
+    email, // Optional - backend will extract from receipt if not provided
+    required String firstName,
+    required String lastName,
+    required int age,
+    required String appleReceiptData,
+    required String subscriptionId,
+    int? targetWeight,
+  }) async {
+    try {
+      final response = await dio
+          .post('/auth/create-account-apple-subscription', {
+            if (email != null && email.isNotEmpty) 'email': email,
+            'firstName': firstName,
+            'lastName': lastName,
+            'age': age,
+            'appleReceiptData': appleReceiptData,
+            'subscriptionId': subscriptionId,
+            if (targetWeight != null) 'targetWeight': targetWeight,
+          });
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // Backend returns tokens in headers
+        // Your DioClient should handle saving them automatically
+        return AuthResult(
+          success: true,
+          message: response.data['message'] ?? 'Account created successfully',
+          data: response.data['user'],
+        );
+      } else {
+        return AuthResult(
+          success: false,
+          message: response.data['message'] ?? 'Failed to create account',
+        );
+      }
+    } catch (e) {
+      return AuthResult(success: false, message: 'Error creating account: $e');
+    }
+  }
 }
 
 class AuthResult {

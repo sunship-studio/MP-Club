@@ -111,4 +111,55 @@ class DioClient {
       throw Exception('Failed to put data: ${e.message}');
     }
   }
+
+  /// Register FCM token with backend
+  Future<Response> registerFCMToken(String fcmToken) async {
+    try {
+      dio.options.headers['authorization'] =
+          await tokenStorage.getAccessToken() ?? '';
+      dio.options.headers['x-refresh-token'] =
+          await tokenStorage.getRefreshToken() ?? '';
+
+      final response = await dio.post(
+        '/notifications/register-token',
+        data: {'fcmToken': fcmToken},
+      );
+
+      if (response.headers['authorization'] != null &&
+          response.headers['x-refresh-token'] != null) {
+        await tokenStorage.saveTokens(
+          accessToken: response.headers['authorization']!.first,
+          refreshToken: response.headers['x-refresh-token']!.first,
+        );
+      }
+
+      return response;
+    } on DioException catch (e) {
+      throw Exception('Failed to register FCM token: ${e.message}');
+    }
+  }
+
+  /// Remove FCM token from backend (on logout)
+  Future<Response> removeFCMToken() async {
+    try {
+      dio.options.headers['authorization'] =
+          await tokenStorage.getAccessToken() ?? '';
+      dio.options.headers['x-refresh-token'] =
+          await tokenStorage.getRefreshToken() ?? '';
+
+      final response = await dio.post('/notifications/remove-token');
+
+      if (response.headers['authorization'] != null &&
+          response.headers['x-refresh-token'] != null) {
+        await tokenStorage.saveTokens(
+          accessToken: response.headers['authorization']!.first,
+          refreshToken: response.headers['x-refresh-token']!.first,
+        );
+      }
+
+      return response;
+    } on DioException catch (e) {
+      throw Exception('Failed to remove FCM token: ${e.message}');
+    }
+  }
 }

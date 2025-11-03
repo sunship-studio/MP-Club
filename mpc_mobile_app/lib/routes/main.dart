@@ -26,12 +26,15 @@ import 'package:mpc_mobile_app/presentation/screens/profile.dart';
 import 'package:mpc_mobile_app/presentation/screens/submit_checkin.dart';
 import 'package:mpc_mobile_app/presentation/screens/training_plan.dart';
 
+// Global keys for navigation
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 GlobalKey<MpcAppNavBarState> navBarKey = GlobalKey<MpcAppNavBarState>();
 bool showNavBar = true;
 
 class MainRouter {
   MainRouter();
   final router = GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/home',
     routes: [
       StatefulShellRoute.indexedStack(

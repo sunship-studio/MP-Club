@@ -2,44 +2,29 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mpc_admin_app/app/services/notification_service.dart';
 import 'package:mpc_admin_app/core/router/app_router.dart';
 
 bool debug = false;
 String admin_key = 'shanempc113@';
 
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  print("Handling a background message: ${message.messageId}");
-}
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
   await Firebase.initializeApp();
+
   if (debug) {
-    // Enable debug mode
     debugPrint("Debug mode is enabled");
   } else {
-    // Disable debug mode
     debugPrint("Debug mode is disabled");
   }
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  NotificationSettings settings = await FirebaseMessaging.instance
-      .requestPermission(alert: true, badge: true, sound: true);
 
-  // Only proceed if user granted permission
-  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    // Get the token
-    try {
-      String? token = await FirebaseMessaging.instance.getToken();
-      print('FCM Token: $token');
+  // Set up background message handler
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-      // For iOS, specifically get the APNS token
-      String? apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-      print('APNS Token: $apnsToken');
-    } catch (e) {
-      debugPrint("cant get aspn");
-    }
-  }
+  // Initialize notification service
+  await NotificationService().initialize();
 
   runApp(const MpcApp());
 }

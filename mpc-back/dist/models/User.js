@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const UserSchema = new mongoose_1.Schema({
+    profilePictureUrl: { type: String },
     customerId: { type: String, required: true },
     subscriptionId: { type: String, required: true },
     status: { type: String, required: true },

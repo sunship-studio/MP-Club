@@ -1,83 +1,79 @@
-import crypto from "crypto";
-import express from "express";
-import fs from "fs";
-import path from "path";
-import { AuthController } from "../../controllers/mobile/auth";
-import { verifyToken } from "../../middleware/auth";
-import PasswordResetToken from "../../models/PasswordResetToken";
-import User from "../../models/User";
+import crypto from 'crypto';
+import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import { AuthController } from '../../controllers/mobile/auth';
+import { verifyToken } from '../../middleware/auth';
+import PasswordResetToken from '../../models/PasswordResetToken';
+import User from '../../models/User';
 const authRouter = express.Router();
 
-authRouter.post("/check-email", async (req, res) => {
+authRouter.post('/check-email', async (req, res) => {
   try {
-    console.log("Request body:", req.body);
+    console.log('Request body:', req.body);
     const { email } = req.body;
 
     const data = await AuthController.checkEmail(email);
-    console.log("Email check data:", data);
+    console.log('Email check data:', data);
     res.json({ exists: data.exists, hasPassword: data.hasPassword });
   } catch (error) {
-    res.status(500).json({ message: "Error checking email" });
+    res.status(500).json({ message: 'Error checking email' });
   }
 });
 
-authRouter.post("/set-password", async (req, res) => {
+authRouter.post('/set-password', async (req, res) => {
   const { email, newPassword } = req.body;
   const result = await AuthController.setPassword(email, newPassword);
-  res.setHeader("authorization", result?.token || "");
-  res.setHeader("x-refresh-token", result?.refreshToken || "");
+  res.setHeader('authorization', result?.token || '');
+  res.setHeader('x-refresh-token', result?.refreshToken || '');
   res.json({
-    message: "Password set successfully",
-
+    message: 'Password set successfully',
   });
 });
 
-authRouter.post("/new-password", async (req, res) => {
+authRouter.post('/new-password', async (req, res) => {
   const { token, password } = req.body;
   if (!token || !password) {
-    res.status(400).json({ message: "Token and password are required" });
+    res.status(400).json({ message: 'Token and password are required' });
     return;
   }
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-  console.log("Token hash:", tokenHash);
+  console.log('Token hash:', tokenHash);
   const dbToken = await PasswordResetToken.findOne({
     token: tokenHash,
-    used: false
+    used: false,
   });
   if (!dbToken) {
-    res.status(400).json({ message: "Invalid or expired token" });
+    res.status(400).json({ message: 'Invalid or expired token' });
     return;
   }
   const user = await User.findById(dbToken.userId);
 
   if (!user) {
-    console.error("User not found for ID:", dbToken.userId);
-    res.status(404).json({ message: "User not found" });
+    console.error('User not found for ID:', dbToken.userId);
+    res.status(404).json({ message: 'User not found' });
     return;
   }
 
-
   if (user) {
-  const result = await AuthController.setPassword(user.email, password);
-  res.setHeader("authorization", result?.token || "");
-  res.setHeader("x-refresh-token", result?.refreshToken || "");
-  res.json(user);
+    const result = await AuthController.setPassword(user.email, password);
+    res.setHeader('authorization', result?.token || '');
+    res.setHeader('x-refresh-token', result?.refreshToken || '');
+    res.json(user);
   }
-
 });
 
-authRouter.post("/login", async (req, res) => {
+authRouter.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const tokens = await AuthController.login(email, password);
-  res.setHeader("authorization", tokens?.token || "");
-  res.setHeader("x-refresh-token", tokens?.refreshToken || "");
+  res.setHeader('authorization', tokens?.token || '');
+  res.setHeader('x-refresh-token', tokens?.refreshToken || '');
   if (tokens) {
     res.json({
-      message: "Login successful",
-
+      message: 'Login successful',
     });
   } else {
-    res.status(401).json({ message: "Invalid email or password" });
+    res.status(401).json({ message: 'Invalid email or password' });
   }
 });
 
@@ -86,87 +82,94 @@ authRouter.get('/verify-reset-token/:token', async (req, res) => {
     const { token } = req.params;
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
-    const resetTokenDoc = await PasswordResetToken.findOne({ token: hashedToken, used: false });
+    const resetTokenDoc = await PasswordResetToken.findOne({
+      token: hashedToken,
+      used: false,
+    });
     if (!resetTokenDoc || resetTokenDoc.expiry < Date.now()) {
-        res.status(400).json({ valid: false, message: 'Invalid or expired token' });
-        return;
-      }
+      res
+        .status(400)
+        .json({ valid: false, message: 'Invalid or expired token' });
+      return;
+    }
     res.json({ valid: true, message: 'Token is valid' });
-  }
-    catch (error) {
+  } catch (error) {
     console.error('Error verifying reset token:', error);
     res.status(500).json({ valid: false, message: 'Server error' });
   }
-
 });
 
-authRouter.post("/forgot-password", async (req, res): Promise<void> =>  {
-try {
+authRouter.post('/forgot-password', async (req, res): Promise<void> => {
+  try {
     const { email } = req.body;
 
     if (!email) {
-       res.status(400).json({ error: 'Email is required' });
-        return;
+      res.status(400).json({ error: 'Email is required' });
+      return;
     }
-
 
     const user = await User.findOne({ email });
     if (!user) {
-       res.status(404).json({ error: 'User not found' });
-       return;
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
 
     // Generate secure token
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
     const expiry = Date.now() + 3600000; // 1 hour
 
     await PasswordResetToken.create({
       userId: user._id,
       token: hashedToken,
       expiry: expiry,
-      used: false
-    })
+      used: false,
+    });
 
     // Create deep link
-    const deepLink =  createResetLink(resetToken);
-
+    const deepLink = createResetLink(resetToken);
 
     try {
-    await sendPasswordResetEmail(email, deepLink);
+      await sendPasswordResetEmail(email, deepLink);
     } catch (emailError) {
       console.error('Error sending password reset email:', emailError);
-        res.status(500).json({ error: 'Failed to send reset link' });
-        return;
-      }
+      res.status(500).json({ error: 'Failed to send reset link' });
+      return;
+    }
     // Send email
-
 
     res.json({
       message: 'Password reset link sent to your email',
       // For testing only - remove in production
-      ...(process.env.NODE_ENV === 'development' && { resetLink: deepLink })
+      ...(process.env.NODE_ENV === 'development' && { resetLink: deepLink }),
     });
-
   } catch (error: any) {
     console.error('Error requesting password reset:', error);
     res.status(500).json({ error: 'Failed to send reset link' });
   }
 });
 
- function createResetLink(token: string): string{
-  const baseUrl =  'https://mp-club-production.up.railway.app/mobile-app/auth/';
+function createResetLink(token: string): string {
+  const baseUrl = 'https://mp-club-production.up.railway.app/mobile-app/auth/';
   return `${baseUrl}reset-password?token=${token}`;
 }
 
-async function sendPasswordResetEmail(email: string, link: string): Promise<void> {
+async function sendPasswordResetEmail(
+  email: string,
+  link: string
+): Promise<void> {
   const sgMail = require('@sendgrid/mail');
   sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
-  const templatePath = path.join(__dirname, '../../../templates/forgot_password.html');
+  const templatePath = path.join(
+    __dirname,
+    '../../../templates/forgot_password.html'
+  );
   let template = fs.readFileSync(templatePath, 'utf-8');
   template = template.replace('{{resetLink}}', link);
-
 
   const msg = {
     to: email,
@@ -174,25 +177,22 @@ async function sendPasswordResetEmail(email: string, link: string): Promise<void
     subject: 'Password Reset Request',
     html: template,
     tracking_settings: {
-        click_tracking: {
-          enable: false,
-          enable_text: false
-        }
+      click_tracking: {
+        enable: false,
+        enable_text: false,
       },
+    },
   };
 
   await sgMail.send(msg);
   console.log('Password reset email sent');
-
 }
 
 authRouter.get('/reset-password', (req, res) => {
   const token = req.query.token as string;
 
   if (!token) {
-     res.status(400).send('Invalid reset link');
-
-
+    res.status(400).send('Invalid reset link');
   }
 
   // Send HTML page that attempts to open the app
@@ -428,10 +428,52 @@ authRouter.get('/reset-password', (req, res) => {
   res.send(html);
 });
 
-authRouter.get("/user", verifyToken,  (req, res) =>
-   AuthController.getUser(req, res)
+authRouter.post('/create-account-apple-subscription', async (req, res) => {
+  try {
+    const {
+      email,
+      firstName,
+      lastName,
+      age,
+      targetWeight,
+      appleReceiptData,
+      subscriptionId,
+    } = req.body;
+
+    const result = await AuthController.createAccountWithAppleSubscription({
+      email,
+      firstName,
+      lastName,
+      age,
+      targetWeight,
+      appleReceiptData,
+      subscriptionId,
+    });
+
+    console.log('Account creation result:', req.body, result);
+
+    if (result.success) {
+      res.setHeader('authorization', result.token || '');
+      res.setHeader('x-refresh-token', result.refreshToken || '');
+      res.status(201).json({
+        message: 'Account created successfully with Apple subscription',
+        user: result.user,
+      });
+    } else {
+      res.status(400).json({
+        message: result.message || 'Failed to create account',
+      });
+    }
+  } catch (error) {
+    console.error('Error creating account with Apple subscription:', error);
+    res.status(500).json({
+      message: 'Internal server error',
+    });
+  }
+});
+
+authRouter.get('/user', verifyToken, (req, res) =>
+  AuthController.getUser(req, res)
 );
-
-
 
 export default authRouter;

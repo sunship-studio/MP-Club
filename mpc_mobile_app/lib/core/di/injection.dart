@@ -12,6 +12,7 @@ import 'package:mpc_mobile_app/data/repositories/workout.dart';
 import 'package:mpc_mobile_app/main.dart';
 import 'package:mpc_mobile_app/routes/auth.dart';
 import 'package:mpc_mobile_app/routes/main.dart';
+import 'package:mpc_mobile_app/services/notification_service.dart';
 import 'package:mpc_mobile_app/services/socket.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -35,7 +36,7 @@ Future<void> setupDependencies() async {
       BaseOptions(
         baseUrl:
             debugMode
-                ? 'http://172.20.10.12:3500/mobile-app'
+                ? 'http://localhost:3500/mobile-app'
                 : 'https://mp-club-production.up.railway.app/mobile-app',
         connectTimeout: Duration(seconds: 10),
         receiveTimeout: Duration(seconds: 10),
@@ -58,6 +59,9 @@ Future<void> setupDependencies() async {
   );
   //  SOCKET SERVICE
   getIt.registerLazySingleton<SocketService>(() => SocketService());
+
+  // NOTIFICATION SERVICE
+  getIt.registerLazySingleton<NotificationService>(() => NotificationService());
 
   // ==================== REPOSITORIES ====================
   // Singleton = One instance for entire app lifetime

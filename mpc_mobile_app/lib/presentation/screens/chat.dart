@@ -20,6 +20,7 @@ import 'package:mpc_mobile_app/presentation/widgets/chat/header.dart';
 import 'package:mpc_mobile_app/presentation/widgets/chat/message.dart';
 import 'package:mpc_mobile_app/presentation/widgets/check_in/sheets/browse_file.dart';
 import 'package:mpc_mobile_app/routes/main.dart';
+import 'package:mpc_mobile_app/services/notification_service.dart';
 import 'package:mpc_mobile_app/services/socket.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -61,13 +62,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _initializeChat();
     _setupListeners();
     _scrollController.addListener(_onScroll);
-    @override
-    void initState() {
-      super.initState();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        navBarKey.currentState?.turnOffNavBar();
-      });
-    }
+
+    // Set navigation context for NotificationService
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      navBarKey.currentState?.turnOffNavBar();
+      getIt<NotificationService>().setNavigationContext(context);
+    });
   }
 
   ///

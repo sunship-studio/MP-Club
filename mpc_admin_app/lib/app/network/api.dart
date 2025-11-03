@@ -50,6 +50,30 @@ class ApiService {
       throw Exception('Failed to post form data: $e');
     }
   }
+
+  /// Register FCM token with backend
+  Future<bool> registerFCMToken(String fcmToken) async {
+    try {
+      Response response = await post('/notifications/register-token', {
+        'fcmToken': fcmToken,
+      });
+      return response.statusCode == 200;
+    } catch (e) {
+      print('❌ Error registering FCM token: $e');
+      return false;
+    }
+  }
+
+  /// Remove FCM token from backend
+  Future<bool> removeFCMToken() async {
+    try {
+      Response response = await post('/notifications/remove-token', {});
+      return response.statusCode == 200;
+    } catch (e) {
+      print('❌ Error removing FCM token: $e');
+      return false;
+    }
+  }
 }
 
 ApiService apiService = ApiService();

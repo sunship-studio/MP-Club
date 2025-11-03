@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/bloc/add_subscriber.dart';
-import 'package:mpc_admin_app/core/router/route_names.dart';
 
 class AddSubscriberScreen extends StatefulWidget {
   const AddSubscriberScreen({super.key});
@@ -39,7 +38,7 @@ class _AddSubscriberScreenState extends State<AddSubscriberScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Subscriber added successfully')),
           );
-          context.go(RouteNames.onlineCoaching);
+          context.go('/waiting-list');
         } else if (state is AddSubscriberFailure) {
           // Show error message
           ScaffoldMessenger.of(
@@ -49,137 +48,170 @@ class _AddSubscriberScreenState extends State<AddSubscriberScreen> {
       },
       child: BlocBuilder<AddSubscribeCubit, AddSubscriberState>(
         builder: (context, state) {
-          if (state is AddSubscriberLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            );
-          }
           return GestureDetector(
             onTap: () {
               // Dismiss keyboard when tapping outside
               FocusScope.of(context).unfocus();
             },
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Add Subscriber Manually',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'SF-Pro',
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Email Input
-                    _buildTextField(
-                      controller: _emailController,
-                      label: 'Email',
-                      hint: 'Enter email address',
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.done,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter an email';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: gap),
-
-                    // First Name Input
-                    _buildTextField(
-                      controller: _firstNameController,
-                      label: 'First Name',
-                      hint: 'Enter first name',
-                      textInputAction: TextInputAction.done,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter first name';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: gap),
-
-                    // Last Name Input
-                    _buildTextField(
-                      controller: _lastNameController,
-                      label: 'Last Name',
-                      hint: 'Enter last name',
-                      textInputAction: TextInputAction.done,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter last name';
-                        }
-                        return null;
-                      },
-                    ),
-                    SizedBox(height: gap),
-
-                    // Age Input
-                    _buildTextField(
-                      controller: _ageController,
-                      label: 'Age',
-                      hint: 'Enter age',
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      textInputAction: TextInputAction.done,
-                      showDoneButton: true, // Add this parameter
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter age';
-                        }
-                        final age = int.tryParse(value);
-                        if (age == null || age < 1 || age > 120) {
-                          return 'Please enter a valid age';
-                        }
-                        return null;
-                      },
-                    ),
-                    const Spacer(),
-
-                    // Submit Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: _submitForm,
-                        style: ButtonStyle(
-                          padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
-                            const EdgeInsets.symmetric(vertical: 16),
+            child: SingleChildScrollView(
+              // This makes the content scrollable when keyboard appears
+              padding: EdgeInsets.only(
+                left: 22,
+                right: 22,
+                top: 16,
+                bottom:
+                    MediaQuery.of(context).viewInsets.bottom +
+                    16, // Add keyboard padding
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight:
+                      MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).viewInsets.bottom -
+                      100, // Account for header
+                ),
+                child: IntrinsicHeight(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Add Subscriber Manually',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'SF-Pro',
                           ),
-                          backgroundColor: WidgetStateProperty.all<Color>(
-                            const Color.fromARGB(255, 19, 157, 221),
-                          ),
-                          shape:
-                              WidgetStateProperty.all<RoundedRectangleBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Email Input
+                        _buildTextField(
+                          controller: _emailController,
+                          label: 'Email',
+                          hint: 'Enter email address',
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter an email';
+                            }
+                            if (!value.contains('@')) {
+                              return 'Please enter a valid email';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: gap),
+
+                        // First Name Input
+                        _buildTextField(
+                          controller: _firstNameController,
+                          label: 'First Name',
+                          hint: 'Enter first name',
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter first name';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: gap),
+
+                        // Last Name Input
+                        _buildTextField(
+                          controller: _lastNameController,
+                          label: 'Last Name',
+                          hint: 'Enter last name',
+                          textInputAction: TextInputAction.next,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter last name';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: gap),
+
+                        // Age Input
+                        _buildTextField(
+                          controller: _ageController,
+                          label: 'Age',
+                          hint: 'Enter age',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          textInputAction: TextInputAction.done,
+                          showDoneButton: true,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter age';
+                            }
+                            final age = int.tryParse(value);
+                            if (age == null || age < 1 || age > 120) {
+                              return 'Please enter a valid age';
+                            }
+                            return null;
+                          },
+                        ),
+
+                        const Spacer(), // Pushes button to bottom
+                        // Submit Button
+                        Padding(
+                          padding: const EdgeInsets.only(top: 20),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed:
+                                  state is AddSubscriberLoading
+                                      ? null
+                                      : _submitForm,
+                              style: ButtonStyle(
+                                padding:
+                                    WidgetStateProperty.all<EdgeInsetsGeometry>(
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                    ),
+                                backgroundColor: WidgetStateProperty.all<Color>(
+                                  const Color.fromARGB(255, 19, 157, 221),
+                                ),
+                                shape: WidgetStateProperty.all<
+                                  RoundedRectangleBorder
+                                >(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.0),
+                                  ),
                                 ),
                               ),
-                        ),
-                        child: const Text(
-                          'Add Subscriber',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontFamily: 'SF-Pro',
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
+                              child:
+                                  state is AddSubscriberLoading
+                                      ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                      : const Text(
+                                        'Add Subscriber',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontFamily: 'SF-Pro',
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                  ],
+                  ),
                 ),
               ),
             ),

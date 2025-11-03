@@ -41,19 +41,13 @@ class PlansController {
                 console.log("Session created:", session);
                 // Store the session ID in your database or perform any other necessary actions
                 res.status(200).json({
-                    sessionId: session.id,
+                    url: session.url,
                 });
             }
             catch (error) {
                 console.error("Error creating subscription:", error);
                 res.status(500).json({ error: "Failed to create subscription" });
             }
-        });
-    }
-    handleWebhook(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            // Logic to handle webhook events from Stripe
-            res.status(200).send("Webhook received");
         });
     }
 }

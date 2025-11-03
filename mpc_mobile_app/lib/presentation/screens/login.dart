@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/cubits/auth.dart';
+import 'package:mpc_mobile_app/cubits/subscription.dart';
 import 'package:mpc_mobile_app/presentation/widgets/circular_button.dart';
 import 'package:mpc_mobile_app/presentation/widgets/onboarding/onboarding_input.dart';
 import 'package:mpc_mobile_app/services/snack_bar.dart';
@@ -117,23 +118,66 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color.fromRGBO(4, 6, 14, 1),
-      body: BlocListener<AuthCubit, AuthState>(
-        listener: (context, state) {
-          if (state is EmailCheckSuccess &&
-              state.exists &&
-              !state.hasPassword) {
-            // Navigate to set password screen
-            context.go('/login/set_password', extra: _emailController.text);
-          } else if (state is AuthError) {
-            // Show error snackbar
-            SnackBarService.show(
-              context: context,
-              message: state.message,
-              isNavBar: false,
-              isError: true,
-            );
-          }
-        },
+      body: MultiBlocListener(
+        listeners: [
+          // Auth state listener
+          BlocListener<AuthCubit, AuthState>(
+            listener: (context, state) {
+              if (state is EmailCheckSuccess &&
+                  state.exists &&
+                  !state.hasPassword) {
+                // Navigate to set password screen
+                context.go('/login/set_password', extra: _emailController.text);
+              } else if (state is AuthError) {
+                // Show error snackbar
+                SnackBarService.show(
+                  context: context,
+                  message: state.message,
+                  isNavBar: false,
+                  isError: true,
+                );
+              }
+            },
+          ),
+          // Subscription state listener
+          BlocListener<SubscriptionCubit, SubscriptionState>(
+            listener: (context, state) {
+              if (state is SubscriptionPurchasing) {
+                // Show loading indicator
+                SnackBarService.show(
+                  context: context,
+                  message: 'Processing purchase...',
+                  isNavBar: false,
+                  isError: false,
+                );
+              } else if (state is SubscriptionActive) {
+                // Purchase successful - navigate to signup form
+                SnackBarService.show(
+                  context: context,
+                  message: 'Purchase successful! Please complete your profile.',
+                  isNavBar: false,
+                  isError: false,
+                );
+                // Navigate to subscription signup screen
+                context.go(
+                  '/login/subscription_signup',
+                  extra: {
+                    'receipt': state.receipt,
+                    'subscriptionId': state.purchaseDetails.productID,
+                  },
+                );
+              } else if (state is SubscriptionError) {
+                // Purchase failed
+                SnackBarService.show(
+                  context: context,
+                  message: state.message,
+                  isNavBar: false,
+                  isError: true,
+                );
+              }
+            },
+          ),
+        ],
         child: BlocBuilder<AuthCubit, AuthState>(
           builder: (context, state) {
             return Container(
@@ -334,15 +378,23 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             SizedBox(height: 6),
-                            Text(
-                              "Purchase a Membership",
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 1),
-                                fontSize: 14.sp,
-                                decoration: TextDecoration.underline,
-                                decorationColor: Colors.white,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: -0.6,
+                            GestureDetector(
+                              onTap: () {
+                                // Trigger subscription purchase via cubit
+                                context
+                                    .read<SubscriptionCubit>()
+                                    .purchaseSubscription();
+                              },
+                              child: Text(
+                                "Purchase a Membership",
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 1),
+                                  fontSize: 14.sp,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                  letterSpacing: -0.6,
+                                ),
                               ),
                             ),
                           ],

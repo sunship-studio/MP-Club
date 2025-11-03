@@ -19,32 +19,36 @@ const auth_1 = require("../middleware/auth");
 const adminAppRouter = express_1.default.Router();
 const adminAppController = new admin_app_1.default();
 // Route to get the waiting list
-adminAppRouter.get("/waiting-list", auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+adminAppRouter.get('/waiting-list', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield adminAppController.getWaitingList(req, res);
 }));
-adminAppRouter.get("/exercises", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+adminAppRouter.get('/exercises', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield adminAppController.getAllExercises(req, res);
 }));
 // Route to get online subscriptions
-adminAppRouter.get("/online-users", auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+adminAppRouter.get('/online-users', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield adminAppController.getOnlineCoachingUsers(req, res);
 }));
-adminAppRouter.post("/waiting-list/reject", auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+adminAppRouter.post('/waiting-list/reject', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield adminAppController.rejectWaitingList(req, res);
 }));
-adminAppRouter.post("/waiting-list/accept", auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+adminAppRouter.post('/waiting-list/accept', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield adminAppController.acceptWaitingList(req, res);
 }));
-adminAppRouter.post("/user-calories", auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("Received request to save user calories:", req.body);
+adminAppRouter.post('/user-calories', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('Received request to save user calories:', req.body);
     yield adminAppController.saveUserCalories(req, res);
 }));
 adminAppRouter.post('/user-target-weight', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("Received request to save user target weight:", req.body);
+    console.log('Received request to save user target weight:', req.body);
     yield adminAppController.saveUserTargetWeight(req, res);
 }));
-adminAppRouter.post("/save-training-plan", auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log("Received request to save training plan:", req.body);
+adminAppRouter.post('/save-training-plan', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('Received request to save training plan:', req.body);
     yield adminAppController.saveTrainingPlan(req, res);
+}));
+adminAppRouter.post('/add-subscriber', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('Received request to add subscriber:', req.body);
+    yield adminAppController.addSubscriber(req, res);
 }));
 exports.default = adminAppRouter;

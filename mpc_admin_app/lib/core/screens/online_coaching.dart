@@ -135,10 +135,18 @@ class OnlineCoaching extends StatelessWidget {
                         child: ListView.builder(
                           padding: const EdgeInsets.only(),
                           shrinkWrap: true,
-                          itemCount: state.currentSubscribers.length,
+                          itemCount:
+                              state.currentSubscribers.length < 6
+                                  ? state.currentSubscribers.length + 1
+                                  : 4,
                           itemBuilder: (context, index) {
+                            if (index >= state.currentSubscribers.length) {
+                              return Container(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.4,
+                              );
+                            }
                             final subscriber = state.currentSubscribers[index];
-
                             return UserBox(user: subscriber);
                           },
                         ),

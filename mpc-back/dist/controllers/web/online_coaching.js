@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const mailer_1 = __importDefault(require("../../config/mailer"));
 const stripe_1 = __importDefault(require("../../config/stripe"));
 const PaymentSession_1 = __importDefault(require("../../models/PaymentSession"));
 const User_1 = __importDefault(require("../../models/User"));
@@ -33,16 +32,16 @@ class OnlineCoachingController {
                     mode: "subscription",
                     line_items: [
                         {
-                            price: process.env.STRIPE_PRICE_ID,
+                            price: process.env.NODE_ENV == "production" ? process.env.STRIPE_PRICE_ID : process.env.STRIPE_TEST_PRICE_ID,
                             quantity: 1,
                         },
                     ],
                     success_url: process.env.NODE_ENV === "development"
                         ? `http://localhost:3000/online-coaching/success`
-                        : `${req.protocol}://${req.get("host")}/online-coaching/success`,
+                        : `https://www.midlandsperformanceclub.ie/online-coaching/success`,
                     cancel_url: process.env.NODE_ENV === "development"
                         ? `http://localhost:3000/online-coaching/`
-                        : `${req.protocol}://${req.get("host")}/online-coaching/`,
+                        : `https://www.midlandsperformanceclub.ie/online-coaching/`,
                 });
                 console.log("Session created:", session);
                 // Store the session ID in your database or perform any other necessary actions
@@ -60,7 +59,7 @@ class OnlineCoachingController {
                     console.error("Error saving payment session:", error);
                 });
                 res.status(200).json({
-                    sessionId: session.id,
+                    url: session.url,
                 });
             }
             catch (error) {
@@ -96,7 +95,6 @@ class OnlineCoachingController {
                     subject: "Subscription Cancellation",
                     html: htmlToSend,
                 };
-                yield mailer_1.default.sendMail(mailOptions);
                 res.status(200);
                 console.log("Cancellation email sent to:", email);
             }

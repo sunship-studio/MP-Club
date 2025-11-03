@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,10 +7,13 @@ import 'package:mpc_mobile_app/core/storage/token.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/core/theme/theme.dart';
 import 'package:mpc_mobile_app/cubits/auth.dart';
+import 'package:mpc_mobile_app/cubits/subscription.dart';
 import 'package:mpc_mobile_app/data/models/user.dart';
 import 'package:mpc_mobile_app/data/repositories/auth.dart';
 import 'package:mpc_mobile_app/routes/auth.dart';
 import 'package:mpc_mobile_app/routes/main.dart';
+import 'package:mpc_mobile_app/services/notification_service.dart';
+import 'package:mpc_mobile_app/services/subscription_service.dart';
 
 bool debugMode = false;
 
@@ -19,7 +23,16 @@ void main(List<String> args) async {
     print('Stack: ${details.stack}');
   };
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
+  // Setup dependencies (includes NotificationService)
   await setupDependencies();
+
+  // Initialize NotificationService
+  await getIt<NotificationService>().initialize();
+
   runApp(MpcApp());
 }
 
@@ -31,13 +44,25 @@ class MpcApp extends StatelessWidget {
     return ScreenUtilInit(
       designSize: const Size(375, 812),
       minTextAdapt: true,
-      child: BlocProvider(
-        // Global AuthCubit - checks authentication status
-        create:
-            (_) => AuthCubit(
-              authRepository: getIt<AuthRepository>(),
-              tokenStorage: getIt<TokenStorage>(),
-            )..checkAuthStatus(), // Check on app start
+      child: MultiBlocProvider(
+        providers: [
+          // Global AuthCubit - checks authentication status
+          BlocProvider(
+            create:
+                (_) => AuthCubit(
+                  authRepository: getIt<AuthRepository>(),
+                  tokenStorage: getIt<TokenStorage>(),
+                )..checkAuthStatus(), // Check on app start
+          ),
+          // Global SubscriptionCubit - manages in-app subscriptions
+          BlocProvider(
+            create:
+                (context) => SubscriptionCubit(
+                  SubscriptionService(),
+                  context.read<AuthCubit>(), // Pass AuthCubit
+                )..checkSubscriptionStatus(), // Check on app start
+          ),
+        ],
         child: AuthStateHandler(),
       ),
     );
@@ -49,28 +74,38 @@ class AuthStateHandler extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      builder: (context, state) {
-        return switch (state) {
-          // Still checking authentication
-          AuthInitial() || AuthLoading() => _buildLoadingApp(),
-
-          // User is authenticated - Show main app
-          AuthAuthenticated(:final user) => _buildMainApp(user),
-
-          // User is not authenticated - Show auth flow
-          AuthUnauthenticated() ||
-          EmailCheckSuccess() ||
-          EmailCheckLoading() ||
-          ForgotPasswordLoading() => _buildAuthApp(),
-
-          // Error checking auth - treat as unauthenticated
-          AuthError() => _buildAuthApp(),
-
-          // Fallback to loading screen
-          _ => _buildLoadingApp(),
-        };
+    return BlocListener<SubscriptionCubit, SubscriptionState>(
+      listener: (context, subscriptionState) {
+        // When subscription becomes active, the AuthCubit has already
+        // been updated with the user data via verifyPurchaseAndCreateAccount
+        if (subscriptionState is SubscriptionActive) {
+          print('✅ Subscription active - user should be logged in');
+          // No need to do anything here, AuthCubit handles the login
+        }
       },
+      child: BlocBuilder<AuthCubit, AuthState>(
+        builder: (context, state) {
+          return switch (state) {
+            // Still checking authentication
+            AuthInitial() || AuthLoading() => _buildLoadingApp(),
+
+            // User is authenticated - Show main app
+            AuthAuthenticated(:final user) => _buildMainApp(user),
+
+            // User is not authenticated - Show auth flow
+            AuthUnauthenticated() ||
+            EmailCheckSuccess() ||
+            EmailCheckLoading() ||
+            ForgotPasswordLoading() => _buildAuthApp(),
+
+            // Error checking auth - treat as unauthenticated
+            AuthError() => _buildAuthApp(),
+
+            // Fallback to loading screen
+            _ => _buildLoadingApp(),
+          };
+        },
+      ),
     );
   }
 

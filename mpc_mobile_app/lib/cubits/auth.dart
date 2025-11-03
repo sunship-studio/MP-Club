@@ -1,7 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mpc_mobile_app/core/di/injection.dart';
 import 'package:mpc_mobile_app/core/storage/token.dart';
 import 'package:mpc_mobile_app/data/models/user.dart';
 import 'package:mpc_mobile_app/data/repositories/auth.dart';
+import 'package:mpc_mobile_app/services/notification_service.dart';
+import 'package:mpc_mobile_app/services/socket.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit({required this.authRepository, required this.tokenStorage})
@@ -19,8 +22,29 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> logout() async {
+    try {
+      // 1. Remove FCM token from backend (before deleting auth tokens)
+      final notificationService = getIt<NotificationService>();
+      await notificationService.removeToken();
+      print('✅ FCM token removed from backend');
+    } catch (e) {
+      print('⚠️ Error removing FCM token (continuing with logout): $e');
+      // Don't block logout if FCM removal fails
+    }
+
+    try {
+      // 2. Disconnect socket
+      final socketService = getIt<SocketService>();
+      socketService.disconnect();
+      print('✅ Socket disconnected');
+    } catch (e) {
+      print('⚠️ Error disconnecting socket: $e');
+    }
+
+    // 3. Clear local tokens
     await tokenStorage.deleteTokens();
 
+    // 4. Update auth state
     emit(AuthUnauthenticated());
   }
 
@@ -47,6 +71,9 @@ class AuthCubit extends Cubit<AuthState> {
       if (result.success) {
         emit(SetPasswordSuccess());
         loadUser();
+
+        // Register FCM token after setting password (new account)
+        _registerFCMToken();
       } else {
         emit(SetPasswordError(result.message ?? 'Error setting password'));
       }
@@ -58,6 +85,9 @@ class AuthCubit extends Cubit<AuthState> {
     if (result.success) {
       final user = await authRepository.getUser();
       emit(AuthAuthenticated(user: user));
+
+      // Register FCM token after successful login
+      _registerFCMToken();
       return;
     } else {
       emit(AuthError(result.message ?? 'Error logging in'));
@@ -102,6 +132,68 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthUnauthenticated());
     } else {
       emit(ForgotPasswordError(result.message ?? 'Error sending reset link'));
+    }
+  }
+
+  /// Create account with Apple subscription
+  Future<void> createAccountWithAppleSubscription({
+    String? email, // Optional - backend extracts from receipt
+    required String firstName,
+    required String lastName,
+    required int age,
+    required String appleReceiptData,
+    required String subscriptionId,
+    int? targetWeight,
+  }) async {
+    emit(AuthLoading());
+
+    try {
+      final result = await authRepository.createAccountWithAppleSubscription(
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+        age: age,
+        appleReceiptData: appleReceiptData,
+        subscriptionId: subscriptionId,
+        targetWeight: targetWeight,
+      );
+
+      if (result.success) {
+        // Account created and tokens saved
+        // Now fetch the user data
+        final user = await authRepository.getUser();
+        emit(AuthAuthenticated(user: user));
+
+        // Register FCM token after account creation
+        _registerFCMToken();
+      } else {
+        emit(AuthError(result.message ?? 'Failed to create account'));
+      }
+    } catch (e) {
+      emit(AuthError('Error creating account: $e'));
+    }
+  }
+
+  /// Register FCM token with backend (called after login/signup)
+  /// Note: Socket service also auto-registers on connection,
+  /// but this ensures early registration
+  Future<void> _registerFCMToken() async {
+    try {
+      final notificationService = getIt<NotificationService>();
+      final fcmToken = notificationService.fcmToken;
+
+      if (fcmToken != null && fcmToken.isNotEmpty) {
+        print('📤 Registering FCM token after authentication...');
+        await notificationService.registerToken(fcmToken);
+        print('✅ FCM token registered successfully');
+      } else {
+        print(
+          '⚠️ No FCM token available yet (will register when socket connects)',
+        );
+      }
+    } catch (e) {
+      print('⚠️ Error registering FCM token: $e');
+      // Don't block auth flow if FCM registration fails
     }
   }
 }

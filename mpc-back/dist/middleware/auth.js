@@ -12,9 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyToken = exports.adminAppAuth = void 0;
+exports.verifyTokenInternal = exports.verifyToken = exports.secret = exports.refreshSecret = exports.adminAppAuth = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = __importDefault(require("../models/User"));
+const refreshSecret = "b18e762f3a079f9bcdacf0ccce05770b14ceed959e01f246b1bc9e70debaa6d05537219bb00376aecf84510a8d17f18f0194e4829189a226f88b2595629697bb";
+exports.refreshSecret = refreshSecret;
+const secret = "a6a760517da71371b77e45ffc4900da5504f7824c0ef19d1b65ce6bb263dc4c103a21c44a70d5e5161274f11244cbdf1475176b97d40ea6ff692431841a0b9ff";
+exports.secret = secret;
 const adminAppAuth = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const token = req.headers["token"];
     if (token === process.env.ADMIN_TOKEN) {
@@ -35,37 +39,62 @@ const verifyToken = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
         return;
     }
     try {
-        jsonwebtoken_1.default.verify(authHeader, "a6a760517da71371b77e45ffc4900da5504f7824c0ef19d1b65ce6bb263dc4c103a21c44a70d5e5161274f11244cbdf1475176b97d40ea6ff692431841a0b9ff");
-        res.setHeader("authorization", authHeader);
-        res.setHeader("x-refresh-token", refreshToken);
+        jsonwebtoken_1.default.verify(authHeader, secret);
         next();
     }
     catch (error) {
-        try {
-            jsonwebtoken_1.default.verify(refreshToken, "b18e762f3a079f9bcdacf0ccce05770b14ceed959e01f246b1bc9e70debaa6d05537219bb00376aecf84510a8d17f18f0194e4829189a226f88b2595629697bb");
-            const decoded = jsonwebtoken_1.default.decode(refreshToken);
-            const newToken = jsonwebtoken_1.default.sign({ id: decoded.id }, "a6a760517da71371b77e45ffc4900da5504f7824c0ef19d1b65ce6bb263dc4c103a21c44a70d5e5161274f11244cbdf1475176b97d40ea6ff692431841a0b9ff", {
-                expiresIn: "1h",
-            });
-            const newRefreshToken = jsonwebtoken_1.default.sign({ id: decoded.id }, "b18e762f3a079f9bcdacf0ccce05770b14ceed959e01f246b1bc9e70debaa6d05537219bb00376aecf84510a8d17f18f0194e4829189a226f88b2595629697bb", { expiresIn: "7d" });
-            res.setHeader("authorization", newToken);
-            res.setHeader("x-refresh-token", newRefreshToken);
-            const user = yield User_1.default.findById(decoded.id);
-            user.token = newToken;
-            user.refreshToken = newRefreshToken;
-            yield (user === null || user === void 0 ? void 0 : user.save());
-            if (!user) {
-                console.log('no user found in verifyToken middleware');
+        if (error instanceof jsonwebtoken_1.default.TokenExpiredError) {
+            try {
+                jsonwebtoken_1.default.verify(refreshToken, refreshSecret);
+                const decoded = jsonwebtoken_1.default.decode(refreshToken);
+                const newToken = jsonwebtoken_1.default.sign({ id: decoded.id }, secret, {
+                    expiresIn: "15m",
+                });
+                res.setHeader("authorization", newToken);
+                const user = yield User_1.default.findById(decoded.id);
+                user.token = newToken;
+                yield (user === null || user === void 0 ? void 0 : user.save());
+                if (!user) {
+                    console.log('no user found in verifyToken middleware');
+                    res.status(401).json({ message: "Unauthorized" });
+                    return;
+                }
+                next();
+            }
+            catch (error) {
+                console.error("Token verification error:", error);
                 res.status(401).json({ message: "Unauthorized" });
                 return;
             }
-            next();
-        }
-        catch (error) {
-            console.error("Token verification error:", error);
-            res.status(401).json({ message: "Unauthorized" });
-            return;
         }
     }
 });
 exports.verifyToken = verifyToken;
+const verifyTokenInternal = (token, refreshToken) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        jsonwebtoken_1.default.verify(token, secret);
+        return jsonwebtoken_1.default.decode(token);
+    }
+    catch (error) {
+        try {
+            jsonwebtoken_1.default.verify(refreshToken, refreshSecret);
+            const decoded = jsonwebtoken_1.default.decode(refreshToken);
+            const newToken = jsonwebtoken_1.default.sign({ id: decoded.id }, secret, {
+                expiresIn: "15m",
+            });
+            const user = yield User_1.default.findById(decoded.id);
+            user.token = newToken;
+            yield (user === null || user === void 0 ? void 0 : user.save());
+            if (!user) {
+                console.log('no user found in verifyToken middleware');
+                return null;
+            }
+            return jsonwebtoken_1.default.decode(newToken);
+        }
+        catch (error) {
+            console.error("Token verification error:", error);
+            return null;
+        }
+    }
+});
+exports.verifyTokenInternal = verifyTokenInternal;

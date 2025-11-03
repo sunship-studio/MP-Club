@@ -5,5 +5,5 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const stripe_1 = __importDefault(require("stripe"));
 // Initialize Stripe
-const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY || "");
+const stripe = new stripe_1.default((process.env.NODE_ENV === "production" ? process.env.STRIPE_SECRET_KEY : process.env.STRIPE_TEST_SECRET_KEY) || "");
 exports.default = stripe;

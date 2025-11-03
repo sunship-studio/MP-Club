@@ -53,7 +53,7 @@ class ChatScreenHeader extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Stack(children: [ProfileAvatar(radius: 20.w)]),
+                Stack(children: [ProfileAvatar(radius: 20.w, user: user)]),
                 SizedBox(width: 10.w),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

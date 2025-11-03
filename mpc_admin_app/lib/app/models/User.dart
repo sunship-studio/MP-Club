@@ -9,7 +9,7 @@ class User {
   final String? token;
   final String? refreshToken;
   final int? targetWeight;
-
+  final String? profilePictureUrl;
   final String subscriptionId;
   final String status;
   final String type;
@@ -32,6 +32,7 @@ class User {
     required this.id,
     required this.checkIns,
     required this.customerId,
+    this.profilePictureUrl,
     required this.caloriesLogs,
     this.token,
     this.refreshToken,
@@ -58,6 +59,7 @@ class User {
       id: json['_id'] as String,
       customerId: json['customerId'] as String,
       token: json['token'] as String?,
+      profilePictureUrl: json['proflePictureUrl'] as String?,
       targetWeight: json['targetWeight'] as int?,
       doneWorkouts:
           json['doneWorkouts'] != null

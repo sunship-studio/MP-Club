@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:mpc_mobile_app/core/di/injection.dart';
 import 'package:mpc_mobile_app/data/models/message.dart';
 import 'package:mpc_mobile_app/data/models/pending_message.dart';
+import 'package:mpc_mobile_app/services/notification_service.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -125,6 +127,9 @@ class SocketService {
       _reconnectAttempts = 0;
       _reconnectTimer?.cancel();
       _processMessageQueue();
+
+      // Register FCM token with backend after socket connection
+      _registerFCMTokenAfterConnection();
     });
 
     _socket?.onDisconnect((_) {
@@ -173,6 +178,29 @@ class SocketService {
       final isOnline = data[0]['online'] == true;
       _shaneStatusSubject.add(isOnline);
     });
+  }
+
+  /// Register FCM token with backend after socket connection
+  Future<void> _registerFCMTokenAfterConnection() async {
+    try {
+      final notificationService = getIt<NotificationService>();
+      final fcmToken = notificationService.fcmToken;
+
+      if (fcmToken != null && fcmToken.isNotEmpty) {
+        debugPrint('📤 Registering FCM token with backend...');
+        final success = await notificationService.registerToken(fcmToken);
+
+        if (success) {
+          debugPrint('✅ FCM token registered successfully');
+        } else {
+          debugPrint('⚠️ Failed to register FCM token');
+        }
+      } else {
+        debugPrint('⚠️ No FCM token available to register');
+      }
+    } catch (e) {
+      debugPrint('❌ Error registering FCM token: $e');
+    }
   }
 
   void _attemptReconnect() {
