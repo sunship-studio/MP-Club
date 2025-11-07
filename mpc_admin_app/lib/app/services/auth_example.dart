@@ -33,15 +33,15 @@ class AuthService {
         return;
       }
 
-      final success = await apiService.registerFCMToken(fcmToken);
+      final success = await apiService.saveFCMToken(fcmToken);
 
       if (success) {
-        print('✅ FCM token registered successfully');
+        print('✅ FCM token saved successfully');
       } else {
-        print('❌ Failed to register FCM token');
+        print('❌ Failed to save FCM token');
       }
     } catch (e) {
-      print('❌ Error registering FCM token: $e');
+      print('❌ Error saving FCM token: $e');
     }
   }
 

@@ -52,6 +52,7 @@ app.use('/web/plans', plansRouter);
 app.use('/mobile-app/auth', authRouter);
 
 app.use('/admin-app', adminAppRouter);
+app.use('/admin-app/notifications', notificationsRouter);
 app.use('/mobile-app/check-in', checkInRouter);
 app.use('/mobile-app/workout', workoutRouter);
 app.use('/mobile-app/profile', profileRouter);

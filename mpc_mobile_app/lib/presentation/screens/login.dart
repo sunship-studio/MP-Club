@@ -123,6 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // Auth state listener
           BlocListener<AuthCubit, AuthState>(
             listener: (context, state) {
+              print('🔔 Auth state changed: $state  ');
               if (state is EmailCheckSuccess &&
                   state.exists &&
                   !state.hasPassword) {

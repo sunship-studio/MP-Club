@@ -7,7 +7,11 @@ import { createClient } from 'redis';
 import { Server, Socket } from 'socket.io';
 import { ChatController } from '../controllers/mobile/chat';
 import { verifyTokenInternal } from '../middleware/auth';
-import { sendChatNotification } from './notification';
+import User from '../models/User';
+import {
+  sendChatNotification,
+  sendChatNotificationToAdmin,
+} from './notification';
 
 interface ISocketUser {
   userId: string;
@@ -255,25 +259,44 @@ export class SocketService {
         this.io.to(recipientRoom).emit('message:new', messageData);
 
         // Send push notification if recipient is offline
-        const recipientId = fromShane ? clientId : socket.data.userId;
-        const isRecipientOnline = fromShane
-          ? this.isUserOnline(clientId)
-          : this.isShaneOnline();
+        if (fromShane) {
+          // Shane sent to client
+          const isClientOnline = this.isUserOnline(clientId);
+          if (!isClientOnline) {
+            const messagePreview =
+              content?.trim().substring(0, 100) || 'Sent an attachment';
 
-        if (!isRecipientOnline) {
-          const senderName = fromShane ? 'Shane' : 'Client';
-          const messagePreview =
-            content?.trim().substring(0, 100) || 'Sent an attachment';
+            sendChatNotification(
+              clientId,
+              'Shane',
+              messagePreview,
+              targetClientId
+            ).catch((err) =>
+              console.error('Failed to send push notification to client:', err)
+            );
+          }
+        } else {
+          // Client sent to Shane
+          const isShaneOnline = await this.isShaneOnline();
+          if (!isShaneOnline) {
+            // Get client name
+            const client = await User.findById(socket.data.userId).select(
+              'firstName lastName'
+            );
+            const clientName = client
+              ? `${client.firstName} ${client.lastName}`
+              : 'Client';
+            const messagePreview =
+              content?.trim().substring(0, 100) || 'Sent an attachment';
 
-          // Send push notification asynchronously
-          sendChatNotification(
-            recipientId,
-            senderName,
-            messagePreview,
-            targetClientId
-          ).catch((err) =>
-            console.error('Failed to send push notification:', err)
-          );
+            sendChatNotificationToAdmin(
+              clientName,
+              messagePreview,
+              socket.data.userId
+            ).catch((err) =>
+              console.error('Failed to send push notification to Shane:', err)
+            );
+          }
         }
 
         // Clear typing

@@ -3,6 +3,7 @@ import express from 'express';
 import { Request, Response } from 'express';
 import { verifyToken } from '../middleware/auth';
 import {
+  removeAdminFCMToken,
   removeUserFCMToken,
   storeAdminFCMToken,
   storeUserFCMToken,
@@ -10,12 +11,60 @@ import {
 
 const notificationsRouter = express.Router();
 
+// ========================================
+// ADMIN (SHANE) ENDPOINTS
+// ========================================
+
 // Admin FCM token registration
-notificationsRouter.post('/save_token', async (req: Request, res: Response) => {
-  const { token, debug } = req.body;
-  await storeAdminFCMToken(token, debug);
-  res.status(200).json({ message: 'Token stored successfully' });
-});
+notificationsRouter.post(
+  '/save_token',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { token, debug } = req.body;
+
+      if (!token) {
+        res.status(400).json({ error: 'Token is required' });
+        return;
+      }
+
+      await storeAdminFCMToken(token, debug || false);
+      res.status(200).json({
+        message: 'Admin token stored successfully',
+        success: true,
+      });
+    } catch (error: any) {
+      console.error('Error storing admin FCM token:', error);
+      res.status(500).json({
+        error: 'Failed to store admin token',
+        message: error.message,
+      });
+    }
+  }
+);
+
+// Admin FCM token removal (on Shane's logout)
+notificationsRouter.post(
+  '/remove_admin_token',
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      await removeAdminFCMToken();
+      res.status(200).json({
+        message: 'Admin token removed successfully',
+        success: true,
+      });
+    } catch (error: any) {
+      console.error('Error removing admin FCM token:', error);
+      res.status(500).json({
+        error: 'Failed to remove admin token',
+        message: error.message,
+      });
+    }
+  }
+);
+
+// ========================================
+// USER (CLIENT) ENDPOINTS
+// ========================================
 
 // User FCM token registration (protected route)
 notificationsRouter.post(

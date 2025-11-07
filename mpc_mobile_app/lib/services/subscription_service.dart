@@ -200,38 +200,69 @@ class SubscriptionService {
       }
 
       final bool available = await _inAppPurchase.isAvailable();
+      print('📱 Store available: $available');
       if (!available) {
-        onPurchaseError?.call('Store is not available');
+        onPurchaseError?.call(
+          'Store is not available. Check: 1) Sandbox account signed in 2) Network connection',
+        );
         return false;
       }
+
+      print('🛒 Querying product details for: $subscriptionId');
 
       // Query the product details
       final ProductDetailsResponse response = await _inAppPurchase
           .queryProductDetails({subscriptionId});
 
+      print(
+        '📦 Query response - Found: ${response.productDetails.length}, Not found: ${response.notFoundIDs.length}',
+      );
+      if (response.error != null) {
+        print('❌ Query error: ${response.error}');
+      }
+
       if (response.notFoundIDs.isNotEmpty) {
-        onPurchaseError?.call('Subscription not found in store');
+        print('❌ Product not found: ${response.notFoundIDs}');
+        print('💡 Troubleshooting:');
+        print(
+          '   1. Check Sandbox account is signed in (Settings → App Store)',
+        );
+        print('   2. Verify product ID in App Store Connect: $subscriptionId');
+        print('   3. Ensure product status is "Ready to Submit" or "Approved"');
+        print('   4. Try restarting the app');
+        onPurchaseError?.call(
+          'Product not found. Check sandbox account and product setup.',
+        );
         return false;
       }
 
       if (response.productDetails.isEmpty) {
+        print('❌ No product details available');
         onPurchaseError?.call('No subscription products available');
         return false;
       }
 
       // Get the product and initiate purchase
       final ProductDetails productDetails = response.productDetails.first;
+      print('✅ Product found: ${productDetails.id}');
+      print('   Title: ${productDetails.title}');
+      print('   Price: ${productDetails.price}');
+
       final PurchaseParam purchaseParam = PurchaseParam(
         productDetails: productDetails,
       );
+
+      print('💳 Initiating purchase flow...');
 
       // Purchase subscription (auto-renewable)
       final bool success = await _inAppPurchase.buyNonConsumable(
         purchaseParam: purchaseParam,
       );
 
+      print('Purchase initiated: $success');
       return success;
     } catch (e) {
+      print('❌ Purchase exception: $e');
       onPurchaseError?.call('Failed to initiate purchase: $e');
       return false;
     }

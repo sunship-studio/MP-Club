@@ -6,22 +6,29 @@ import User from '../models/User';
 // ADMIN FCM TOKEN MANAGEMENT
 // ========================================
 
-// Storing or updating the FCM token
-async function storeAdminFCMToken(token: string, debug: boolean) {
-  if (debug) {
-    await AdminSettings.findOneAndUpdate(
-      { key: 'debug_fcm_token' },
-      { value: token },
-      { upsert: true, new: true }
-    );
-  }
+/**
+ * Store or update FCM token for Shane (admin)
+ * @param token - FCM token from Shane's device
+ * @param debug - Optional flag to store in debug token
+ */
+async function storeAdminFCMToken(token: string, debug: boolean = false) {
   try {
+    if (debug) {
+      await AdminSettings.findOneAndUpdate(
+        { key: 'debug_fcm_token' },
+        { value: token },
+        { upsert: true, new: true }
+      );
+      console.log('✅ Debug FCM token stored for admin');
+    }
+
     // Upsert the token (update if exists, insert if doesn't)
     await AdminSettings.findOneAndUpdate(
       { key: 'admin_fcm_token' },
       { value: token },
       { upsert: true, new: true }
     );
+    console.log('✅ FCM token stored for admin (Shane)');
     return true;
   } catch (error) {
     console.error('Error storing admin FCM token:', error);
@@ -29,8 +36,10 @@ async function storeAdminFCMToken(token: string, debug: boolean) {
   }
 }
 
-// Retrieving the token when needed
-async function getAdminFCMToken() {
+/**
+ * Get FCM token for Shane (admin)
+ */
+async function getAdminFCMToken(): Promise<string | null> {
   try {
     const setting = await AdminSettings.findOne({ key: 'admin_fcm_token' });
     return setting ? setting.value : null;
@@ -40,10 +49,40 @@ async function getAdminFCMToken() {
   }
 }
 
-async function sendNotificationToAdmin(title: string, body: string) {
-  const adminFCMToken = await getAdminFCMToken();
-  if (adminFCMToken) {
-    firebaseAdmin.messaging().send({
+/**
+ * Remove admin FCM token (on Shane's logout)
+ */
+async function removeAdminFCMToken(): Promise<boolean> {
+  try {
+    await AdminSettings.findOneAndDelete({ key: 'admin_fcm_token' });
+    console.log('🗑️ FCM token removed for admin (Shane)');
+    return true;
+  } catch (error) {
+    console.error('Error removing admin FCM token:', error);
+    throw error;
+  }
+}
+
+/**
+ * Send push notification to Shane (admin)
+ * @param title - Notification title
+ * @param body - Notification body
+ * @param data - Optional additional data
+ */
+async function sendNotificationToAdmin(
+  title: string,
+  body: string,
+  data?: { [key: string]: string }
+): Promise<boolean> {
+  try {
+    const adminFCMToken = await getAdminFCMToken();
+
+    if (!adminFCMToken) {
+      console.log('⚠️ No FCM token found for admin (Shane)');
+      return false;
+    }
+
+    await firebaseAdmin.messaging().send({
       token: adminFCMToken,
       notification: {
         title: title,
@@ -52,38 +91,100 @@ async function sendNotificationToAdmin(title: string, body: string) {
       data: {
         title: title,
         body: body,
+        ...data,
+      },
+      apns: {
+        headers: {
+          'apns-priority': '10',
+        },
+        payload: {
+          aps: {
+            sound: 'default',
+            badge: 1,
+          },
+        },
+      },
+      android: {
+        priority: 'high' as const,
+        notification: {
+          sound: 'default',
+          channelId: 'admin_notifications',
+        },
       },
     });
-    console.log(`Sending notification to admin: ${title} - ${body}`);
-  } else {
-    console.error('No FCM token found for admin.');
+
+    console.log(`📤 Notification sent to admin (Shane): ${title} - ${body}`);
+    return true;
+  } catch (error: any) {
+    // Handle invalid token errors
+    if (
+      error.code === 'messaging/invalid-registration-token' ||
+      error.code === 'messaging/registration-token-not-registered'
+    ) {
+      console.log('🗑️ Invalid admin token, removing...');
+      await removeAdminFCMToken();
+    } else {
+      console.error('Error sending notification to admin:', error);
+    }
+    return false;
   }
 }
 
-async function sendNotificationToDebug(title: string, body: string) {
-  const debugFCMToken =
-    'fozeAy38bk6LgLmLDuqt-I:APA91bEsA56_HAN2FZNuvvMrStvlFtt5Raq-bfFbxnavya01OXPRRm2UUFUchA1xBOlSsz0XYCwnFVwbeh6dW_jndgHFi8vdYvIdfcog7Jcai7kcaTelQkA';
-  firebaseAdmin.messaging().send({
-    token: debugFCMToken,
-    notification: {
-      title: title,
-      body: body,
-    },
-    data: {
-      title: title,
-      body: body,
-    },
-    apns: {
-      headers: {
-        'apns-priority': '10',
+/**
+ * Send notification to debug token (for testing)
+ * @param title - Notification title
+ * @param body - Notification body
+ */
+async function sendNotificationToDebug(
+  title: string,
+  body: string,
+  data?: { [key: string]: string }
+): Promise<boolean> {
+  try {
+    const debugFCMToken = await AdminSettings.findOne({
+      key: 'debug_fcm_token',
+    });
+
+    if (!debugFCMToken?.value) {
+      console.log('⚠️ No debug FCM token found');
+      return false;
+    }
+
+    await firebaseAdmin.messaging().send({
+      token: debugFCMToken.value,
+      notification: {
+        title: title,
+        body: body,
       },
-      payload: {
-        aps: {
+      data: {
+        title: title,
+        body: body,
+        ...data,
+      },
+      apns: {
+        headers: {
+          'apns-priority': '10',
+        },
+        payload: {
+          aps: {
+            sound: 'default',
+          },
+        },
+      },
+      android: {
+        priority: 'high' as const,
+        notification: {
           sound: 'default',
         },
       },
-    },
-  });
+    });
+
+    console.log(`📤 Debug notification sent: ${title}`);
+    return true;
+  } catch (error) {
+    console.error('Error sending debug notification:', error);
+    return false;
+  }
 }
 
 // ========================================
@@ -268,6 +369,25 @@ async function sendChatNotification(
 }
 
 /**
+ * Send notification to Shane about new client message
+ */
+async function sendChatNotificationToAdmin(
+  clientName: string,
+  messagePreview: string,
+  clientId: string
+): Promise<boolean> {
+  return sendNotificationToAdmin(
+    `New message from ${clientName}`,
+    messagePreview,
+    {
+      type: 'chat_message',
+      chatRoomId: clientId,
+      senderId: clientId,
+    }
+  );
+}
+
+/**
  * Send notification about workout plan update
  */
 async function sendWorkoutPlanNotification(userId: string): Promise<boolean> {
@@ -296,16 +416,19 @@ async function sendCheckInReminder(userId: string): Promise<boolean> {
 export {
   getAdminFCMToken,
   getUserFCMToken,
+  removeAdminFCMToken,
   removeUserFCMToken,
   sendChatNotification,
+  sendChatNotificationToAdmin,
   sendCheckInReminder,
+  // Admin notifications
   sendNotificationToAdmin,
   sendNotificationToDebug,
   sendNotificationToMultipleUsers,
   // User notifications
   sendNotificationToUser,
   sendWorkoutPlanNotification,
-  // Admin functions
+  // Admin (Shane) token management
   storeAdminFCMToken,
   // User token management
   storeUserFCMToken,

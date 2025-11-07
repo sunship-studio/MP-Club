@@ -52,10 +52,10 @@ class ApiService {
   }
 
   /// Register FCM token with backend
-  Future<bool> registerFCMToken(String fcmToken) async {
+  Future<bool> saveFCMToken(String fcmToken) async {
     try {
-      Response response = await post('/notifications/register-token', {
-        'fcmToken': fcmToken,
+      Response response = await post('/notifications/save-token', {
+        'token': fcmToken,
       });
       return response.statusCode == 200;
     } catch (e) {
@@ -67,7 +67,7 @@ class ApiService {
   /// Remove FCM token from backend
   Future<bool> removeFCMToken() async {
     try {
-      Response response = await post('/notifications/remove-token', {});
+      Response response = await post('/notifications/remove_admin_token', {});
       return response.statusCode == 200;
     } catch (e) {
       print('❌ Error removing FCM token: $e');
