@@ -40,16 +40,39 @@ const excelFileFilter = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  const allowedTypes = [
+  const allowedMimeTypes = [
     'application/vnd.ms-excel',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'application/vnd.ms-excel.sheet.macroEnabled.12',
+    'application/octet-stream', // Some systems send Excel as binary stream
   ];
-  console.log('Uploading file of type:', file.mimetype);
-  if (allowedTypes.includes(file.mimetype)) {
+
+  const allowedExtensions = ['.xls', '.xlsx', '.xlsm'];
+  const fileExtension = file.originalname
+    .toLowerCase()
+    .substring(file.originalname.lastIndexOf('.'));
+
+  console.log(
+    'Uploading Excel file - mimetype:',
+    file.mimetype,
+    'extension:',
+    fileExtension,
+    'filename:',
+    file.originalname
+  );
+
+  // Check either MIME type OR file extension
+  if (
+    allowedMimeTypes.includes(file.mimetype) ||
+    allowedExtensions.includes(fileExtension)
+  ) {
     cb(null, true);
   } else {
-    cb(new Error('Only Excel files are allowed!'));
+    cb(
+      new Error(
+        `Only Excel files are allowed! Received: ${file.mimetype} with extension ${fileExtension}`
+      )
+    );
   }
 };
 
