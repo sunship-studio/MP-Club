@@ -1,112 +1,46 @@
-"use client";
-import apiService from "@/services/api.service";
-import { loadStripe } from "@stripe/stripe-js";
-import React, { useState } from "react";
+'use client';
+import apiService from '@/services/api.service';
+import { loadStripe } from '@stripe/stripe-js';
+import React, { useEffect, useState } from 'react';
+
 const stripePromise = loadStripe(
- process.env.NODE_ENV == "production" ?  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string : process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY as string
+  process.env.NODE_ENV == 'production'
+    ? (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string)
+    : (process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY as string)
 );
+
+interface Plan {
+  id: string;
+  name: string;
+  excelFileUrl: string;
+  listOfExercises: string[];
+  stripeProductId: string;
+  price: number | null;
+  currency: string | null;
+  priceId: string | null;
+}
+
 const WorkoutSplitPlans: React.FC = () => {
-  const plans = [
-    {
-      title: "Push Pull Legs Split",
-      icon: (
-        <img
-          src="/assets/pushpull.png"
-          alt="Push Pull Legs"
-          className="w-14 h-14 text-[#56C2F3]"
-        />
-      ),
-      focus: "Full Body",
-      intensity: "Very High",
-      overlayOpacity: "bg-[#56C2F3]/10",
-      priceId: "price_1RGjVPPrBbVluHtKMSq17jrQ",
-      price: 199.99,
-      description:
-        "Classic full-body split that provides comprehensive muscle group targeting.",
-      details: [
-        "Push day: Chest, shoulders, triceps",
-        "Pull day: Back, biceps",
-        "Leg day: Quads, hamstrings, calves",
-        "Complete full-body transformation plan",
-      ],
-    },
-    {
-      title: "Upper Focused 4 Day Split",
-      icon: (
-        <img
-          src="/assets/upper.png"
-          alt="Upper Body"
-          className="w-14 h-14 text-[#56C2F3]"
-        />
-      ),
-      focus: "Upper Body",
-      intensity: "High",
-      overlayOpacity: "bg-[#56C2F3]/20",
-      priceId: "price_1RGjVtPrBbVluHtKMS8Gj0I5",
-      price: 199.99,
-      description:
-        "Intensive 4-day upper body split targeting muscle groups for comprehensive development.",
-      details: [
-        "Chest, back, shoulders, and arms focus",
-        "Balanced muscle group training",
-        "Strength and definition goals",
-        "Comprehensive upper body development",
-      ],
-    },
-    {
-      title: "Female Lower Focused Split",
-      icon: (
-        <img
-          src="/assets/female.png"
-          alt="Lower Body"
-          className="w-14 h-14 text-[#56C2F3]"
-        />
-      ),
-      focus: "Lower Body",
-      intensity: "Moderate",
-      overlayOpacity: "bg-[#56C2F3]/30",
-      priceId: "price_1RGjQQPrBbVluHtKOJhsfoRW",
-      price: 199.99,
-      description:
-        "Specialized lower body workout designed specifically for female physiology and goals.",
-      details: [
-        "Targeted lower body muscle development",
-        "Glute and leg strength focus",
-        "Progressive overload approach",
-        "Customized female-specific training plan",
-      ],
-    },
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingPlans, setIsFetchingPlans] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
-    {
-      title: "Lower Focused 4 Day Split",
-      icon: (
-        <img
-          src="/assets/lower.png"
-          alt="Lower Body"
-          className="w-14 h-14 text-[#56C2F3]"
-        />
-      ),
-      focus: "Lower Body",
-      intensity: "High",
-      overlayOpacity: "bg-[#56C2F3]/40",
-      priceId: "price_1RGjPmPrBbVluHtKAdUK720a",
-      price: 199.99,
-      description:
-        "Comprehensive 4-day split concentrating on lower body muscle groups and strength.",
-      details: [
-        "4-day structured lower body workout",
-        "Quad, hamstring, and calf emphasis",
-        "Strength and hypertrophy training",
-        "Detailed exercise progression",
-      ],
-    },
-  ];
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        setIsFetchingPlans(true);
+        const response = await apiService.get<Plan[]>('/plans');
+        setPlans(response);
+      } catch (error) {
+        console.error('Error fetching plans:', error);
+      } finally {
+        setIsFetchingPlans(false);
+      }
+    };
 
-  let [isLoading, setIsLoading] = useState(false);
-
-  const [selectedPlan, setSelectedPlan] = useState<(typeof plans)[0] | null>(
-    null
-  );
+    fetchPlans();
+  }, []);
 
   return (
     <div className="container mx-auto">
@@ -114,43 +48,46 @@ const WorkoutSplitPlans: React.FC = () => {
         Workout Split Plans
       </h1>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 rounded-lg px-8 py-6">
-        {plans.map((plan) => (
-          <div
-            key={plan.title}
-            onClick={() => setSelectedPlan(plan)}
-            className="relative h-full cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-          >
-            {/* White base layer */}
-            <div className="absolute inset-0 bg-white z-0 rounded-xl"></div>
-
-            {/* Colored overlay layer */}
+      {isFetchingPlans ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="text-xl">Loading plans...</div>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 rounded-lg px-8 py-6">
+          {plans.map((plan, index) => (
             <div
-              className={`
-              absolute inset-0 z-10
-              ${plan.overlayOpacity}
-            `}
-            ></div>
+              key={plan.id}
+              onClick={() => setSelectedPlan(plan)}
+              className="relative h-full cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+            >
+              {/* White base layer */}
+              <div className="absolute inset-0 bg-white z-0 rounded-xl"></div>
 
-            {/* Content layer */}
-            <div className="relative z-20 p-6 text-[#002C3F] h-full flex flex-col">
-              <div className="flex justify-between items-center mb-4">
-                {plan.icon}
-              </div>
-              <h2 className="text-2xl font-bold mb-2">{plan.title}</h2>
-              <p className="text-sm mb-4">{plan.description}</p>
-              <div className="mt-auto flex justify-between items-center">
-                <span className="text-sm font-semibold">
-                  Focus: {plan.focus}
-                </span>
-                <span className="text-2xl font-bold">
-                  ${plan.price.toFixed(2)}
-                </span>
+              {/* Colored overlay layer */}
+              <div
+                className={`
+                absolute inset-0 z-10 rounded-xl
+                bg-[#56C2F3]/${(index + 1) * 10}
+              `}
+              ></div>
+
+              {/* Content layer */}
+              <div className="relative z-20 p-6 text-[#002C3F] h-full flex flex-col">
+                <h2 className="text-2xl font-bold mb-2">{plan.name}</h2>
+                <p className="text-sm mb-4 flex-grow">
+                  {plan.listOfExercises.length} exercises included
+                </p>
+                <div className="mt-auto flex justify-between items-center">
+                  <span className="text-sm font-semibold">View Details</span>
+                  <span className="text-2xl font-bold">
+                    {plan.price ? `$${plan.price.toFixed(2)}` : 'N/A'}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {selectedPlan && (
         <div
@@ -165,31 +102,32 @@ const WorkoutSplitPlans: React.FC = () => {
             <div className="absolute inset-0 bg-white z-0 rounded-2xl"></div>
 
             {/* Colored overlay layer */}
-            <div
-              className={`
-                absolute inset-0 z-10 rounded-2xl
-                ${selectedPlan.overlayOpacity}
-              `}
-            ></div>
+            <div className="absolute inset-0 z-10 rounded-2xl bg-[#56C2F3]/20"></div>
 
             {/* Content layer */}
             <div className="relative z-20 p-8 text-[#002C3F]">
               <div className="flex justify-between items-center mb-6">
-                {selectedPlan.icon}
                 <div className="flex items-center space-x-4">
                   <span className="text-3xl font-bold">
-                    ${selectedPlan.price.toFixed(2)}
+                    {selectedPlan.price
+                      ? `$${selectedPlan.price.toFixed(2)}`
+                      : 'N/A'}
                   </span>
                 </div>
               </div>
-              <h2 className="text-3xl font-bold mb-4">{selectedPlan.title}</h2>
-              <p className="mb-6">{selectedPlan.description}</p>
-              <h3 className="text-xl font-semibold mb-4">Key Details:</h3>
-              <ul className="space-y-3 mb-6">
-                {selectedPlan.details.map((detail) => (
-                  <li key={detail} className="flex items-center">
+              <h2 className="text-3xl font-bold mb-4">{selectedPlan.name}</h2>
+              <p className="mb-6 text-gray-600">
+                Complete training plan with{' '}
+                {selectedPlan.listOfExercises.length} exercises
+              </p>
+              <h3 className="text-xl font-semibold mb-4">
+                Exercises Included:
+              </h3>
+              <ul className="space-y-3 mb-6 max-h-60 overflow-y-auto">
+                {selectedPlan.listOfExercises.map((exercise, index) => (
+                  <li key={index} className="flex items-center">
                     <svg
-                      className="w-5 h-5 mr-2 text-[#56C2F3]"
+                      className="w-5 h-5 mr-2 text-[#56C2F3] flex-shrink-0"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -199,7 +137,7 @@ const WorkoutSplitPlans: React.FC = () => {
                         clipRule="evenodd"
                       />
                     </svg>
-                    {detail}
+                    <span>{exercise}</span>
                   </li>
                 ))}
               </ul>
@@ -219,29 +157,36 @@ const WorkoutSplitPlans: React.FC = () => {
                   </div>
                 )}
                 {!isLoading && (
-                <button
-                  className="w-1/2 py-3 bg-[#077fb6]  font-semibold text-white rounded-lg hover:bg-[#077fb6b3] transition cursor-pointer"
-                  onClick={async () => {
-                    setIsLoading(true);
-                    const response = await apiService.post<{
-                      url: string;
-                    }>("/plans/create-checkout-session", {
-                      priceId: selectedPlan.priceId,
-                    });
-                    await stripePromise;
-                          if (response.url) {
-        window.location.href = response.url;
-      } else {
-        throw new Error("No checkout URL returned");
-      }
-
-
-
-                  }}
-
-                >
-                  Purchase Plan
-                </button>)}
+                  <button
+                    className="w-1/2 py-3 bg-[#077fb6]  font-semibold text-white rounded-lg hover:bg-[#077fb6b3] transition cursor-pointer"
+                    onClick={async () => {
+                      if (!selectedPlan.priceId) {
+                        alert('Price information not available');
+                        return;
+                      }
+                      setIsLoading(true);
+                      try {
+                        const response = await apiService.post<{
+                          url: string;
+                        }>('/plans/create-checkout-session', {
+                          priceId: selectedPlan.priceId,
+                        });
+                        await stripePromise;
+                        if (response.url) {
+                          window.location.href = response.url;
+                        } else {
+                          throw new Error('No checkout URL returned');
+                        }
+                      } catch (error) {
+                        console.error('Checkout error:', error);
+                        alert('Failed to create checkout session');
+                        setIsLoading(false);
+                      }
+                    }}
+                  >
+                    Purchase Plan
+                  </button>
+                )}
               </div>
             </div>
           </div>
