@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 
+import { upload } from '../config/cloudinary';
 import AdminAppController from '../controllers/admin/admin_app';
 import { adminAppAuth } from '../middleware/auth';
 
@@ -82,4 +83,53 @@ adminAppRouter.post(
   }
 );
 
+adminAppRouter.post(
+  '/load-exercises',
+  async (req: Request, res: Response) => {}
+);
+
+adminAppRouter.post(
+  '/edit-training-plan',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    console.log('Received request to edit training plan:', req.body);
+    await adminAppController.editTrainingPlan(req, res);
+  }
+);
+
+adminAppRouter.post(
+  '/delete-training-plan',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    console.log('Received request to delete training plan:', req.body);
+    await adminAppController.deleteTrainingPlan(req, res);
+  }
+);
+
+// add training plan to sell on website
+
+adminAppRouter.post(
+  '/add-training-plan',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    console.log('Received request to add training plan to sell:', req.body);
+    await adminAppController.addTrainingPlanToSell(req, res);
+  }
+);
+
+adminAppRouter.get(
+  '/training-plans',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    await adminAppController.getTrainingPlans(req, res);
+  }
+);
+
+adminAppRouter.post(
+  '/upload-training-plan-file',
+  upload.single('file'),
+  async (req: Request, res: Response) => {
+    await adminAppController.uploadTrainingPlanFile(req, res);
+  }
+);
 export default adminAppRouter;

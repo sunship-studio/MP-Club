@@ -2,7 +2,11 @@ import sgMail from '@sendgrid/mail';
 import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
+import { uploadToCloudinary } from '../../config/cloudinary';
+import stripe from '../../config/stripe';
+import AdminSettings from '../../models/AdminSettings';
 import Exercise from '../../models/Exercise';
+import { TrainingPlan } from '../../models/TrainingPlan';
 import User from '../../models/User';
 import { WaitingListEntry } from '../../models/WaitingListEntry';
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
@@ -156,6 +160,23 @@ export default class AdminAppController {
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
+
+  public async saveAdminFCMToken(
+    req: Request,
+    res: Response
+  ): Promise<Response> {
+    try {
+      const { fcmToken } = req.body;
+      AdminSettings.create({
+        key: 'admin_fcm_token',
+        value: fcmToken,
+      });
+      return res.status(200).json({ message: 'FCM token updated' });
+    } catch (error) {
+      console.error('Error updating admin FCM token:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
   readHTMLFile = (filePath: string) => {
     return fs.readFileSync(filePath, 'utf8');
   };
@@ -198,6 +219,126 @@ export default class AdminAppController {
       return res.status(200).json({ message: 'Subscriber added' });
     } catch (error) {
       console.error('Error adding subscriber:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  public async getTrainingPlans(
+    req: Request,
+    res: Response
+  ): Promise<Response> {
+    try {
+      const trainingPlans = await TrainingPlan.find();
+      return res.status(200).json(trainingPlans);
+    } catch (error) {
+      console.error('Error fetching training plans:', error);
+
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  public async editTrainingPlan(req: Request, res: Response): Promise<void> {
+    try {
+      const { id, updatedPlan } = req.body;
+      const trainingPlan = await TrainingPlan.findById(id);
+      if (!trainingPlan) {
+        res.status(404).json({ message: 'Training plan not found' });
+        return;
+      }
+      trainingPlan.name = updatedPlan.name;
+      trainingPlan.excelFileUrl = updatedPlan.excelFileUrl;
+      trainingPlan.listOfExercises = updatedPlan.listOfExercises;
+
+      await trainingPlan.save();
+    } catch (error) {
+      console.error('Error editing training plan:', error);
+    }
+  }
+
+  public async deleteTrainingPlan(req: Request, res: Response): Promise<void> {
+    try {
+      const { id } = req.body;
+      const trainingPlan = await TrainingPlan.findById(id);
+      if (!trainingPlan) {
+        res.status(404).json({ message: 'Training plan not found' });
+        return;
+      }
+      await TrainingPlan.findByIdAndDelete(id);
+      res.status(200).json({ message: 'Training plan deleted' });
+    } catch (error) {
+      console.error('Error deleting training plan:', error);
+    }
+  }
+
+  public async addTrainingPlanToSell(
+    req: Request,
+    res: Response
+  ): Promise<Response> {
+    try {
+      const {
+        name,
+        excelFileUrl,
+        listOfExercises,
+        price,
+        currency = 'eur',
+      } = req.body;
+
+      // Create Stripe product
+      const stripeProduct = await stripe.products.create({
+        name: name,
+        description: `Training plan: ${name}`,
+        metadata: {
+          type: 'training_plan',
+        },
+      });
+
+      // Create Stripe price for the product
+      const stripePrice = await stripe.prices.create({
+        product: stripeProduct.id,
+        unit_amount: Math.round(price * 100), // Convert to cents
+        currency: currency,
+      });
+
+      // Save training plan with Stripe product ID
+      const newPlan = new TrainingPlan({
+        name,
+        excelFileUrl,
+        listOfExercises,
+        stripeProductId: stripeProduct.id,
+      });
+      await newPlan.save();
+
+      console.log(
+        `✅ Training plan created with Stripe Product ID: ${stripeProduct.id}`
+      );
+      return res.status(200).json({
+        message: 'Training plan added',
+        productId: stripeProduct.id,
+        priceId: stripePrice.id,
+      });
+    } catch (error) {
+      console.error('Error adding training plan:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  public async uploadTrainingPlanFile(
+    req: Request,
+    res: Response
+  ): Promise<Response> {
+    try {
+      if (!req.file || !req.file.path) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+      const response = uploadToCloudinary(
+        req.file.buffer,
+        req.file.originalname,
+        'training_plans'
+      );
+
+      return res.status(200).json({ url: (await response).url });
+    } catch (error) {
+      console.error('Error uploading training plan file:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   }

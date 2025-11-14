@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:mpc_admin_app/app/network/api.dart';
 import 'package:mpc_admin_app/core/router/app_router.dart';
 
 // Top-level background message handler
@@ -48,6 +49,7 @@ class NotificationService {
       _fcmToken = await _messaging.getToken();
       debugPrint('📱 FCM Token: $_fcmToken');
 
+      ApiService().saveFCMToken(_fcmToken ?? '');
       // Get APNS token for iOS
       final apnsToken = await _messaging.getAPNSToken();
       if (apnsToken != null) {
@@ -57,9 +59,8 @@ class NotificationService {
       // Listen for token refresh
       _messaging.onTokenRefresh.listen((newToken) {
         _fcmToken = newToken;
-        debugPrint('🔄 FCM Token refreshed: $newToken');
-        // TODO: Update token on backend
-        // You can call your API service here to update the token
+
+        ApiService().saveFCMToken(newToken);
       });
 
       // Set up message handlers
@@ -283,20 +284,20 @@ class NotificationService {
           // Navigate to chat screen
           // Note: You'll need to fetch the User object if needed
           if (userId != null || chatRoomId != null) {
-            appRouter.push('/chat', extra: {'userId': userId ?? chatRoomId});
+            appRouter.push('/onlineCoaching');
           } else {
-            appRouter.push('/chat');
+            appRouter.push('/onlineCoaching');
           }
           break;
 
-        case 'workout_plan_update':
-          debugPrint('💪 Navigate to workout plan');
-          appRouter.push('/plan-editor');
+        case 'waiting-list':
+          debugPrint('💪 Navigate to waiting list');
+          appRouter.push('/waitingList');
           break;
 
-        case 'check_in_reminder':
+        case 'check_in':
           debugPrint('📝 Navigate to check-in');
-          appRouter.push('/check-ins');
+          appRouter.push('/onlineCoaching');
           break;
 
         default:

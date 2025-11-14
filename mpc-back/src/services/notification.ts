@@ -123,8 +123,23 @@ async function sendNotificationToAdmin(
     ) {
       console.log('🗑️ Invalid admin token, removing...');
       await removeAdminFCMToken();
+    } else if (error.code === 'messaging/third-party-auth-error') {
+      console.error('⚠️ APNs/FCM Auth Error for admin (Shane):');
+      console.error(
+        '   → This is likely an APNs certificate/key issue in Firebase Console'
+      );
+      console.error(
+        '   → Check: Firebase Console → Project Settings → Cloud Messaging'
+      );
+      console.error('   → Ensure APNs Authentication Key is uploaded for iOS');
+      console.error(
+        '   → For production iOS apps, upload APNs Auth Key (.p8 file)'
+      );
     } else {
-      console.error('Error sending notification to admin:', error);
+      console.error(
+        '❌ Error sending notification to admin:',
+        error.code || error.message
+      );
     }
     return false;
   }
@@ -317,8 +332,25 @@ async function sendNotificationToUser(
     ) {
       console.log(`🗑️ Invalid token for user ${userId}, removing...`);
       await removeUserFCMToken(userId);
+    } else if (error.code === 'messaging/third-party-auth-error') {
+      console.error(`⚠️ APNs/FCM Auth Error for user ${userId}:`);
+      console.error(
+        '   → This is likely an APNs certificate/key issue in Firebdase Console'
+      );
+      console.error(
+        '   → Check: Firebase Console → Project Settings → Cloud Messaging → APNs Certificates'
+      );
+      console.error(
+        '   → For iOS: Ensure APNs Authentication Key or Certificate is uploaded'
+      );
+      console.error(
+        '   → For Android: This error is rare, check FCM server key'
+      );
     } else {
-      console.error(`Error sending notification to user ${userId}:`, error);
+      console.error(
+        `❌ Error sending notification to user ${userId}:`,
+        error.code || error.message
+      );
     }
     return false;
   }

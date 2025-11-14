@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +13,7 @@ import 'package:mpc_mobile_app/core/di/injection.dart';
 import 'package:mpc_mobile_app/core/network/dio.dart';
 import 'package:mpc_mobile_app/core/storage/token.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
+import 'package:mpc_mobile_app/cubits/auth.dart';
 import 'package:mpc_mobile_app/data/models/message.dart';
 import 'package:mpc_mobile_app/data/models/user.dart';
 import 'package:mpc_mobile_app/main.dart';
@@ -25,8 +27,7 @@ import 'package:mpc_mobile_app/services/socket.dart';
 
 class ChatScreen extends StatefulWidget {
   final bool isAdmin; // true for Shane's app, false for client app
-  final User user;
-  const ChatScreen({super.key, required this.user, this.isAdmin = false});
+  const ChatScreen({super.key, this.isAdmin = false});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -54,6 +55,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   Timer? _typingDebounce;
 
+  // Get user from AuthCubit
+  User? _user;
+
   @override
   void initState() {
     super.initState();
@@ -68,6 +72,16 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       navBarKey.currentState?.turnOffNavBar();
       getIt<NotificationService>().setNavigationContext(context);
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Get user from AuthCubit
+    final authState = context.read<AuthCubit>().state;
+    if (authState is AuthAuthenticated) {
+      _user = authState.user;
+    }
   }
 
   ///
@@ -161,7 +175,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     setState(() => _isLoadingMessages = true);
     try {
       final messages = await _socketService.loadMessages(
-        clientId: widget.user.id.toString(),
+        clientId: _user!.id.toString(),
         before:
             before ?? (_messages.isNotEmpty ? _messages.last.timestamp : null),
       );
@@ -248,7 +262,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     final tempMessage = Message(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      clientId: widget.user.id,
+      clientId: _user!.id,
       content: text,
       fromShane: widget.isAdmin,
       attachment: {
@@ -268,12 +282,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       selectedFile = null;
     });
     _scrollToBottom();
-    _socketService.stopTyping(clientId: widget.isAdmin ? widget.user.id : null);
+    _socketService.stopTyping(clientId: widget.isAdmin ? _user!.id : null);
 
     try {
       await _socketService.sendMessage(
         content: text,
-        clientId: widget.user.id,
+        clientId: _user!.id,
         attachment: {
           'type': 'image',
           'url': imageUrl,
@@ -300,7 +314,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
     final tempMessage = Message(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      clientId: widget.user.id,
+      clientId: _user!.id,
       content: _messageController.text,
       fromShane: widget.isAdmin,
 
@@ -314,10 +328,10 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     });
 
     _scrollToBottom();
-    _socketService.stopTyping(clientId: widget.isAdmin ? widget.user.id : null);
+    _socketService.stopTyping(clientId: widget.isAdmin ? _user!.id : null);
 
     try {
-      await _socketService.sendMessage(content: text, clientId: widget.user.id);
+      await _socketService.sendMessage(content: text, clientId: _user!.id);
     } catch (e) {
       _showError('Failed to send: $e');
       setState(() {
@@ -333,13 +347,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void _onTextChanged(String text) {
     if (text.isNotEmpty) {
       _typingDebounce?.cancel();
-      _socketService.startTyping(clientId: widget.user.id);
+      _socketService.startTyping(clientId: _user!.id);
 
       _typingDebounce = Timer(const Duration(milliseconds: 1000), () {
-        _socketService.stopTyping(clientId: widget.user.id);
+        _socketService.stopTyping(clientId: _user!.id);
       });
     } else {
-      _socketService.stopTyping(clientId: widget.user.id);
+      _socketService.stopTyping(clientId: _user!.id);
     }
   }
 
@@ -348,7 +362,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   ///
 
   Future<void> _markMessagesAsRead() async {
-    await _socketService.markMessagesAsRead(clientId: widget.user.id);
+    await _socketService.markMessagesAsRead(clientId: _user!.id);
   }
 
   ///
@@ -370,6 +384,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    // Guard: if user is not loaded yet, show loading indicator
+    if (_user == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       body: Column(
         children: [

@@ -275,12 +275,12 @@ class NotificationService {
 
     if (_navigationContext != null && _navigationContext!.mounted) {
       // Use go_router to navigate
-      _navigationContext!.push('/chat');
+      _navigationContext!.push('/home/chat');
     } else {
       // Fallback: use global navigator key if available
       final context = rootNavigatorKey.currentContext;
       if (context != null) {
-        context.push('/chat');
+        context.push('/home/chat');
       } else {
         debugPrint('⚠️ No navigation context available');
       }

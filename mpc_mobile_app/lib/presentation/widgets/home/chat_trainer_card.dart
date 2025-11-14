@@ -25,7 +25,7 @@ class _ChatTrainerCardState extends State<ChatTrainerCard> {
     final refreshToken = await getIt<TokenStorage>().getRefreshToken() ?? '';
     await _socketService.connect(
       debugMode
-          ? 'http://172.20.10.12:3500'
+          ? 'ws://localhost:3500'
           : 'wss://mp-club-production.up.railway.app',
       token,
       refreshToken,
@@ -114,7 +114,7 @@ class _ButtonState extends State<Button> {
         return GestureDetector(
           onTap: () {
             navBarKey.currentState?.turnOffNavBar();
-            getIt<MainRouter>().router.push('/home/chat', extra: state.user);
+            getIt<MainRouter>().router.push('/home/chat');
           },
           onTapDown: (details) => setState(() => _isPressed = true),
           onTapUp: (details) => setState(() => _isPressed = false),

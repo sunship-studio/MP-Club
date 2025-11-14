@@ -18,11 +18,13 @@ Run: `flutter pub get`
 ### Step 2: Configure Firebase
 
 **iOS:**
+
 - Add `GoogleService-Info.plist` to `ios/Runner/`
 - Enable Push Notifications in Xcode capabilities
 - Enable Background Modes → Remote notifications
 
 **Android:**
+
 - Add `google-services.json` to `android/app/`
 - Update `android/build.gradle`:
   ```gradle
@@ -83,7 +85,7 @@ class AdminNotificationService {
     FirebaseMessaging.onBackgroundMessage(_backgroundHandler);
     FirebaseMessaging.onMessage.listen(_handleForeground);
     FirebaseMessaging.onMessageOpenedApp.listen(_handleTap);
-    
+
     // Token refresh
     _messaging.onTokenRefresh.listen((token) {
       _fcmToken = token;
@@ -201,20 +203,20 @@ Future<void> onShaneLogout() async {
 class NotificationRouter {
   static void handleNotification(Map<String, dynamic> data) {
     final type = data['type'];
-    
+
     switch (type) {
       case 'chat_message':
         Get.toNamed('/chat', arguments: {
           'clientId': data['chatRoomId'],
         });
         break;
-        
+
       case 'new_user':
         Get.toNamed('/user-details', arguments: {
           'userId': data['userId'],
         });
         break;
-        
+
       case 'payment_received':
         Get.toNamed('/payments', arguments: {
           'userId': data['userId'],
@@ -234,6 +236,7 @@ void _handleTap(RemoteMessage message) {
 ## 📱 Notification Types Shane Receives
 
 ### 1. New Client Message
+
 ```json
 {
   "type": "chat_message",
@@ -241,18 +244,22 @@ void _handleTap(RemoteMessage message) {
   "senderId": "client_id"
 }
 ```
+
 **Action:** Navigate to chat with that client
 
 ### 2. New User Signup
+
 ```json
 {
   "type": "new_user",
   "userId": "user_id"
 }
 ```
+
 **Action:** Navigate to user details
 
 ### 3. Payment Received
+
 ```json
 {
   "type": "payment_received",
@@ -260,16 +267,18 @@ void _handleTap(RemoteMessage message) {
   "amount": "99.99"
 }
 ```
+
 **Action:** Navigate to payments/user profile
 
 ## 🧪 Testing
 
 ### 1. Test Token Registration
+
 ```dart
 void testTokenRegistration() async {
   final token = AdminNotificationService().fcmToken;
   print('Current token: $token');
-  
+
   if (token != null) {
     final success = await AdminNotificationService().registerToken(token);
     print('Registration success: $success');
@@ -278,6 +287,7 @@ void testTokenRegistration() async {
 ```
 
 ### 2. Test with Firebase Console
+
 1. Go to Firebase Console → Cloud Messaging
 2. Click "Send test message"
 3. Enter Shane's FCM token (from logs)
@@ -291,6 +301,7 @@ void testTokenRegistration() async {
 5. Send and verify notification appears
 
 ### 3. Test Navigation
+
 - Send test notification
 - Tap notification
 - Verify app navigates to correct screen
@@ -298,16 +309,21 @@ void testTokenRegistration() async {
 ## ⚙️ Configuration
 
 ### Backend URL
+
 Update in `admin_notification_service.dart`:
+
 ```dart
 static const baseUrl = 'https://api.mpclub.com'; // or your backend URL
 ```
 
 ### Android Notification Channel
+
 Already configured as `admin_notifications` - matches backend
 
 ### iOS Setup
+
 Add to `ios/Runner/AppDelegate.swift`:
+
 ```swift
 import FirebaseCore
 import FirebaseMessaging
@@ -323,7 +339,7 @@ import FirebaseMessaging
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
-  
+
   override func application(_ application: UIApplication,
                    didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
     Messaging.messaging().apnsToken = deviceToken
@@ -357,24 +373,28 @@ import FirebaseMessaging
 ## 🆘 Troubleshooting
 
 **Token is null:**
+
 - Ensure Firebase is initialized before getting token
 - Check internet connection
 - Verify Firebase configuration files
 
 **Notifications not appearing:**
+
 - Check device notification settings
 - Verify token is registered in backend
 - Test with Firebase Console first
 - iOS: Check APNs certificates
 
 **Navigation not working:**
+
 - Verify notification data payload includes required fields
 - Check navigation routes are defined
-- Test with print statements in _handleTap
+- Test with print statements in \_handleTap
 
 ---
 
 **Backend Endpoints:**
+
 - Register: `POST /mobile-app/notifications/save_token`
 - Remove: `POST /mobile-app/notifications/remove_admin_token`
 

@@ -6,6 +6,7 @@ class RouteNames {
   static const String home = '/';
   static const String waitingList = '/waiting-list';
   static const String onlineCoaching = '/online-coaching';
+  static const String trainingPlans = '/training-plans';
   static const String addSubscriber = '/add-subscriber';
   static const String chat = '/chat';
   static const String checkIns = '/check-ins';

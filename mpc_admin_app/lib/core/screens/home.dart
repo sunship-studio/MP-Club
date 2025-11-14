@@ -74,6 +74,37 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () {
+                context.go(RouteNames.trainingPlans);
+              },
+              style: ButtonStyle(
+                padding: WidgetStateProperty.all<EdgeInsetsGeometry>(
+                  const EdgeInsets.symmetric(vertical: 10),
+                ),
+                backgroundColor: WidgetStateProperty.all<Color>(
+                  const Color.fromARGB(255, 19, 157, 221),
+                ),
+                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                  ),
+                ),
+              ),
+              child: const Text(
+                'TRAINING PLANS',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontFamily: 'GoodTimes',
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

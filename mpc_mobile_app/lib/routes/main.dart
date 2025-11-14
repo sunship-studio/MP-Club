@@ -11,7 +11,6 @@ import 'package:mpc_mobile_app/cubits/check_in.dart';
 import 'package:mpc_mobile_app/cubits/profile.dart';
 import 'package:mpc_mobile_app/cubits/workout.dart';
 import 'package:mpc_mobile_app/data/models/TrainingDay.dart';
-import 'package:mpc_mobile_app/data/models/user.dart';
 import 'package:mpc_mobile_app/data/repositories/calories.dart';
 import 'package:mpc_mobile_app/data/repositories/check_in.dart';
 import 'package:mpc_mobile_app/data/repositories/profile.dart';
@@ -64,9 +63,7 @@ class MainRouter {
                   ),
                   GoRoute(
                     path: '/chat',
-                    builder:
-                        (context, state) =>
-                            ChatScreen(user: state.extra as User),
+                    builder: (context, state) => ChatScreen(),
                   ),
                 ],
               ),

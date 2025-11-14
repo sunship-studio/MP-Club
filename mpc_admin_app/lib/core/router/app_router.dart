@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/bloc/add_subscriber.dart';
+import 'package:mpc_admin_app/app/bloc/public_plans/cubit.dart';
 import 'package:mpc_admin_app/app/models/User.dart';
 import 'package:mpc_admin_app/app/services/socket.dart';
 import 'package:mpc_admin_app/core/router/route_names.dart';
@@ -9,6 +10,7 @@ import 'package:mpc_admin_app/core/screens/add_subscriber.dart';
 import 'package:mpc_admin_app/core/screens/chat.dart';
 import 'package:mpc_admin_app/core/screens/home.dart';
 import 'package:mpc_admin_app/core/screens/online_coaching.dart';
+import 'package:mpc_admin_app/core/screens/training_plans.dart';
 import 'package:mpc_admin_app/core/screens/waiting_list.dart';
 import 'package:mpc_admin_app/core/widgets/app_shell.dart';
 import 'package:mpc_admin_app/main.dart';
@@ -81,11 +83,22 @@ final GoRouter appRouter = GoRouter(
           path: RouteNames.addSubscriber,
           name: 'addSubscriber',
           pageBuilder: (context, state) {
-            final user = state.extra as User?;
             return NoTransitionPage(
               child: BlocProvider(
                 create: (context) => AddSubscribeCubit(),
                 child: AddSubscriberScreen(),
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: RouteNames.trainingPlans,
+          name: 'trainingPlans',
+          pageBuilder: (context, state) {
+            return NoTransitionPage(
+              child: BlocProvider(
+                create: (context) => PublicPlansCubit(),
+                child: const TrainingPlansScreen(),
               ),
             );
           },

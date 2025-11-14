@@ -154,7 +154,7 @@ export class SocketService {
 
   private handleUserConnection(socket: Socket) {
     const { userId, userType } = socket.data;
-
+    console.log('Handling connection for user:', userId);
     if (userType === 'shane') {
       socket.join('shane');
       this.broadcastShaneStatus(true);
@@ -212,6 +212,7 @@ export class SocketService {
   private handleChatEvents(socket: Socket) {
     // Send message with idempotency
     socket.on('message:send', async (data, callback) => {
+      console.log('Sending message event data:', data);
       try {
         const { content, clientId, message_type, attachment, idempotencyKey } =
           data;
@@ -262,6 +263,7 @@ export class SocketService {
         if (fromShane) {
           // Shane sent to client
           const isClientOnline = this.isUserOnline(clientId);
+          console.log('Emitting push notification to client:', clientId);
           if (!isClientOnline) {
             const messagePreview =
               content?.trim().substring(0, 100) || 'Sent an attachment';

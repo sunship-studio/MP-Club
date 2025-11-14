@@ -75,9 +75,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
   void _initializeChat() async {
     await _socketService.connect(
-      debug
-          ? 'http://localhost:3500'
-          : 'wss://mp-club-production.up.railway.app',
+      debug ? 'ws://localhost:3500' : 'wss://mp-club-production.up.railway.app',
       admin_key,
     );
   }

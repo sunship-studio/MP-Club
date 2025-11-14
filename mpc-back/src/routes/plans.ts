@@ -14,6 +14,11 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 const plansRouter = express.Router();
 const plansController = new PlansController();
 
+// Get all training plans with prices
+plansRouter.get("/", async (req: Request, res: Response) => {
+  await plansController.getPlans(req, res);
+});
+
 // Purchase Plan
 plansRouter.post("/create-checkout-session", bodyParser.json(), plansController.createCheckoutSession);
 

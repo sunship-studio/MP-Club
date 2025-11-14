@@ -7,13 +7,16 @@ The notification system has been updated to properly save and manage Shane's FCM
 ## ✅ New Features
 
 ### 1. Admin Token Management
+
 - **Store Shane's FCM token** in the database (AdminSettings collection)
 - **Remove token on logout** for security
 - **Automatic token cleanup** for invalid/expired tokens
 - **Debug token support** for testing
 
 ### 2. Notifications to Shane
+
 Shane now receives push notifications for:
+
 - 📨 **New messages from clients** (when offline)
 - 💰 **Payment notifications**
 - 👤 **New user signups**
@@ -22,6 +25,7 @@ Shane now receives push notifications for:
 ## 📡 API Endpoints
 
 ### Register Shane's FCM Token
+
 ```
 POST /mobile-app/notifications/save_token
 Content-Type: application/json
@@ -40,6 +44,7 @@ Response:
 ```
 
 ### Remove Shane's FCM Token (Logout)
+
 ```
 POST /mobile-app/notifications/remove_admin_token
 
@@ -55,25 +60,29 @@ Response:
 ### Admin App (React Native / Flutter)
 
 #### 1. Register Token on Login
+
 ```javascript
 import messaging from '@react-native-firebase/messaging';
 
 async function registerShaneToken() {
   // Get FCM token
   const fcmToken = await messaging().getToken();
-  
+
   // Register with backend
-  const response = await fetch('https://api.mpclub.com/mobile-app/notifications/save_token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      token: fcmToken,
-      debug: false
-    })
-  });
-  
+  const response = await fetch(
+    'https://api.mpclub.com/mobile-app/notifications/save_token',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        token: fcmToken,
+        debug: false,
+      }),
+    }
+  );
+
   const result = await response.json();
   console.log('Token registered:', result.success);
 }
@@ -83,12 +92,16 @@ await registerShaneToken();
 ```
 
 #### 2. Remove Token on Logout
+
 ```javascript
 async function removeShaneToken() {
-  const response = await fetch('https://api.mpclub.com/mobile-app/notifications/remove_admin_token', {
-    method: 'POST',
-  });
-  
+  const response = await fetch(
+    'https://api.mpclub.com/mobile-app/notifications/remove_admin_token',
+    {
+      method: 'POST',
+    }
+  );
+
   const result = await response.json();
   console.log('Token removed:', result.success);
 }
@@ -98,6 +111,7 @@ await removeShaneToken();
 ```
 
 #### 3. Handle Token Refresh
+
 ```javascript
 messaging().onTokenRefresh(async (newToken) => {
   // Re-register new token
@@ -108,20 +122,21 @@ messaging().onTokenRefresh(async (newToken) => {
     },
     body: JSON.stringify({
       token: newToken,
-      debug: false
-    })
+      debug: false,
+    }),
   });
 });
 ```
 
 #### 4. Handle Incoming Notifications
+
 ```javascript
 // Foreground messages
 messaging().onMessage((remoteMessage) => {
   console.log('Notification received:', remoteMessage);
-  
+
   const { type, chatRoomId, userId } = remoteMessage.data;
-  
+
   // Show local notification or update UI
   if (type === 'chat_message') {
     // Update chat badge count
@@ -135,7 +150,7 @@ messaging().onMessage((remoteMessage) => {
 // Notification tap (background/killed)
 messaging().onNotificationOpenedApp((remoteMessage) => {
   const { type, chatRoomId, userId } = remoteMessage.data;
-  
+
   if (type === 'chat_message') {
     // Navigate to chat with specific client
     navigation.navigate('Chat', { clientId: chatRoomId });
@@ -149,6 +164,7 @@ messaging().onNotificationOpenedApp((remoteMessage) => {
 ## 📱 Notification Types Shane Receives
 
 ### 1. New Client Message
+
 ```json
 {
   "notification": {
@@ -164,6 +180,7 @@ messaging().onNotificationOpenedApp((remoteMessage) => {
 ```
 
 ### 2. New User Signup (Example - implement in signup controller)
+
 ```json
 {
   "notification": {
@@ -178,6 +195,7 @@ messaging().onNotificationOpenedApp((remoteMessage) => {
 ```
 
 ### 3. Payment Received (Example - implement in payment webhook)
+
 ```json
 {
   "notification": {
@@ -206,7 +224,7 @@ async function handleUserSignup(user: any) {
     `${user.firstName} ${user.lastName} just signed up!`,
     {
       type: 'new_user',
-      userId: user._id.toString()
+      userId: user._id.toString(),
     }
   );
 }
@@ -219,7 +237,7 @@ async function handlePayment(user: any, amount: number) {
     {
       type: 'payment_received',
       userId: user._id.toString(),
-      amount: amount.toString()
+      amount: amount.toString(),
     }
   );
 }
@@ -231,16 +249,19 @@ async function handlePayment(user: any, amount: number) {
 ## 🔄 Automatic Features
 
 ### 1. Chat Notifications (Already Implemented)
+
 - When a **client sends a message** and Shane is **offline**, Shane receives a push notification
 - When **Shane sends a message** and client is **offline**, client receives a push notification
 - Notifications include sender name and message preview
 
 ### 2. Token Validation
+
 - Invalid or expired tokens are **automatically removed** from database
 - Prevents sending to non-existent devices
 - Logs errors for monitoring
 
 ### 3. Platform Support
+
 - Configured for both **iOS (APNs)** and **Android (FCM)**
 - Includes proper sound, badge, and priority settings
 - Channel ID: `admin_notifications` for Android
@@ -265,6 +286,7 @@ Shane's token is stored in the `AdminSettings` collection:
 ## 🧪 Testing
 
 ### 1. Test Token Registration
+
 ```bash
 curl -X POST http://localhost:3000/mobile-app/notifications/save_token \
   -H "Content-Type: application/json" \
@@ -275,6 +297,7 @@ curl -X POST http://localhost:3000/mobile-app/notifications/save_token \
 ```
 
 ### 2. Test Sending Notification
+
 ```typescript
 import { sendNotificationToAdmin } from './services/notification';
 
@@ -286,6 +309,7 @@ await sendNotificationToAdmin(
 ```
 
 ### 3. Test with Firebase Console
+
 1. Go to Firebase Console → Cloud Messaging
 2. Send test notification to Shane's token
 3. Verify notification appears on Shane's device
@@ -293,16 +317,19 @@ await sendNotificationToAdmin(
 ## ⚠️ Important Notes
 
 ### Security
+
 - **No authentication required** for `/save_token` endpoint (public for admin app)
 - Token is stored securely in database
 - Token automatically removed on invalid/expired errors
 
 ### Token Lifecycle
+
 1. **Login**: Register token immediately after Firebase initialization
 2. **Refresh**: Update token automatically when Firebase refreshes it
 3. **Logout**: Remove token from backend to stop notifications
 
 ### Platform-Specific
+
 - **iOS**: Requires APNs certificates in Firebase Console
 - **Android**: Works out of the box with google-services.json
 - **Testing**: Must use physical devices (notifications don't work on simulators)
@@ -325,6 +352,6 @@ await sendNotificationToAdmin(
 
 ---
 
-**Updated:** November 2025  
-**Status:** ✅ Production Ready  
+**Updated:** November 2025
+**Status:** ✅ Production Ready
 **Backend Changes:** Complete and deployed
