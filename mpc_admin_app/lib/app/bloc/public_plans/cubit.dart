@@ -30,6 +30,8 @@ class PublicPlansCubit extends Cubit<PublicPlansState> {
         '/add-training-plan',
         plan.toJson()..['excelFileUrl'] = uploadUrl,
       );
+      print('Create plan response status: ${response.statusCode}');
+      print('Create plan response data: ${response.data}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         await loadPlans();

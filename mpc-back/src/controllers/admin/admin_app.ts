@@ -2,7 +2,7 @@ import sgMail from '@sendgrid/mail';
 import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { uploadToCloudinary } from '../../config/cloudinary';
+import { uploadExcelToCloudinary } from '../../config/cloudinary';
 import stripe from '../../config/stripe';
 import AdminSettings from '../../models/AdminSettings';
 import Exercise from '../../models/Exercise';
@@ -327,16 +327,16 @@ export default class AdminAppController {
     res: Response
   ): Promise<Response> {
     try {
-      if (!req.file || !req.file.path) {
+      if (!req.file || !req.file.buffer) {
         return res.status(400).json({ message: 'No file uploaded' });
       }
-      const response = uploadToCloudinary(
+      const response = await uploadExcelToCloudinary(
         req.file.buffer,
         req.file.originalname,
         'training_plans'
       );
 
-      return res.status(200).json({ url: (await response).url });
+      return res.status(200).json({ url: response.url });
     } catch (error) {
       console.error('Error uploading training plan file:', error);
       return res.status(500).json({ message: 'Internal server error' });

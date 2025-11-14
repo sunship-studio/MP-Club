@@ -23,13 +23,17 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
   }
 
   void _showCreateDialog() {
+    final cubit = context.read<PublicPlansCubit>();
     showDialog(
       context: context,
       builder:
-          (context) => CreatePlanDialog(
-            onSave: (plan) {
-              context.read<PublicPlansCubit>().createPlan(plan);
-            },
+          (context) => BlocProvider.value(
+            value: cubit,
+            child: CreatePlanDialog(
+              onSave: (plan) {
+                cubit.createPlan(plan);
+              },
+            ),
           ),
     );
   }

@@ -96,7 +96,7 @@ final GoRouter appRouter = GoRouter(
           name: 'trainingPlans',
           pageBuilder: (context, state) {
             return NoTransitionPage(
-              child: BlocProvider(
+              child: BlocProvider<PublicPlansCubit>(
                 create: (context) => PublicPlansCubit(),
                 child: const TrainingPlansScreen(),
               ),
