@@ -123,11 +123,11 @@ export async function uploadExcelToCloudinary(
         folder: folder,
         public_id: `${Date.now()}-${fileName.split('.')[0]}`,
         resource_type: 'raw', // Use 'raw' for non-image files
-        format: fileName.split('.').pop(), // Preserve file extension
+        format: fileName.split('.').pop(),
       },
       (error, result) => {
         if (error) {
-          console.error('Cloudinary upload error:', error);
+          console.error('Excel Cloudinary upload error:', error);
           reject(error);
         } else {
           resolve({
