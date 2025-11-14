@@ -21,14 +21,20 @@ class PublicPlansCubit extends Cubit<PublicPlansState> {
     }
   }
 
-  Future<void> createPlan(PublicPlan plan) async {
+  Future<void> createPlan(PublicPlan plan, String filePath) async {
     emit(PublicPlansLoading());
     try {
-      final uploadUrl = await uploadExcelFile(plan.excelFileUrl);
-
+      final uploadUrl = await uploadExcelFile(filePath);
+      if (uploadUrl == null) {
+        emit(PublicPlansError(message: 'Failed to upload Excel file'));
+        return;
+      }
+      plan.excelFileUrl = uploadUrl;
+      print(uploadUrl);
+      print(plan.toJson());
       final response = await apiService.post(
         '/add-training-plan',
-        plan.toJson()..['excelFileUrl'] = uploadUrl,
+        plan.toJson(),
       );
       print('Create plan response status: ${response.statusCode}');
       print('Create plan response data: ${response.data}');
@@ -90,7 +96,7 @@ class PublicPlansCubit extends Cubit<PublicPlansState> {
       );
 
       if (response.statusCode == 200) {
-        return response.data['data']['url'] as String;
+        return response.data['url'] as String;
       }
       return null;
     } catch (e) {

@@ -303,6 +303,7 @@ export default class AdminAppController {
       const newPlan = new TrainingPlan({
         name,
         excelFileUrl,
+        price,
         listOfExercises,
         stripeProductId: stripeProduct.id,
       });

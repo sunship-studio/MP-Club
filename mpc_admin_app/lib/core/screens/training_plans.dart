@@ -27,14 +27,8 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
     showDialog(
       context: context,
       builder:
-          (context) => BlocProvider.value(
-            value: cubit,
-            child: CreatePlanDialog(
-              onSave: (plan) {
-                cubit.createPlan(plan);
-              },
-            ),
-          ),
+          (context) =>
+              BlocProvider.value(value: cubit, child: CreatePlanDialog()),
     );
   }
 

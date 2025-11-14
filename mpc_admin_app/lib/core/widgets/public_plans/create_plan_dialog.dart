@@ -10,9 +10,7 @@ import 'package:mpc_admin_app/app/network/api.dart';
 import 'package:mpc_admin_app/core/theme/app_colors.dart';
 
 class CreatePlanDialog extends StatefulWidget {
-  final Function(PublicPlan) onSave;
-
-  const CreatePlanDialog({super.key, required this.onSave});
+  const CreatePlanDialog({super.key});
 
   @override
   State<CreatePlanDialog> createState() => _CreatePlanDialogState();
@@ -142,7 +140,7 @@ class _CreatePlanDialogState extends State<CreatePlanDialog> {
       price: price,
     );
 
-    widget.onSave(plan);
+    await context.read<PublicPlansCubit>().createPlan(plan, _excelFilePath!);
     Navigator.pop(context);
   }
 
