@@ -8,7 +8,6 @@ import bodyParser from 'body-parser';
 import console from 'console';
 import fs from 'fs';
 import path from 'path';
-import { sendTrainingPlanEmail } from '../webhook/plan_webhook';
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 // Plans Router
 const plansRouter = express.Router();
@@ -94,11 +93,5 @@ plansRouter.get(
     }
   }
 );
-
-plansRouter.post('/', async (req, res) => {
-  sendTrainingPlanEmail('kamryydev@gmail.com', 'upper', '1234567890');
-  console.log('✅ Email sent successfully');
-  res.status(200).send('Email sent');
-});
 
 export default plansRouter;

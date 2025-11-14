@@ -154,14 +154,17 @@ class _EditPlanDialogState extends State<EditPlanDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: AppColors.darkScaffoldColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+    return Material(
+      color: Colors.black54,
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        height: MediaQuery.of(context).size.height * 0.8,
-        padding: EdgeInsets.all(20.w),
-        child: Column(
+        decoration: BoxDecoration(
+          color: AppColors.darkScaffoldColor,
+          borderRadius: BorderRadius.circular(12.r),
+        ),
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          padding: EdgeInsets.all(20.w),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -397,6 +400,7 @@ class _EditPlanDialogState extends State<EditPlanDialog> {
           ],
         ),
       ),
+    ),
     );
   }
 

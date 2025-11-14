@@ -26,14 +26,17 @@ class PlanCard extends StatelessWidget {
             title: Text(
               'Delete Plan',
               style: TextStyle(
-                color: Colors.white,
+                color: Colors.black.withValues(alpha: 0.7),
                 fontFamily: 'SF-Pro',
                 fontWeight: FontWeight.w600,
               ),
             ),
             content: Text(
               'Are you sure you want to delete "${plan.name}"?',
-              style: TextStyle(color: Colors.white70, fontFamily: 'SF-Pro'),
+              style: TextStyle(
+                color: Colors.black.withValues(alpha: 0.7),
+                fontFamily: 'SF-Pro',
+              ),
             ),
             actions: [
               TextButton(
@@ -65,7 +68,7 @@ class PlanCard extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 16.h),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: AppColors.darkCardColor,
+        color: AppColors.lightCardColor.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: AppColors.lightCardColor2.withValues(alpha: 0.1),
@@ -82,9 +85,9 @@ class PlanCard extends StatelessWidget {
                 child: Text(
                   plan.name,
                   style: TextStyle(
-                    fontSize: 18.sp,
+                    fontSize: 24.sp,
                     fontFamily: 'SF-Pro',
-                    color: Colors.white,
+                    color: Colors.black.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -137,7 +140,7 @@ class PlanCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontFamily: 'SF-Pro',
-                  color: Colors.white70,
+                  color: Colors.black.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -198,7 +201,7 @@ class PlanCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12.sp,
                   fontFamily: 'SF-Pro',
-                  color: Colors.white54,
+                  color: Colors.black.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),

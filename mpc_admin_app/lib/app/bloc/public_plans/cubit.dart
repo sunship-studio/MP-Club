@@ -54,7 +54,7 @@ class PublicPlansCubit extends Cubit<PublicPlansState> {
     try {
       final response = await apiService.post('/edit-training-plan', {
         ...plan.toJson(),
-        'planId': planId,
+        'id': planId,
       });
 
       if (response.statusCode == 200) {
@@ -71,7 +71,7 @@ class PublicPlansCubit extends Cubit<PublicPlansState> {
     emit(PublicPlansLoading());
     try {
       final response = await apiService.post('/delete-training-plan', {
-        'planId': planId,
+        'id': planId,
       });
 
       if (response.statusCode == 200) {

@@ -23,7 +23,7 @@ export default class PlansController {
               product: plan.stripeProductId,
               active: true,
             });
-
+            console.log('Fetched prices from Stripe:', prices.data);
             const price = prices.data[0]; // Get the first active price
 
             return {
@@ -32,8 +32,7 @@ export default class PlansController {
               excelFileUrl: plan.excelFileUrl,
               listOfExercises: plan.listOfExercises,
               stripeProductId: plan.stripeProductId,
-              price:
-                price && price.unit_amount ? price.unit_amount / 100 : null, // Convert from cents
+              price: plan.price, // Convert from cents
               currency: price ? price.currency : null,
               priceId: price ? price.id : null,
             };
@@ -49,7 +48,7 @@ export default class PlansController {
               excelFileUrl: plan.excelFileUrl,
               listOfExercises: plan.listOfExercises,
               stripeProductId: plan.stripeProductId,
-              price: null,
+              price: plan.price,
               currency: null,
               priceId: null,
             };

@@ -39,7 +39,7 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Gap(20.h),
+          Gap(12.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -62,7 +62,7 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
               ),
             ],
           ),
-          Gap(20.h),
+
           Expanded(
             child: BlocBuilder<PublicPlansCubit, PublicPlansState>(
               builder: (context, state) {
@@ -144,6 +144,7 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
                         await context.read<PublicPlansCubit>().loadPlans();
                       },
                       child: ListView.builder(
+                        padding: EdgeInsets.symmetric(vertical: 12.h),
                         itemCount: state.plans.length,
                         itemBuilder: (context, index) {
                           final plan = state.plans[index];
