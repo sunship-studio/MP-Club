@@ -43,8 +43,8 @@ const WorkoutSplitPlans: React.FC = () => {
   }, []);
 
   return (
-    <div className="container mx-auto">
-      <h1 className="text-3xl font-semibold text-center mb-2 mt-6">
+    <div className="container mx-auto px-4 pb-8">
+      <h1 className="text-2xl md:text-3xl font-semibold text-center mb-4 mt-6">
         Workout Split Plans
       </h1>
 
@@ -52,8 +52,31 @@ const WorkoutSplitPlans: React.FC = () => {
         <div className="flex justify-center items-center py-20">
           <div className="text-xl">Loading plans...</div>
         </div>
+      ) : plans.length === 0 ? (
+        <div className="flex flex-col justify-center items-center py-20 text-center">
+          <svg
+            className="w-20 h-20 text-gray-300 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <h3 className="text-xl font-semibold text-gray-300 mb-2">
+            No Plans Available
+          </h3>
+          <p className="text-gray-400 max-w-md">
+            There are currently no training plans available. Please check back
+            later.
+          </p>
+        </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 rounded-lg px-8 py-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 px-2 md:px-4 py-6">
           {plans.map((plan, index) => (
             <div
               key={plan.id}
@@ -72,14 +95,18 @@ const WorkoutSplitPlans: React.FC = () => {
               ></div>
 
               {/* Content layer */}
-              <div className="relative z-20 p-6 text-[#002C3F] h-full flex flex-col">
-                <h2 className="text-2xl font-bold mb-2">{plan.name}</h2>
-                <p className="text-sm mb-4 flex-grow">
+              <div className="relative z-20 p-4 md:p-6 text-[#002C3F] h-full flex flex-col min-h-[200px]">
+                <h2 className="text-lg md:text-2xl font-bold mb-2">
+                  {plan.name}
+                </h2>
+                <p className="text-xs md:text-sm mb-4 flex-grow">
                   {plan.listOfExercises.length} exercises included
                 </p>
                 <div className="mt-auto flex justify-between items-center">
-                  <span className="text-sm font-semibold">View Details</span>
-                  <span className="text-2xl font-bold">
+                  <span className="text-xs md:text-sm font-semibold">
+                    View Details
+                  </span>
+                  <span className="text-xl md:text-2xl font-bold">
                     {plan.price ? `$${plan.price.toFixed(2)}` : 'N/A'}
                   </span>
                 </div>
@@ -95,7 +122,7 @@ const WorkoutSplitPlans: React.FC = () => {
           onClick={() => setSelectedPlan(null)}
         >
           <div
-            className="relative rounded-2xl shadow-2xl max-w-md w-full"
+            className="relative rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* White base layer */}
@@ -105,29 +132,31 @@ const WorkoutSplitPlans: React.FC = () => {
             <div className="absolute inset-0 z-10 rounded-2xl bg-[#56C2F3]/20"></div>
 
             {/* Content layer */}
-            <div className="relative z-20 p-8 text-[#002C3F]">
-              <div className="flex justify-between items-center mb-6">
+            <div className="relative z-20 p-4 md:p-8 text-[#002C3F]">
+              <div className="flex justify-between items-center mb-4 md:mb-6">
                 <div className="flex items-center space-x-4">
-                  <span className="text-3xl font-bold">
+                  <span className="text-2xl md:text-3xl font-bold">
                     {selectedPlan.price
                       ? `$${selectedPlan.price.toFixed(2)}`
                       : 'N/A'}
                   </span>
                 </div>
               </div>
-              <h2 className="text-3xl font-bold mb-4">{selectedPlan.name}</h2>
-              <p className="mb-6 text-gray-600">
+              <h2 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">
+                {selectedPlan.name}
+              </h2>
+              <p className="mb-4 md:mb-6 text-sm md:text-base text-gray-600">
                 Complete training plan with{' '}
                 {selectedPlan.listOfExercises.length} exercises
               </p>
-              <h3 className="text-xl font-semibold mb-4">
+              <h3 className="text-lg md:text-xl font-semibold mb-3 md:mb-4">
                 Exercises Included:
               </h3>
-              <ul className="space-y-3 mb-6 max-h-60 overflow-y-auto">
+              <ul className="space-y-2 md:space-y-3 mb-6 max-h-48 md:max-h-60 overflow-y-auto">
                 {selectedPlan.listOfExercises.map((exercise, index) => (
-                  <li key={index} className="flex items-center">
+                  <li key={index} className="flex items-start">
                     <svg
-                      className="w-5 h-5 mr-2 text-[#56C2F3] flex-shrink-0"
+                      className="w-4 h-4 md:w-5 md:h-5 mr-2 mt-0.5 text-[#56C2F3] flex-shrink-0"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -137,28 +166,28 @@ const WorkoutSplitPlans: React.FC = () => {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <span>{exercise}</span>
+                    <span className="text-sm md:text-base">{exercise}</span>
                   </li>
                 ))}
               </ul>
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                 <button
                   onClick={() => {
                     setSelectedPlan(null);
                     setIsLoading(false);
                   }}
-                  className="w-1/2 py-3 bg-gray-100 border-1 font-semibold text-gray-800 rounded-lg hover:bg-gray-400 transition cursor-pointer"
+                  className="w-full sm:w-1/2 py-3 bg-gray-100 border-1 font-semibold text-gray-800 rounded-lg hover:bg-gray-400 transition cursor-pointer text-sm md:text-base"
                 >
                   Close
                 </button>
                 {isLoading && (
-                  <div className="w-1/2 py-3 bg-gray-100 border-1 font-semibold text-gray-800 rounded-lg hover:bg-gray-400 transition cursor-pointer text-center flex items-center justify-center">
+                  <div className="w-full sm:w-1/2 py-3 bg-gray-100 border-1 font-semibold text-gray-800 rounded-lg hover:bg-gray-400 transition cursor-pointer text-center flex items-center justify-center text-sm md:text-base">
                     Loading...
                   </div>
                 )}
                 {!isLoading && (
                   <button
-                    className="w-1/2 py-3 bg-[#077fb6]  font-semibold text-white rounded-lg hover:bg-[#077fb6b3] transition cursor-pointer"
+                    className="w-full sm:w-1/2 py-3 bg-[#077fb6]  font-semibold text-white rounded-lg hover:bg-[#077fb6b3] transition cursor-pointer text-sm md:text-base"
                     onClick={async () => {
                       if (!selectedPlan.priceId) {
                         alert('Price information not available');

@@ -10,6 +10,12 @@ class SubscriptionInitial extends SubscriptionState {}
 
 class SubscriptionLoading extends SubscriptionState {}
 
+class SubscriptionProductLoaded extends SubscriptionState {
+  final ProductDetails productDetails;
+
+  SubscriptionProductLoaded({required this.productDetails});
+}
+
 class SubscriptionActive extends SubscriptionState {
   final PurchaseDetails purchaseDetails;
   final String receipt;
@@ -60,6 +66,23 @@ class SubscriptionCubit extends Cubit<SubscriptionState> {
       }
     } catch (e) {
       emit(SubscriptionError('Failed to check subscription: $e'));
+    }
+  }
+
+  /// Load product details for subscription
+  Future<void> loadProductDetails() async {
+    emit(SubscriptionLoading());
+
+    try {
+      final productDetails = await _subscriptionService.getProductDetails();
+
+      if (productDetails != null) {
+        emit(SubscriptionProductLoaded(productDetails: productDetails));
+      } else {
+        emit(SubscriptionError('Product not found. Please try again later.'));
+      }
+    } catch (e) {
+      emit(SubscriptionError('Failed to load subscription details: $e'));
     }
   }
 

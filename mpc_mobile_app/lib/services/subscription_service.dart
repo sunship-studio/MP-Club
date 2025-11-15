@@ -165,6 +165,42 @@ class SubscriptionService {
     }
   }
 
+  /// Get product details for the subscription
+  Future<ProductDetails?> getProductDetails() async {
+    try {
+      final bool available = await _inAppPurchase.isAvailable();
+      if (!available) {
+        print('❌ Store is not available');
+        return null;
+      }
+
+      print('🛒 Querying product details for: $subscriptionId');
+
+      final ProductDetailsResponse response = await _inAppPurchase
+          .queryProductDetails({subscriptionId});
+
+      if (response.error != null) {
+        print('❌ Query error: ${response.error}');
+        return null;
+      }
+
+      if (response.productDetails.isEmpty) {
+        print('❌ No product details available');
+        return null;
+      }
+
+      final productDetails = response.productDetails.first;
+      print('✅ Product found: ${productDetails.id}');
+      print('   Title: ${productDetails.title}');
+      print('   Price: ${productDetails.price}');
+
+      return productDetails;
+    } catch (e) {
+      print('❌ Error getting product details: $e');
+      return null;
+    }
+  }
+
   /// Check if user has an active subscription
   Future<bool> hasActiveSubscription() async {
     try {

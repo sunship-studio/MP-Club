@@ -29,6 +29,12 @@ class Responsive {
 }
 
 class Constants {
+  // Legal URLs
+  static const String termsOfUseUrl =
+      'https://www.midlandsperformanceclub.ie/terms-and-conditions';
+  static const String privacyPolicyUrl =
+      'https://gist.github.com/kamryy/418f8f96a1764828d36e2b1ac6f6fc50';
+
   static const List<String> months = [
     "January",
     "February",

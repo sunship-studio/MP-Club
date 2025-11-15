@@ -9,6 +9,7 @@ import 'package:mpc_mobile_app/cubits/auth.dart';
 import 'package:mpc_mobile_app/cubits/subscription.dart';
 import 'package:mpc_mobile_app/presentation/widgets/circular_button.dart';
 import 'package:mpc_mobile_app/presentation/widgets/onboarding/onboarding_input.dart';
+import 'package:mpc_mobile_app/presentation/widgets/subscription/subscription_details_dialog.dart';
 import 'package:mpc_mobile_app/services/snack_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -53,6 +54,24 @@ class _LoginScreenState extends State<LoginScreen> {
         _handleDeepLink(uri);
       }
     });
+  }
+
+  void _showSubscriptionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder:
+          (dialogContext) => SubscriptionDetailsDialog(
+            onConfirm: () {
+              Navigator.of(dialogContext).pop();
+              // Proceed with purchase
+              context.read<SubscriptionCubit>().purchaseSubscription();
+            },
+            onCancel: () {
+              Navigator.of(dialogContext).pop();
+            },
+          ),
+    );
   }
 
   void _handleDeepLink(Uri uri) {
@@ -381,10 +400,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             SizedBox(height: 6),
                             GestureDetector(
                               onTap: () {
-                                // Trigger subscription purchase via cubit
-                                context
-                                    .read<SubscriptionCubit>()
-                                    .purchaseSubscription();
+                                _showSubscriptionDialog(context);
                               },
                               child: Text(
                                 "Purchase a Membership",
