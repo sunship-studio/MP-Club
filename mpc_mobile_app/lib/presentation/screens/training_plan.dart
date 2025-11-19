@@ -166,13 +166,12 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                         children: [
                           Container(
                             width: double.infinity,
-                            height: 240.h,
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                fit: BoxFit.cover,
-                                image: AssetImage(
-                                  'assets/images/training_plan.png',
-                                ),
+                            padding: EdgeInsets.symmetric(vertical: 40.h),
+                            child: Center(
+                              child: Image.asset(
+                                'assets/images/splash-icon.png',
+                                width: 180.w,
+                                fit: BoxFit.contain,
                               ),
                             ),
                           ),

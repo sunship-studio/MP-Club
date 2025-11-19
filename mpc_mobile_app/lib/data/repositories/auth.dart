@@ -72,8 +72,7 @@ class AuthRepository {
 
   /// Create account with Apple subscription
   Future<AuthResult> createAccountWithAppleSubscription({
-    String?
-    email, // Optional - backend will extract from receipt if not provided
+    required String email,
     required String firstName,
     required String lastName,
     required int age,
@@ -81,10 +80,13 @@ class AuthRepository {
     required String subscriptionId,
     int? targetWeight,
   }) async {
+    print(
+      'Creating account with Apple subscription for $firstName $lastName, email $email, age $age, subscriptionId $subscriptionId, targetWeight $targetWeight, receiptData length ${appleReceiptData.length}',
+    );
     try {
       final response = await dio
           .post('/auth/create-account-apple-subscription', {
-            if (email != null && email.isNotEmpty) 'email': email,
+            'email': email,
             'firstName': firstName,
             'lastName': lastName,
             'age': age,

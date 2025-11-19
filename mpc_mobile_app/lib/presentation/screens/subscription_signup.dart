@@ -30,7 +30,6 @@ class _SubscriptionSignupScreenState extends State<SubscriptionSignupScreen> {
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _targetWeightController = TextEditingController();
-
   @override
   void dispose() {
     _emailController.dispose();
@@ -48,14 +47,8 @@ class _SubscriptionSignupScreenState extends State<SubscriptionSignupScreen> {
               ? int.tryParse(_targetWeightController.text)
               : null;
 
-      final email =
-          _emailController.text.trim().isNotEmpty
-              ? _emailController.text.trim()
-              : null;
-
       context.read<AuthCubit>().createAccountWithAppleSubscription(
-        email:
-            email, // Provide email if user entered it, otherwise backend extracts from receipt
+        email: _emailController.text.trim(),
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
         age: int.parse(_ageController.text),
@@ -125,30 +118,21 @@ class _SubscriptionSignupScreenState extends State<SubscriptionSignupScreen> {
                       SizedBox(height: 32.h),
                       OnboardingInput(
                         controller: _emailController,
-                        label: 'Email (Optional)',
-                        hintText: 'john@example.com',
+                        label: 'Email Address',
+                        hintText: 'your@email.com',
                         validator: (value) {
-                          if (value != null && value.trim().isNotEmpty) {
-                            // Basic email validation
-                            final emailRegex = RegExp(
-                              r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-                            );
-                            if (!emailRegex.hasMatch(value.trim())) {
-                              return 'Please enter a valid email';
-                            }
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Email is required';
+                          }
+                          final emailRegex = RegExp(
+                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                          );
+                          if (!emailRegex.hasMatch(value.trim())) {
+                            return 'Please enter a valid email';
                           }
                           return null;
                         },
                         enabled: !isLoading,
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        'We\'ll use your Apple account email if left blank',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w400,
-                        ),
                       ),
                       SizedBox(height: 16.h),
                       OnboardingInput(

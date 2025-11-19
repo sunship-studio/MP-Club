@@ -428,49 +428,67 @@ authRouter.get('/reset-password', (req, res) => {
   res.send(html);
 });
 
-authRouter.post('/create-account-apple-subscription', async (req, res) => {
-  try {
-    const {
-      email,
-      firstName,
-      lastName,
-      age,
-      targetWeight,
-      appleReceiptData,
-      subscriptionId,
-    } = req.body;
+authRouter.post(
+  '/create-account-apple-subscription',
+  async (req, res): Promise<void> => {
+    try {
+      const {
+        email,
+        firstName,
+        lastName,
+        age,
+        targetWeight,
+        appleReceiptData,
+        subscriptionId,
+      } = req.body;
 
-    const result = await AuthController.createAccountWithAppleSubscription({
-      email,
-      firstName,
-      lastName,
-      age,
-      targetWeight,
-      appleReceiptData,
-      subscriptionId,
-    });
+      // Validate required fields
+      if (
+        !email ||
+        !firstName ||
+        !lastName ||
+        !age ||
+        !appleReceiptData ||
+        !subscriptionId
+      ) {
+        res.status(400).json({
+          message:
+            'Missing required fields: email, firstName, lastName, age, appleReceiptData, subscriptionId',
+        });
+      }
 
-    console.log('Account creation result:', req.body, result);
-
-    if (result.success) {
-      res.setHeader('authorization', result.token || '');
-      res.setHeader('x-refresh-token', result.refreshToken || '');
-      res.status(201).json({
-        message: 'Account created successfully with Apple subscription',
-        user: result.user,
+      const result = await AuthController.createAccountWithAppleSubscription({
+        email,
+        firstName,
+        lastName,
+        age,
+        targetWeight,
+        appleReceiptData,
+        subscriptionId,
       });
-    } else {
-      res.status(400).json({
-        message: result.message || 'Failed to create account',
+
+      console.log('Account creation result:', req.body, result);
+
+      if (result.success) {
+        res.setHeader('authorization', result.token || '');
+        res.setHeader('x-refresh-token', result.refreshToken || '');
+        res.status(201).json({
+          message: 'Account created successfully with Apple subscription',
+          user: result.user,
+        });
+      } else {
+        res.status(400).json({
+          message: result.message || 'Failed to create account',
+        });
+      }
+    } catch (error) {
+      console.error('Error creating account with Apple subscription:', error);
+      res.status(500).json({
+        message: 'Internal server error',
       });
     }
-  } catch (error) {
-    console.error('Error creating account with Apple subscription:', error);
-    res.status(500).json({
-      message: 'Internal server error',
-    });
   }
-});
+);
 
 authRouter.get('/user', verifyToken, (req, res) =>
   AuthController.getUser(req, res)

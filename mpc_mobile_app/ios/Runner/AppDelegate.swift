@@ -9,18 +9,11 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Register Flutter plugins first
-    GeneratedPluginRegistrant.register(with: self)
+    // Configure Firebase FIRST before anything else
+    FirebaseApp.configure()
 
-    do {
-      if FirebaseApp.app() == nil {
-        FirebaseApp.configure()
-        print("✅ Firebase configured successfully")
-      }
-    } catch {
-      print("❌ Firebase configuration error: \(error)")
-      print("❌ Make sure GoogleService-Info.plist is in the project")
-    }
+    // Register Flutter plugins
+    GeneratedPluginRegistrant.register(with: self)
 
     // Set up notification delegate for iOS 10+
     if #available(iOS 10.0, *) {

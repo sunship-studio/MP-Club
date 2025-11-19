@@ -147,19 +147,23 @@ export class AuthController {
         };
       }
 
-      // Verify Apple subscription receipt
-      const subscriptionValid = await this.verifyAppleReceipt(
-        appleReceiptData,
-        subscriptionId
-      );
+      // TODO: Re-enable Apple receipt verification once properly configured
+      // const subscriptionValid = await this.verifyAppleReceipt(
+      //   appleReceiptData,
+      //   subscriptionId
+      // );
 
-      if (!subscriptionValid.valid) {
-        return {
-          success: false,
-          message: subscriptionValid.message || 'Invalid Apple subscription',
-        };
-      }
-      console.log('Apple subscription verified successfully', userData);
+      // if (!subscriptionValid.valid) {
+      //   return {
+      //     success: false,
+      //     message: subscriptionValid.message || 'Invalid Apple subscription',
+      //   };
+      // }
+
+      console.log(
+        '⚠️ Skipping Apple receipt verification (temporarily disabled)'
+      );
+      console.log('Creating account for user:', { email, firstName, lastName });
 
       // Create new user with Apple subscription
       const newUser = new User({

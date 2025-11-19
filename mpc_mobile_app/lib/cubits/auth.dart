@@ -136,7 +136,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   /// Create account with Apple subscription
   Future<void> createAccountWithAppleSubscription({
-    String? email, // Optional - backend extracts from receipt
+    required String email, // Optional - backend extracts from receipt
     required String firstName,
     required String lastName,
     required int age,

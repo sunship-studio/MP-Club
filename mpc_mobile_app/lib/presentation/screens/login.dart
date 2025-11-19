@@ -11,7 +11,6 @@ import 'package:mpc_mobile_app/presentation/widgets/circular_button.dart';
 import 'package:mpc_mobile_app/presentation/widgets/onboarding/onboarding_input.dart';
 import 'package:mpc_mobile_app/presentation/widgets/subscription/subscription_details_dialog.dart';
 import 'package:mpc_mobile_app/services/snack_bar.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -422,40 +421,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       height:
                           state is EmailCheckSuccess && state.exists
                               ? 24.h
-                              : MediaQuery.of(context).size.height * 0.145,
-                    ),
-                    Text(
-                      "Accounts are created via membership purchase on the",
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: -0.6,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () async {
-                        final url = Uri.parse(
-                          'https://www.midlandsperformanceclub.ie/online-coaching',
-                        );
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(
-                            url,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        }
-                      },
-                      child: Text(
-                        "Private Website",
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 1),
-                          fontSize: 12.sp,
-                          decoration: TextDecoration.underline,
-                          decorationColor: Colors.white,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: -0.6,
-                        ),
-                      ),
+                              : MediaQuery.of(context).size.height * 0.22,
                     ),
                   ],
                 ),

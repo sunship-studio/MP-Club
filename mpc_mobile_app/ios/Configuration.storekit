@@ -1,0 +1,107 @@
+{
+  "identifier" : "9B2F59D0",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6737643839",
+    "_developerTeamID" : "ZKTFWTDSBN",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 761961960.38652205,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21607036",
+      "localizations" : [
+
+      ],
+      "name" : "MPC Subscriptions",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "260.00",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6737644344",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Access to MPC Elite Online Coaching including personalized training plans, nutrition guidance, and direct coach communication.",
+              "displayName" : "MPC Elite Online Coaching",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "mpc_monthly_subscription_260",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "MPC Monthly Subscription",
+          "subscriptionGroupID" : "21607036",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}
