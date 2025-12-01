@@ -2,6 +2,8 @@ import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 
 class TutorialsForYou extends StatelessWidget {
@@ -9,44 +11,82 @@ class TutorialsForYou extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 180.h,
-      child: ListView(
-        physics: BouncingScrollPhysics(),
-        shrinkWrap: true,
-        padding: EdgeInsets.zero,
-        scrollDirection: Axis.horizontal,
-        children: [_TutorialBox(), Gap(10.w), _TutorialBox()],
-      ),
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          child: Row(
+            children: [
+              Text(
+                "Tutotials for you",
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Inter',
+                  letterSpacing: -0.5,
+                  color: AppColors.darkTextColor,
+                ),
+              ),
+              Spacer(),
+              Text(
+                "See More",
+
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Inter',
+                  color: AppColors.greyTextColor,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Gap(10.h),
+        SizedBox(
+          height: 180.h,
+          child: ListView(
+            physics: BouncingScrollPhysics(),
+            shrinkWrap: true,
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            scrollDirection: Axis.horizontal,
+            children: [TutorialBox(), Gap(10.w), TutorialBox()],
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _TutorialBox extends StatefulWidget {
-  const _TutorialBox({super.key});
+class TutorialBox extends StatefulWidget {
+  const TutorialBox({super.key});
 
   @override
-  State<_TutorialBox> createState() => _TutorialBoxState();
+  State<TutorialBox> createState() => _TutorialBoxState();
 }
 
-class _TutorialBoxState extends State<_TutorialBox> {
+class _TutorialBoxState extends State<TutorialBox> {
   bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
-
     return GestureDetector(
-      onTap: () {},
-      onTapDown: (details) => setState(() {
+      onTap: () {
+        context.push('/tutorial/1');
+      },
+      onTapDown:
+          (details) => setState(() {
             _isPressed = true;
           }),
-      onTapUp: (details) => setState(() {
+      onTapUp:
+          (details) => setState(() {
+            _isPressed = false;
+          }),
+      onTapCancel:
+          () => setState(() {
+            _isPressed = false;
+          }),
 
-            _isPressed = false;
-          }),
-      onTapCancel: () => setState(() {
-            _isPressed = false;
-          }),
       child: AnimatedScale(
         duration: Duration(milliseconds: 100),
         scale: _isPressed ? 0.98 : 1.0,
@@ -98,7 +138,9 @@ class _TutorialBoxState extends State<_TutorialBox> {
                 Container(
                   padding: EdgeInsets.all(6.w),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,

@@ -2,7 +2,7 @@ name: mpc_mobile_app
 description: 'A new Flutter project.'
 
 publish_to: 'none'
-version: 1.0.1+10
+version: 1.0.2+13
 
 environment:
   sdk: ^3.7.2
@@ -55,8 +55,6 @@ flutter:
     - assets/images/login_header.png
     - assets/images/logo.png
     - assets/images/loading.gif
-    - assets/images/avatar.png
-    - assets/images/checkin.png
     - assets/images/training_plan.png
     - assets/images/tutorial.png
     - assets/images/default_avatar.png
@@ -73,6 +71,13 @@ flutter:
     - assets/images/photo-filled.svg
     - assets/images/file-filled.svg
     - assets/images/thumbnail.png
+    - assets/images/upper_body.png
+    - assets/images/lower_body.png
+    - assets/images/all.png
+    - assets/images/arms.png
+    # - assets/images/back.png
+    # - assets/images/chest.png
+
     - assets/videos/workout.mp4
 
 flutter_launcher_icons:

@@ -169,7 +169,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                             padding: EdgeInsets.symmetric(vertical: 40.h),
                             child: Center(
                               child: Image.asset(
-                                'assets/images/splash-icon.png',
+                                'assets/splash-icon.png',
                                 width: 180.w,
                                 fit: BoxFit.contain,
                               ),

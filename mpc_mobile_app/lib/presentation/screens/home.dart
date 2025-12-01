@@ -10,9 +10,9 @@ import 'package:mpc_mobile_app/presentation/widgets/home/calories_progress.dart'
 import 'package:mpc_mobile_app/presentation/widgets/home/chat_trainer_card.dart';
 import 'package:mpc_mobile_app/presentation/widgets/home/check_in_card.dart';
 import 'package:mpc_mobile_app/presentation/widgets/home/my_training_plan.dart';
-import 'package:mpc_mobile_app/presentation/widgets/home/tutorials_for_you.dart';
 import 'package:mpc_mobile_app/presentation/widgets/home/weight_progress.dart';
 import 'package:mpc_mobile_app/presentation/widgets/profile_avatar.dart';
+import 'package:mpc_mobile_app/presentation/widgets/tutorials_for_you.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -141,73 +141,19 @@ class HomeScreen extends StatelessWidget {
                   ),
                   Gap(25.h),
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: horizontalPadding.w,
-                    ),
                     margin: EdgeInsets.only(bottom: bottomPadding(context)),
                     child: Column(
                       children: [
-                        MyTrainingPlan(trainingPlan: user.trainingPlan),
-                        Gap(24.h),
-                        Stack(
-                          children: [
-                            Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      "Tutotials for you",
-                                      style: TextStyle(
-                                        fontSize: 14.sp,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: 'Inter',
-                                        letterSpacing: -0.5,
-                                        color: AppColors.darkTextColor,
-                                      ),
-                                    ),
-                                    Spacer(),
-                                    Text(
-                                      "See More",
-
-                                      style: TextStyle(
-                                        fontSize: 12.sp,
-                                        fontWeight: FontWeight.w500,
-                                        fontFamily: 'Inter',
-                                        color: AppColors.greyTextColor,
-                                        letterSpacing: -0.3,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Gap(10.h),
-                                TutorialsForYou(),
-                              ],
-                            ),
-                            Container(
-                              width: double.infinity,
-                              height: 220.h,
-                              decoration: BoxDecoration(
-                                color: AppColors.darkCardColor.withValues(
-                                  alpha: 0.7,
-                                ),
-                                borderRadius: BorderRadius.circular(10.r),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  "Tutorial Coming in end of 2025",
-                                  style: TextStyle(
-                                    color: AppColors.lightTextColor.withValues(
-                                      alpha: 1,
-                                    ),
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w500,
-                                    fontFamily: 'Inter',
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding.w,
+                          ),
+                          child: MyTrainingPlan(
+                            trainingPlan: user.trainingPlan,
+                          ),
                         ),
+                        Gap(24.h),
+                        TutorialsForYou(),
                       ],
                     ),
                   ),

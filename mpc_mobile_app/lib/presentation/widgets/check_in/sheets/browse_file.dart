@@ -11,6 +11,13 @@ import 'package:mpc_mobile_app/services/image.dart';
 
 ImageService imageService = ImageService();
 
+// Check if running on iOS Simulator
+bool get isIOSSimulator {
+  if (!Platform.isIOS) return false;
+  return Platform.environment.containsKey('SIMULATOR_DEVICE_NAME') ||
+      Platform.environment.containsKey('SIMULATOR_RUNTIME_VERSION');
+}
+
 Future<File?> showBrowseFileSheet(
   BuildContext context, {
   bool showNavBarAfter = false,
@@ -147,8 +154,21 @@ class _TakePhotoButtonState extends State<TakePhotoButton> {
         });
       },
       onTap: () async {
+        // Don't attempt camera on simulator - it will crash
+        if (isIOSSimulator) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Camera not available on simulator'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+          return;
+        }
+
         final file = await imageService.pickImageFromCamera();
-        await Future.delayed(Duration(milliseconds: 500));
+
         print("TAKE PHOTO FILE: $file");
         if (file != null) {
           widget.setSelectedFile(file);

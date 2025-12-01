@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 class AppColors {
   static const Color darkScaffoldColor = Color.fromRGBO(10, 13, 20, 1);
   static const Color lightScaffoldColor = Color.fromRGBO(247, 247, 247, 1);
   static const Color lightScaffoldColor2 = Color.fromRGBO(240, 240, 240, 1);
+  static const Color searchIconColor = Color.fromRGBO(134, 140, 152, 1);
+  static const Color searchHintColor = Color.fromRGBO(82, 88, 102, 1);
+  static const Color primaryColor = Color.fromRGBO(3, 105, 161, 1);
   static const Color blueColor = Color.fromRGBO(2, 132, 199, 1);
   static const Color errorColor = Color.fromRGBO(220, 38, 38, 1);
   static const Color orangeColor = Color.fromRGBO(180, 83, 9, 1);

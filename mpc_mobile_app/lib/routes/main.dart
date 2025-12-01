@@ -9,6 +9,7 @@ import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/cubits/calories.dart';
 import 'package:mpc_mobile_app/cubits/check_in.dart';
 import 'package:mpc_mobile_app/cubits/profile.dart';
+import 'package:mpc_mobile_app/cubits/tutorials.dart';
 import 'package:mpc_mobile_app/cubits/workout.dart';
 import 'package:mpc_mobile_app/data/models/TrainingDay.dart';
 import 'package:mpc_mobile_app/data/repositories/calories.dart';
@@ -24,6 +25,8 @@ import 'package:mpc_mobile_app/presentation/screens/home.dart';
 import 'package:mpc_mobile_app/presentation/screens/profile.dart';
 import 'package:mpc_mobile_app/presentation/screens/submit_checkin.dart';
 import 'package:mpc_mobile_app/presentation/screens/training_plan.dart';
+import 'package:mpc_mobile_app/presentation/screens/tutorial_details.dart';
+import 'package:mpc_mobile_app/presentation/screens/tutorials.dart';
 
 // Global keys for navigation
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -99,14 +102,14 @@ class MainRouter {
               GoRoute(
                 path: '/tutorials',
                 builder:
-                    (context, state) => Scaffold(
-                      body: Center(
-                        child: Text("Tutorials Coming By the End of 2025"),
-                      ),
+                    (context, state) => BlocProvider(
+                      create: (context) => getIt<TutorialCubit>(),
+                      child: TutorialsScreens(),
                     ),
               ),
             ],
           ),
+
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -147,6 +150,13 @@ class MainRouter {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/tutorial/:id',
+        builder: (context, state) {
+          final tutorialId = state.pathParameters['id']!;
+          return TutorialDetailScreen();
+        },
       ),
     ],
   );
