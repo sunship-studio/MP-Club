@@ -490,8 +490,6 @@ authRouter.post(
   }
 );
 
-authRouter.get('/user', verifyToken, (req, res) =>
-  AuthController.getUser(req, res)
-);
+authRouter.get('/user', verifyToken, (req, res) => AuthController.getUser(req, res));
 
 export default authRouter;

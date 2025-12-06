@@ -21,6 +21,7 @@ export interface IUser extends Document {
           {
             bodyParts: [string];
             exerciseId: string;
+            videoUrl?: string;
             minutes: number;
             seconds: number;
             sets: [
@@ -28,13 +29,13 @@ export interface IUser extends Document {
                 reps: number;
                 rir: number;
                 weight: number;
-              }
+              },
             ];
             name: string;
-          }
+          },
         ];
       };
-    }
+    },
   ];
   checkIns: [
     {
@@ -42,14 +43,14 @@ export interface IUser extends Document {
       weight: number;
       imageUrl?: string | null;
       note?: string | null;
-    }
+    },
   ];
   caloriesLogs: [
     {
       date: Date;
       calories: number;
       note?: string | null;
-    }
+    },
   ];
   hasPassword?: boolean;
   lastLogin?: Date;
@@ -65,18 +66,19 @@ export interface IUser extends Document {
             bodyParts: [string];
             exerciseId: string;
             minutes: number;
+            videoUrl?: string;
             seconds: number;
             sets: [
               {
                 reps: number;
                 rir: number;
                 weight: number;
-              }
+              },
             ];
             name: string;
-          }
+          },
         ];
-      }
+      },
     ];
     bodyParts: [string];
   };
@@ -165,6 +167,7 @@ const UserSchema = new Schema<IUser>({
         name: { type: String, required: true },
         exercises: [
           {
+            videoUrl: { type: String, required: false },
             bodyParts: { type: [String], default: [] },
             exerciseId: { type: String, required: true },
             minutes: { type: Number, default: 0 },

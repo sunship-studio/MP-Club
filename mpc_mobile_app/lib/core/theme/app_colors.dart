@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color darkScaffoldColor = Color.fromRGBO(10, 13, 20, 1);
+  static const Color darkScaffoldColor = Color.fromRGBO(8, 10, 16, 1);
   static const Color lightScaffoldColor = Color.fromRGBO(247, 247, 247, 1);
   static const Color lightScaffoldColor2 = Color.fromRGBO(240, 240, 240, 1);
   static const Color searchIconColor = Color.fromRGBO(134, 140, 152, 1);

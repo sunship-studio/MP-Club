@@ -6,14 +6,17 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mpc_mobile_app/core/di/injection.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
+import 'package:mpc_mobile_app/cubits/auth.dart';
 import 'package:mpc_mobile_app/cubits/calories.dart';
 import 'package:mpc_mobile_app/cubits/check_in.dart';
 import 'package:mpc_mobile_app/cubits/profile.dart';
 import 'package:mpc_mobile_app/cubits/tutorials.dart';
 import 'package:mpc_mobile_app/cubits/workout.dart';
+import 'package:mpc_mobile_app/data/models/Exercise.dart';
 import 'package:mpc_mobile_app/data/models/TrainingDay.dart';
 import 'package:mpc_mobile_app/data/repositories/calories.dart';
 import 'package:mpc_mobile_app/data/repositories/check_in.dart';
+import 'package:mpc_mobile_app/data/repositories/exercise.dart';
 import 'package:mpc_mobile_app/data/repositories/profile.dart';
 import 'package:mpc_mobile_app/data/repositories/workout.dart';
 import 'package:mpc_mobile_app/presentation/screens/active_workout.dart';
@@ -25,7 +28,7 @@ import 'package:mpc_mobile_app/presentation/screens/home.dart';
 import 'package:mpc_mobile_app/presentation/screens/profile.dart';
 import 'package:mpc_mobile_app/presentation/screens/submit_checkin.dart';
 import 'package:mpc_mobile_app/presentation/screens/training_plan.dart';
-import 'package:mpc_mobile_app/presentation/screens/tutorial_details.dart';
+import 'package:mpc_mobile_app/presentation/screens/tutorial.dart';
 import 'package:mpc_mobile_app/presentation/screens/tutorials.dart';
 
 // Global keys for navigation
@@ -51,7 +54,20 @@ class MainRouter {
             routes: [
               GoRoute(
                 path: "/home",
-                builder: (context, state) => HomeScreen(),
+                builder:
+                    (context, state) => BlocProvider(
+                      create:
+                          (context) => TutorialCubit(
+                            exerciseRepository: getIt<ExerciseRepository>(),
+                          )..fetchTutorialsSection(
+                            userId:
+                                (context.read<AuthCubit>().state
+                                        as AuthAuthenticated)
+                                    .user
+                                    .id,
+                          ),
+                      child: HomeScreen(),
+                    ),
                 routes: [
                   GoRoute(
                     path: '/profile',
@@ -103,8 +119,16 @@ class MainRouter {
                 path: '/tutorials',
                 builder:
                     (context, state) => BlocProvider(
-                      create: (context) => getIt<TutorialCubit>(),
-                      child: TutorialsScreens(),
+                      create:
+                          (context) =>
+                              getIt<TutorialCubit>()..fetchTutorialsSection(
+                                userId:
+                                    (context.read<AuthCubit>().state
+                                            as AuthAuthenticated)
+                                        .user
+                                        .id,
+                              ),
+                      child: TutorialsScreen(),
                     ),
               ),
             ],
@@ -152,10 +176,30 @@ class MainRouter {
         ],
       ),
       GoRoute(
-        path: '/tutorial/:id',
+        path: '/tutorial',
         builder: (context, state) {
-          final tutorialId = state.pathParameters['id']!;
-          return TutorialDetailScreen();
+          if (state.extra is Exercise) {
+            return TutorialScreen(exercise: state.extra as Exercise);
+          } else {
+            return FutureBuilder(
+              future: getIt<ExerciseRepository>().fetchExerciseByVideoUrl(
+                videoUrl: state.extra as String,
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                } else if (snapshot.hasError || !snapshot.hasData) {
+                  return Scaffold(
+                    body: Center(child: Text('Error loading tutorial')),
+                  );
+                } else {
+                  return TutorialScreen(exercise: snapshot.data!);
+                }
+              },
+            );
+          }
         },
       ),
     ],

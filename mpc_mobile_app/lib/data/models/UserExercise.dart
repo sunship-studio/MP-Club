@@ -3,6 +3,7 @@ import 'package:mpc_mobile_app/data/models/set.dart';
 class UserExercise {
   String name;
   String? id;
+  String? videoUrl;
   List<ExerciseSet>? sets = [
     ExerciseSet(reps: 10, rir: 2, weight: 0),
     ExerciseSet(reps: 10, rir: 2, weight: 0),
@@ -16,6 +17,7 @@ class UserExercise {
   UserExercise({
     this.id,
     required this.name,
+    this.videoUrl,
     this.sets,
     this.minutes = 0,
     this.seconds = 0,
@@ -27,6 +29,7 @@ class UserExercise {
       id: json['exerciseId'] as String,
 
       name: json['name'] as String,
+      videoUrl: json['videoUrl'] as String?,
       sets:
           (json['sets'] as List<dynamic>?)
               ?.map((e) => ExerciseSet.fromJson(e as Map<String, dynamic>))
@@ -46,6 +49,7 @@ class UserExercise {
     return {
       'exerciseId': id,
       'name': name,
+      'videoUrl': videoUrl,
       'sets': sets?.map((e) => e.toJson()).toList(),
       'bodyParts': bodyParts,
       'minutes': minutes,

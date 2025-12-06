@@ -8,8 +8,8 @@ import 'package:mpc_mobile_app/cubits/tutorials.dart';
 import 'package:mpc_mobile_app/data/repositories/auth.dart';
 import 'package:mpc_mobile_app/data/repositories/calories.dart';
 import 'package:mpc_mobile_app/data/repositories/check_in.dart';
+import 'package:mpc_mobile_app/data/repositories/exercise.dart';
 import 'package:mpc_mobile_app/data/repositories/profile.dart';
-import 'package:mpc_mobile_app/data/repositories/tutorials.dart';
 import 'package:mpc_mobile_app/data/repositories/workout.dart';
 import 'package:mpc_mobile_app/main.dart';
 import 'package:mpc_mobile_app/routes/auth.dart';
@@ -91,12 +91,12 @@ Future<void> setupDependencies() async {
     () => ProfileRepository(dioClient: getIt<DioClient>()),
   );
 
-  getIt.registerLazySingleton<TutorialRepository>(
-    () => TutorialRepository(dioClient: getIt<DioClient>()),
+  getIt.registerLazySingleton<ExerciseRepository>(
+    () => ExerciseRepository(dioClient: getIt<DioClient>()),
   );
 
   getIt.registerLazySingleton<TutorialCubit>(
-    () => TutorialCubit(tutorialsRepository: getIt<TutorialRepository>()),
+    () => TutorialCubit(exerciseRepository: getIt<ExerciseRepository>()),
   );
 
   // ROUTERS

@@ -1,4 +1,5 @@
 import sgMail from '@sendgrid/mail';
+import console from 'console';
 import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
@@ -50,6 +51,18 @@ export default class AdminAppController {
         return res.status(404).json({ message: 'User not found' });
       }
       console.log('Training Plan to be saved:', trainingPlan.days[0].exercises);
+      for (const day of trainingPlan.days) {
+        for (const exercise of day.exercises) {
+          console.log('Exercise in plan:', exercise);
+          const matchedExercise = await Exercise.findById(exercise.exerciseId);
+          console.log('Matched Exercise:', matchedExercise);
+
+          if (matchedExercise && matchedExercise.videoUrl) {
+            exercise.videoUrl = matchedExercise.videoUrl;
+          }
+          console.log('Final Exercise to be saved:', exercise);
+        }
+      }
       user.trainingPlan = trainingPlan;
       user.trainingPlan.lastUpdated = new Date();
       await user.save();
@@ -245,6 +258,7 @@ export default class AdminAppController {
         res.status(404).json({ message: 'Training plan not found' });
         return;
       }
+
       trainingPlan.name = updatedPlan.name;
       trainingPlan.excelFileUrl = updatedPlan.excelFileUrl;
       trainingPlan.listOfExercises = updatedPlan.listOfExercises;

@@ -52,7 +52,7 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
         jwt.verify(refreshToken!, refreshSecret);
         const decoded = jwt.decode(refreshToken!) as { id: string };
         const newToken = jwt.sign({ id: decoded.id }, secret, {
-          expiresIn: '15m',
+          expiresIn: '10s',
         });
 
         res.setHeader('authorization', newToken);
@@ -92,7 +92,7 @@ const verifyTokenInternal = async (
       jwt.verify(refreshToken!, refreshSecret);
       const decoded = jwt.decode(refreshToken!) as { id: string };
       const newToken = jwt.sign({ id: decoded.id }, secret, {
-        expiresIn: '15m',
+        expiresIn: '10s',
       });
 
       const user = await User.findById(decoded.id);

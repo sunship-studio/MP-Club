@@ -94,16 +94,17 @@ export class AuthController {
   }
 
   static async getUser(req: Request, res: Response) {
-    const token = req.headers['authorization'] as string;
-    const refreshToken = req.headers['x-refresh-token'] as string;
+    const userId = req.user?.id;
 
-    let user = await User.findOne({ token: token });
-    if (!user) {
-      user = await User.findOne({ refreshToken: refreshToken });
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
 
+    const user = await User.findById(userId);
     if (!user) {
-      res.status(401).json({ message: 'Unauthorized' });
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
     res.json(user);
   }

@@ -12,6 +12,18 @@ class TrainingPlan {
     this.lastUpdated,
   });
 
+  String get backgroundImage {
+    if (days.any((day) => day.exercises.any((ex) => ex.videoUrl != null))) {
+      return days
+          .firstWhere((day) => day.exercises.any((ex) => ex.videoUrl != null))
+          .exercises
+          .firstWhere((ex) => ex.videoUrl != null)
+          .videoUrl!
+          .replaceAll('mp4', 'jpeg');
+    }
+    return '';
+  }
+
   factory TrainingPlan.empty() {
     return TrainingPlan(days: [], name: "");
   }

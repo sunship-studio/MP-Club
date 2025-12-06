@@ -64,6 +64,7 @@ flutter:
     - assets/images/soup.svg
     - assets/images/checklist.svg
     - assets/images/fire.svg
+
     - assets/images/photo.svg
     - assets/images/dumbbell.svg
     - assets/images/exercise.svg
@@ -74,11 +75,13 @@ flutter:
     - assets/images/upper_body.png
     - assets/images/lower_body.png
     - assets/images/all.png
+    - assets/images/avatar.png
     - assets/images/arms.png
     # - assets/images/back.png
     # - assets/images/chest.png
 
     - assets/videos/workout.mp4
+    - assets/videos/cableflies.mov
 
 flutter_launcher_icons:
   android: true

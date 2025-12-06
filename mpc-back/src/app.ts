@@ -10,6 +10,7 @@ import authRouter from './routes/mobile_app/auth';
 import caloriesRouter from './routes/mobile_app/calories';
 import chatRouter from './routes/mobile_app/chat';
 import checkInRouter from './routes/mobile_app/check_in';
+import { exerciseRouter } from './routes/mobile_app/exercise';
 import profileRouter from './routes/mobile_app/profile';
 import workoutRouter from './routes/mobile_app/workout';
 import notificationsRouter from './routes/notifications';
@@ -59,7 +60,7 @@ app.use('/mobile-app/profile', profileRouter);
 app.use('/mobile-app/chat', chatRouter);
 app.use('/admin-app/chat', chatRouter);
 app.use('/mobile-app/notifications', notificationsRouter);
-
+app.use('/mobile-app/exercises', exerciseRouter);
 app.use('/mobile-app/calories', caloriesRouter);
 app.post(
   '/webhook',
@@ -70,6 +71,7 @@ app.post(
 );
 
 import fs from 'fs';
+
 import { handlePlanWebhook } from './webhook/plan_webhook';
 
 const readHTMLFile = (filePath: string) => {
@@ -84,12 +86,6 @@ app.post(
     handlePlanWebhook(req, res);
   }
 );
-
-app.post('/', async (req, res) => {
-  console.log('✅ Email sent successfully');
-
-  res.json({ message: 'Template test email sent' });
-});
 
 const socketService = new SocketService(httpServer);
 // Make socket service available to routes

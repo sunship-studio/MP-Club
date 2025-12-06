@@ -164,15 +164,14 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                       ),
                       child: Column(
                         children: [
-                          Container(
+                          SizedBox(
+                            height: 240.h,
                             width: double.infinity,
-                            padding: EdgeInsets.symmetric(vertical: 40.h),
-                            child: Center(
-                              child: Image.asset(
-                                'assets/splash-icon.png',
-                                width: 180.w,
-                                fit: BoxFit.contain,
-                              ),
+
+                            child: Image.network(
+                              user.trainingPlan.backgroundImage,
+
+                              fit: BoxFit.cover,
                             ),
                           ),
                           Gap(16.h),

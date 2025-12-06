@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mpc_mobile_app/core/constants.dart';
 import 'package:mpc_mobile_app/core/theme/app_colors.dart';
 import 'package:mpc_mobile_app/cubits/auth.dart';
+import 'package:mpc_mobile_app/cubits/tutorials.dart';
 import 'package:mpc_mobile_app/presentation/widgets/home/calories_progress.dart';
 import 'package:mpc_mobile_app/presentation/widgets/home/chat_trainer_card.dart';
 import 'package:mpc_mobile_app/presentation/widgets/home/check_in_card.dart';
@@ -153,7 +154,24 @@ class HomeScreen extends StatelessWidget {
                           ),
                         ),
                         Gap(24.h),
-                        TutorialsForYou(),
+                        BlocBuilder<TutorialCubit, TutorialState>(
+                          builder:
+                              (context, state) =>
+                                  state is TutorialsSectionLoaded
+                                      ? TutorialsForYou(
+                                        forYou: state.tutorialsSection.forYou,
+                                      )
+                                      : state is TutorialsLoading
+                                      ? SizedBox(
+                                        height: 200.h,
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            color: AppColors.darkScaffoldColor,
+                                          ),
+                                        ),
+                                      )
+                                      : Container(),
+                        ),
                       ],
                     ),
                   ),

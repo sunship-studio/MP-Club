@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mpc_mobile_app/core/di/injection.dart';
@@ -15,7 +16,7 @@ import 'package:mpc_mobile_app/routes/main.dart';
 import 'package:mpc_mobile_app/services/notification_service.dart';
 import 'package:mpc_mobile_app/services/subscription_service.dart';
 
-bool debugMode = false;
+bool debugMode = true;
 
 void main(List<String> args) async {
   FlutterError.onError = (FlutterErrorDetails details) {
@@ -23,6 +24,12 @@ void main(List<String> args) async {
     print('Stack: ${details.stack}');
   };
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Set default orientation to portrait only
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   // Initialize Firebase
   await Firebase.initializeApp();
@@ -76,11 +83,8 @@ class AuthStateHandler extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<SubscriptionCubit, SubscriptionState>(
       listener: (context, subscriptionState) {
-        // When subscription becomes active, the AuthCubit has already
-        // been updated with the user data via verifyPurchaseAndCreateAccount
         if (subscriptionState is SubscriptionActive) {
           print('✅ Subscription active - user should be logged in');
-          // No need to do anything here, AuthCubit handles the login
         }
       },
       child: BlocBuilder<AuthCubit, AuthState>(
