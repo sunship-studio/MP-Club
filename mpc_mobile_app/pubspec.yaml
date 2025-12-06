@@ -80,9 +80,6 @@ flutter:
     # - assets/images/back.png
     # - assets/images/chest.png
 
-    - assets/videos/workout.mp4
-    - assets/videos/cableflies.mov
-
 flutter_launcher_icons:
   android: true
   ios: true
