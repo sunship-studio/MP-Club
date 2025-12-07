@@ -16,7 +16,7 @@ import 'package:mpc_mobile_app/routes/main.dart';
 import 'package:mpc_mobile_app/services/notification_service.dart';
 import 'package:mpc_mobile_app/services/subscription_service.dart';
 
-bool debugMode = true;
+bool debugMode = false;
 
 void main(List<String> args) async {
   FlutterError.onError = (FlutterErrorDetails details) {

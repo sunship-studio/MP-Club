@@ -65,6 +65,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   }
 
   void startRestPeriod(int seconds) {
+    // Cancel any existing timers to prevent overlaps
+    _timer?.cancel();
+    restTimer?.cancel();
+
     _controller.pause();
     setState(() {
       _isResting = true;
@@ -72,6 +76,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       _restSeconds = seconds;
     });
     restTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
       if (_restSeconds <= 0) {
         restTimer?.cancel();
         _controller.play();
@@ -136,10 +145,20 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   }
 
   void startTimer() {
+    // Cancel existing timer if any to prevent double counting
+    _timer?.cancel();
+
+    // Only start timer if not already active and not resting
+    if (_timer?.isActive == true || _isResting) {
+      return;
+    }
+
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        _seconds++;
-      });
+      if (mounted) {
+        setState(() {
+          _seconds++;
+        });
+      }
     });
   }
 
@@ -186,7 +205,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       await _controller.play();
     }
 
-    await _showTutorialAnimation();
+    // Run tutorial animation in background without blocking
+    _showTutorialAnimation();
     setState(() {});
   }
 
@@ -498,13 +518,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                           _timer?.cancel();
                                           restTimer?.cancel();
                                           await _controller.play();
-                                          startTimer();
+
                                           setState(() {
                                             _isResting = false;
                                             restTimer?.cancel();
                                             _controller.play();
                                             currentSet--;
                                           });
+                                          startTimer();
                                         } else if (currentExercise > 0 &&
                                             !_isResting) {
                                           setState(() {
@@ -570,8 +591,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                             _controller.play();
                                             currentSet++;
                                             _seconds = 0;
-                                            startTimer();
                                           });
+                                          startTimer();
                                           return;
                                         } else if (_controller
                                             .value
