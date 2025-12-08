@@ -188,14 +188,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   }
 
   Future<void> _switchVideo(int exerciseIndex) async {
+    await _controller.pause();
+    await _controller.dispose();
+
     videoUrl = widget.trainingDay.exercises[exerciseIndex].videoUrl;
 
     if (videoUrl == null || videoUrl!.isEmpty) {
       return;
     }
-
-    await _controller.pause();
-    await _controller.dispose();
 
     _controller = VideoPlayerController.networkUrl(Uri.parse(videoUrl!));
     await _controller.initialize();
@@ -239,7 +239,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
               child: CircularProgressIndicator(color: Colors.white),
             );
           }
-          state as AuthAuthenticated;
+          state as Authenticated;
           return Stack(
             children: [
               videoUrl == null || videoUrl!.isEmpty

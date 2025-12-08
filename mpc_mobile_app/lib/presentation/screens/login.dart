@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   !state.hasPassword) {
                 // Navigate to set password screen
                 context.go('/login/set_password', extra: _emailController.text);
-              } else if (state is AuthError) {
+              } else if (state is Error) {
                 // Show error snackbar
                 SnackBarService.show(
                   context: context,
@@ -311,7 +311,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               },
                               child:
                                   state is EmailCheckSuccess && state.exists ||
-                                          state is AuthError ||
+                                          state is Error ||
                                           state is AuthLoading
                                       ? GestureDetector(
                                         onTap: () {
@@ -363,10 +363,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   switch (state) {
                                     case AuthLoading():
                                       return;
-                                    case EmailCheckSuccess() || AuthError():
+                                    case EmailCheckSuccess() || Error():
                                       if (state is EmailCheckSuccess &&
                                               state.exists ||
-                                          state is AuthError) {
+                                          state is Error) {
                                         await context.read<AuthCubit>().login(
                                           _emailController.text,
                                           _passwordController.text,

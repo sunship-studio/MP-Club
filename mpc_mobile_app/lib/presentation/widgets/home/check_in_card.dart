@@ -22,7 +22,7 @@ class CheckInCard extends StatelessWidget {
       onTap: () => navBarKey.currentState?.switchPage(3),
       child: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) {
-          state as AuthAuthenticated;
+          state as Authenticated;
           List<int> daysThatHaveCheckIns = getDaysWithCheckIns(
             state.user.checkIns,
             DateTime.now().month,

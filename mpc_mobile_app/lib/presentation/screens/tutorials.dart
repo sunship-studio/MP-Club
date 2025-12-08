@@ -57,7 +57,7 @@ class _TutorialsScreenState extends State<TutorialsScreen> {
 
   Future<void> _onRefresh() async {
     final authState = context.read<AuthCubit>().state;
-    if (authState is AuthAuthenticated) {
+    if (authState is Authenticated) {
       await context.read<TutorialCubit>().fetchTutorialsSection(
         userId: authState.user.id,
       );

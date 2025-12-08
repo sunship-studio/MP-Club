@@ -62,7 +62,7 @@ class MainRouter {
                           )..fetchTutorialsSection(
                             userId:
                                 (context.read<AuthCubit>().state
-                                        as AuthAuthenticated)
+                                        as Authenticated)
                                     .user
                                     .id,
                           ),
@@ -124,7 +124,7 @@ class MainRouter {
                               getIt<TutorialCubit>()..fetchTutorialsSection(
                                 userId:
                                     (context.read<AuthCubit>().state
-                                            as AuthAuthenticated)
+                                            as Authenticated)
                                         .user
                                         .id,
                               ),

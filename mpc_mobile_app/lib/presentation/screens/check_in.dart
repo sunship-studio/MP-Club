@@ -75,7 +75,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
               ),
               BlocBuilder<AuthCubit, AuthState>(
                 builder: (context, state) {
-                  state as AuthAuthenticated;
+                  state as Authenticated;
                   daysThatHaveCheckIns = getDaysWithCheckIns(
                     state.user.checkIns,
                     selectedMonth,

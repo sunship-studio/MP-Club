@@ -60,7 +60,7 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               );
-            } else if (state is AuthAuthenticated) {
+            } else if (state is Authenticated) {
               final user = state.user;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

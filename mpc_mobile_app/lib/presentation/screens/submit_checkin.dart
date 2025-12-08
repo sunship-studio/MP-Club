@@ -307,7 +307,7 @@ class _SubmitCheckInScreenState extends State<SubmitCheckInScreen> {
                           Gap(24.h),
                           BlocBuilder<AuthCubit, AuthState>(
                             builder: (context, authState) {
-                              authState as AuthAuthenticated;
+                              authState as Authenticated;
                               return CircularButton(
                                 label: "Submit Check-In",
                                 dark: false,

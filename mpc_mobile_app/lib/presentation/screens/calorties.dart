@@ -80,7 +80,7 @@ class CaloriesScreen extends StatelessWidget {
             }
             return BlocBuilder<AuthCubit, AuthState>(
               builder: (context, state) {
-                state as AuthAuthenticated;
+                state as Authenticated;
                 return Column(
                   children: [
                     MpcHeader(

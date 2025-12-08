@@ -46,7 +46,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, authState) {
-          authState as AuthAuthenticated;
+          authState as Authenticated;
           User user = authState.user;
           if (user.trainingPlan.days.isEmpty) {
             return SizedBox.shrink();
@@ -85,13 +85,13 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                   showWorkoutDialog(context, selectedDayIndex, () {
                     context.pop();
                     final workoutDay =
-                        (context.read<AuthCubit>().state as AuthAuthenticated)
+                        (context.read<AuthCubit>().state as Authenticated)
                             .user
                             .trainingPlan
                             .days[selectedDayIndex];
                     context.read<WorkoutCubit>().logWorkout(
                       Workout(workout: workoutDay, date: DateTime.now()),
-                      (context.read<AuthCubit>().state as AuthAuthenticated)
+                      (context.read<AuthCubit>().state as Authenticated)
                           .user
                           .id,
                     );
@@ -114,7 +114,7 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
           ),
           BlocBuilder<AuthCubit, AuthState>(
             builder: (context, authState) {
-              authState as AuthAuthenticated;
+              authState as Authenticated;
               User user = authState.user;
               if (user.trainingPlan.days.isEmpty) {
                 return Expanded(
@@ -268,7 +268,7 @@ void showWorkoutDialog(
     builder: (BuildContext context) {
       return CupertinoAlertDialog(
         title: Text(
-          '${(context.read<AuthCubit>().state as AuthAuthenticated).user.trainingPlan.name}- ${(context.read<AuthCubit>().state as AuthAuthenticated).user.trainingPlan.days[selectedDayIndex].name}  ',
+          '${(context.read<AuthCubit>().state as Authenticated).user.trainingPlan.name}- ${(context.read<AuthCubit>().state as Authenticated).user.trainingPlan.days[selectedDayIndex].name}  ',
         ),
         content: Text('Do you want to start workout or just log it?'),
         actions: [
@@ -286,7 +286,7 @@ void showWorkoutDialog(
               context.push(
                 '/training_plan/workout',
                 extra:
-                    (context.read<AuthCubit>().state as AuthAuthenticated)
+                    (context.read<AuthCubit>().state as Authenticated)
                         .user
                         .trainingPlan
                         .days[selectedDayIndex],

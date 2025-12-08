@@ -516,9 +516,7 @@ class _FullscreenPlayerScreenState extends State<FullscreenPlayerScreen> {
                         ),
                       ),
                     Container(
-                      margin: EdgeInsets.only(
-                        bottom: bottomPadding(context) - 16,
-                      ),
+                      margin: EdgeInsets.only(bottom: bottomPadding(context)),
                       child: Align(
                         alignment: AlignmentGeometry.bottomCenter,
                         child: Row(
@@ -549,9 +547,15 @@ class _FullscreenPlayerScreenState extends State<FullscreenPlayerScreen> {
                         ),
                       ),
                     ),
-                    DurationProgressBar(
-                      controller: widget.controller,
-                      fullscreen: true,
+                    Container(
+                      margin: EdgeInsets.only(
+                        bottom: bottomPadding(context) - 16,
+                      ),
+
+                      child: DurationProgressBar(
+                        controller: widget.controller,
+                        fullscreen: true,
+                      ),
                     ),
                     !widget.controller.value.isPlaying
                         ? Center(

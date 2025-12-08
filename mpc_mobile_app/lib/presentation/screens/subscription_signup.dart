@@ -66,7 +66,7 @@ class _SubscriptionSignupScreenState extends State<SubscriptionSignupScreen> {
 
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
-          if (state is AuthAuthenticated) {
+          if (state is Authenticated) {
             // Account created successfully, user is now logged in
             SnackBarService.show(
               context: context,
@@ -75,7 +75,7 @@ class _SubscriptionSignupScreenState extends State<SubscriptionSignupScreen> {
               isError: false,
             );
             // Navigation will be handled by main.dart AuthStateHandler
-          } else if (state is AuthError) {
+          } else if (state is Error) {
             SnackBarService.show(
               context: context,
               message: state.message,

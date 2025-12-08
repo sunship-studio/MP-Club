@@ -105,7 +105,7 @@ class Checkpoints extends StatelessWidget {
                   },
                   child: BlocBuilder<AuthCubit, AuthState>(
                     builder: (context, state) {
-                      state as AuthAuthenticated;
+                      state as Authenticated;
                       if (state.user.checkIns.isEmpty) {
                         return Center(
                           child: Container(

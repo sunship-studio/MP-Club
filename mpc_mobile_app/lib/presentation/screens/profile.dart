@@ -40,7 +40,7 @@ class ProfileScreen extends StatelessWidget {
         },
         child: BlocBuilder<AuthCubit, AuthState>(
           builder: (context, authState) {
-            authState as AuthAuthenticated;
+            authState as Authenticated;
             return Column(
               children: [
                 MpcHeader(

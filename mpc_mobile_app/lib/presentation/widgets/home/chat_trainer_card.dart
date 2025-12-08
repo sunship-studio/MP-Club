@@ -110,7 +110,7 @@ class _ButtonState extends State<Button> {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
-        state as AuthAuthenticated;
+        state as Authenticated;
         return GestureDetector(
           onTap: () {
             navBarKey.currentState?.turnOffNavBar();

@@ -94,16 +94,16 @@ class AuthStateHandler extends StatelessWidget {
             AuthInitial() || AuthLoading() => _buildLoadingApp(),
 
             // User is authenticated - Show main app
-            AuthAuthenticated(:final user) => _buildMainApp(user),
+            Authenticated(:final user) => _buildMainApp(user),
 
             // User is not authenticated - Show auth flow
-            AuthUnauthenticated() ||
+            Unauthenticated() ||
             EmailCheckSuccess() ||
             EmailCheckLoading() ||
             ForgotPasswordLoading() => _buildAuthApp(),
 
             // Error checking auth - treat as unauthenticated
-            AuthError() => _buildAuthApp(),
+            Error() => _buildAuthApp(),
 
             // Fallback to loading screen
             _ => _buildLoadingApp(),

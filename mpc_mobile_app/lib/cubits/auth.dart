@@ -15,9 +15,9 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> loadUser() async {
     try {
       final user = await authRepository.getUser();
-      emit(AuthAuthenticated(user: user));
+      emit(Authenticated(user: user));
     } catch (e) {
-      emit(AuthError('Failed to load user: $e'));
+      emit(Error('Failed to load user: $e'));
     }
   }
 
@@ -45,7 +45,7 @@ class AuthCubit extends Cubit<AuthState> {
     await tokenStorage.deleteTokens();
 
     // 4. Update auth state
-    emit(AuthUnauthenticated());
+    emit(Unauthenticated());
   }
 
   Future<void> checkEmail(String email) async {
@@ -83,13 +83,13 @@ class AuthCubit extends Cubit<AuthState> {
     final result = await authRepository.login(email, password);
     if (result.success) {
       final user = await authRepository.getUser();
-      emit(AuthAuthenticated(user: user));
+      emit(Authenticated(user: user));
 
       // Register FCM token after successful login
       _registerFCMToken();
       return;
     } else {
-      emit(AuthError(result.message ?? 'Error logging in'));
+      emit(Error(result.message ?? 'Error logging in'));
       return;
     }
   }
@@ -103,12 +103,12 @@ class AuthCubit extends Cubit<AuthState> {
         print('fetching user');
         User user = await authRepository.getUser();
         print('got user: ${user.email}');
-        emit(AuthAuthenticated(user: user));
+        emit(Authenticated(user: user));
       } catch (e) {
-        emit(AuthUnauthenticated());
+        emit(Unauthenticated());
       }
     } else {
-      emit(AuthUnauthenticated());
+      emit(Unauthenticated());
     }
   }
 
@@ -117,7 +117,7 @@ class AuthCubit extends Cubit<AuthState> {
     final user = await authRepository.setNewPassword(token, password);
     if (user != null) {
       emit(SetNewPasswordSuccess());
-      emit(AuthAuthenticated(user: user));
+      emit(Authenticated(user: user));
     } else {
       emit(SetNewPasswordError('Error resetting password'));
     }
@@ -128,7 +128,7 @@ class AuthCubit extends Cubit<AuthState> {
     final result = await authRepository.forgotPassword(email);
     if (result.success) {
       emit(ForgotPasswordSuccess());
-      emit(AuthUnauthenticated());
+      emit(Unauthenticated());
     } else {
       emit(ForgotPasswordError(result.message ?? 'Error sending reset link'));
     }
@@ -161,15 +161,15 @@ class AuthCubit extends Cubit<AuthState> {
         // Account created and tokens saved
         // Now fetch the user data
         final user = await authRepository.getUser();
-        emit(AuthAuthenticated(user: user));
+        emit(Authenticated(user: user));
 
         // Register FCM token after account creation
         _registerFCMToken();
       } else {
-        emit(AuthError(result.message ?? 'Failed to create account'));
+        emit(Error(result.message ?? 'Failed to create account'));
       }
     } catch (e) {
-      emit(AuthError('Error creating account: $e'));
+      emit(Error('Error creating account: $e'));
     }
   }
 
@@ -250,18 +250,18 @@ class EmailCheckError extends AuthState {
   const EmailCheckError(this.message);
 }
 
-class AuthError extends AuthState {
+class Error extends AuthState {
   final String message;
-  const AuthError(this.message);
+  const Error(this.message);
 }
 
-class AuthAuthenticated extends AuthState {
+class Authenticated extends AuthState {
   final User user;
-  const AuthAuthenticated({required this.user});
+  const Authenticated({required this.user});
 }
 
-class AuthUnauthenticated extends AuthState {
-  const AuthUnauthenticated();
+class Unauthenticated extends AuthState {
+  const Unauthenticated();
 }
 
 class AuthLoading extends AuthState {}

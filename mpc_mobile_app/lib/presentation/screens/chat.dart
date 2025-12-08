@@ -79,7 +79,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     super.didChangeDependencies();
     // Get user from AuthCubit
     final authState = context.read<AuthCubit>().state;
-    if (authState is AuthAuthenticated) {
+    if (authState is Authenticated) {
       _user = authState.user;
     }
   }
