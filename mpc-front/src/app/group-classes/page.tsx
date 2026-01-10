@@ -1,0 +1,284 @@
+'use client';
+import { useState } from 'react';
+
+export default function GroupClassesPage() {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Sample class schedule
+  const classTypes = [
+    {
+      id: 'strength',
+      name: 'Strength Training',
+      duration: '60 min',
+      spots: 12,
+    },
+    { id: 'hiit', name: 'HIIT', duration: '45 min', spots: 15 },
+    { id: 'yoga', name: 'Yoga & Mobility', duration: '60 min', spots: 10 },
+    { id: 'cardio', name: 'Cardio Blast', duration: '45 min', spots: 15 },
+  ];
+
+  const timeSlots = ['06:00', '09:00', '12:00', '17:00', '18:30', '20:00'];
+
+  // Generate calendar days for current month
+  const generateCalendarDays = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const days = [];
+
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+      days.push(new Date(year, month, i));
+    }
+    return days;
+  };
+
+  const calendarDays = generateCalendarDays();
+
+  return (
+    <div className="max-w-7xl mx-auto px-8 md:px-16 py-12">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
+          Group Classes
+        </h1>
+        <p className="text-lg text-gray-200">
+          Join our energizing group workouts. Select a date and class below to
+          book your spot.
+        </p>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Calendar Section */}
+        <div className="bg-white rounded-lg p-6 shadow-xl">
+          <h2 className="text-2xl font-semibold mb-4 text-black">
+            Select a Date
+          </h2>
+          <div className="grid grid-cols-7 gap-2">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              <div
+                key={day}
+                className="text-center font-semibold text-gray-600 py-2"
+              >
+                {day}
+              </div>
+            ))}
+            {calendarDays.map((date) => {
+              const isSelected =
+                selectedDate?.toDateString() === date.toDateString();
+              const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
+
+              return (
+                <button
+                  key={date.toISOString()}
+                  onClick={() => !isPast && setSelectedDate(date)}
+                  disabled={isPast}
+                  className={`
+                    py-3 rounded-lg font-medium transition-all
+                    ${
+                      isSelected
+                        ? 'bg-[#0B79AB] text-white shadow-lg scale-105'
+                        : isPast
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-50 text-black hover:bg-gray-200'
+                    }
+                  `}
+                >
+                  {date.getDate()}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Class Selection Section */}
+        <div className="bg-white rounded-lg p-6 shadow-xl">
+          <h2 className="text-2xl font-semibold mb-4 text-black">
+            Available Classes
+          </h2>
+          {!selectedDate ? (
+            <p className="text-gray-600 text-center py-12">
+              Please select a date to view available classes
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {classTypes.map((classItem) => (
+                <div
+                  key={classItem.id}
+                  className="border border-gray-200 rounded-lg p-4 hover:border-[#0B79AB] transition-all"
+                >
+                  <h3 className="font-semibold text-lg text-black">
+                    {classItem.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {classItem.duration} • {classItem.spots} spots available
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {timeSlots.slice(0, 3).map((time) => (
+                      <button
+                        key={time}
+                        onClick={() =>
+                          setSelectedClass(`${classItem.id}-${time}`)
+                        }
+                        className={`
+                          py-2 px-3 rounded text-sm font-medium transition-all
+                          ${
+                            selectedClass === `${classItem.id}-${time}`
+                              ? 'bg-[#0B79AB] text-white'
+                              : 'bg-gray-100 text-black hover:bg-gray-200'
+                          }
+                        `}
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Booking Summary & Sign Up Form */}
+      {selectedDate && selectedClass && (
+        <div className="mt-8 bg-white rounded-lg p-8 shadow-xl">
+          <h2 className="text-2xl font-semibold mb-6 text-black">
+            Complete Your Booking
+          </h2>
+
+          {/* Booking Details */}
+          <div className="bg-[#0B79AB]/5 rounded-lg p-6 mb-6">
+            <h3 className="text-lg font-semibold mb-3 text-gray-900">Booking Details</h3>
+            <div className="grid md:grid-cols-3 gap-4 text-black">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Date</p>
+                <p className="font-semibold">
+                  {selectedDate.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Time</p>
+                <p className="font-semibold">{selectedClass.split('-')[1]}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Class</p>
+                <p className="font-semibold">
+                  {
+                    classTypes.find((c) => c.id === selectedClass.split('-')[0])
+                      ?.name
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Sign Up Form */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Your Information</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Full Name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-[#0B79AB] focus:outline-none transition-colors text-black placeholder:text-gray-400"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your.email@example.com"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-[#0B79AB] focus:outline-none transition-colors text-black placeholder:text-gray-400"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            onClick={() => {
+              if (!name || !email) {
+                alert('Please fill in all fields');
+                return;
+              }
+              setIsSubmitting(true);
+              // Handle booking submission here
+              setTimeout(() => {
+                alert('Booking confirmed! Check your email for details.');
+                setIsSubmitting(false);
+                setName('');
+                setEmail('');
+                setSelectedDate(null);
+                setSelectedClass(null);
+              }, 1500);
+            }}
+            disabled={isSubmitting || !name || !email}
+            className="w-full bg-[#0B79AB] text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-[#0b78ab9e] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-100"
+          >
+            {isSubmitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                Processing...
+              </span>
+            ) : (
+              'Confirm Booking →'
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* Info Section */}
+      <div className="mt-12 grid md:grid-cols-3 gap-6 text-center">
+        <div className="bg-white/10 backdrop-blur rounded-lg p-6">
+          <div className="text-4xl mb-2">🏋️</div>
+          <h3 className="font-semibold text-lg mb-2 text-white">
+            Expert Trainers
+          </h3>
+          <p className="text-gray-200 text-sm">
+            All classes led by certified fitness professionals
+          </p>
+        </div>
+        <div className="bg-white/10 backdrop-blur rounded-lg p-6">
+          <div className="text-4xl mb-2">👥</div>
+          <h3 className="font-semibold text-lg mb-2 text-white">
+            Small Groups
+          </h3>
+          <p className="text-gray-200 text-sm">
+            Limited spots ensure personalized attention
+          </p>
+        </div>
+        <div className="bg-white/10 backdrop-blur rounded-lg p-6">
+          <div className="text-4xl mb-2">📅</div>
+          <h3 className="font-semibold text-lg mb-2 text-white">
+            Flexible Schedule
+          </h3>
+          <p className="text-gray-200 text-sm">
+            Multiple time slots throughout the day
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

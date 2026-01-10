@@ -1,0 +1,58 @@
+'use client';
+import { useRouter } from 'next/navigation';
+
+const MembershipCard = ({
+  title,
+  points,
+  option,
+}: {
+  title: string;
+  points: string[];
+  option: number;
+}) => {
+  const router = useRouter();
+
+  const getCardStyles = () => {
+    if (option === 0) return 'bg-[#0B79AB] text-white';
+    if (option === 2) return 'bg-[#141414] text-white'; // Green for Group Classes
+    return 'bg-white text-black';
+  };
+
+  return (
+    <div
+      className={`${getCardStyles()} rounded-lg p-6 shadow-lg font-inter w-full max-w-sm  md:h-65 justify-between flex flex-col space-y-4
+  `}
+    >
+      <h3 className="text-xl font-semibold mb-4 text-left">{title}</h3>
+      <ul className="text-left space-y-2 mb-4 text-sm">
+        {points.map((point, idx) => (
+          <li key={idx}>• {point}</li>
+        ))}
+      </ul>
+      <div className="flex justify-between text-sm items-end">
+        <a
+          href="#"
+          className={`${option == 0 || option == 2 ? 'text-gray-200' : 'text-gray-700'} underline font-bold`}
+        >
+          Learn more
+        </a>
+        <button
+          className={`${option == 1 || option == 2 ? 'bg-[#0B79AB] text-white hover:bg-[#0b78ab9e]' : 'bg-white text-black hover:bg-gray-100'} cursor-pointer px-8 py-2 rounded-lg font-semibold `}
+          onClick={() => {
+            if (option == 0) {
+              router.push('/waiting-list');
+            } else if (option == 1) {
+              router.push('/online-coaching');
+            } else if (option == 2) {
+              router.push('/group-classes');
+            }
+          }}
+        >
+          {option == 2 ? 'Book now' : 'Join now'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default MembershipCard;

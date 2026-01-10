@@ -1,0 +1,298 @@
+'use client';
+import apiService from '@/services/api.service';
+import { loadStripe } from '@stripe/stripe-js';
+import React, { useEffect, useState } from 'react';
+
+const stripePromise = loadStripe(
+  process.env.NODE_ENV == 'development'
+    ? (process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY as string)
+    : (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string)
+);
+
+interface Plan {
+  id: string;
+  name: string;
+  excelFileUrl: string;
+  days: TrainingDay[];
+  stripeProductId: string;
+  price: number | null;
+  currency: string | null;
+  priceId: string | null;
+}
+
+interface TrainingSet {
+  reps: number;
+  rir: number;
+  weight: number;
+}
+
+interface Exercise {
+  bodyParts: string[];
+  exerciseId: string;
+  minutes: number;
+  videoUrl?: string;
+  seconds: number;
+  sets: TrainingSet[];
+  name: string;
+}
+
+interface TrainingDay {
+  name: string;
+  exercises: Exercise[];
+}
+
+const WorkoutSplitPlans: React.FC = () => {
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingPlans, setIsFetchingPlans] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        setIsFetchingPlans(true);
+        const response = await apiService.get<Plan[]>('/plans');
+        setPlans(response);
+      } catch (error) {
+        console.error('Error fetching plans:', error);
+      } finally {
+        setIsFetchingPlans(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  return (
+    <div className="container mx-auto px-4 pb-8">
+      <h1 className="text-2xl md:text-3xl font-semibold text-center mb-4 mt-6">
+        Workout Split Plans
+      </h1>
+
+      {isFetchingPlans ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="text-xl">Loading plans...</div>
+        </div>
+      ) : plans.length === 0 ? (
+        <div className="flex flex-col justify-center items-center py-20 text-center">
+          <svg
+            className="w-20 h-20 text-gray-300 mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <h3 className="text-xl font-semibold text-gray-300 mb-2">
+            No Plans Available
+          </h3>
+          <p className="text-gray-400 max-w-md">
+            There are currently no training plans available. Please check back
+            later.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 px-2 md:px-4 py-6">
+          {plans.map((plan, index) => (
+            <div
+              key={plan.id}
+              onClick={() => setSelectedPlan(plan)}
+              className="relative h-full cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+            >
+              {/* White base layer */}
+              <div className="absolute inset-0 bg-white z-0 rounded-xl"></div>
+
+              {/* Colored overlay layer */}
+              <div
+                className={`
+                absolute inset-0 z-10 rounded-xl
+                bg-[#56C2F3]/${(index + 1) * 10}
+              `}
+              ></div>
+
+              {/* Content layer */}
+              <div className="relative z-20 p-4 md:p-6 text-[#002C3F] h-full flex flex-col min-h-[200px]">
+                <h2 className="text-lg md:text-2xl font-bold mb-2">
+                  {plan.name}
+                </h2>
+                <p className="text-xs md:text-sm mb-4 flex-grow">
+                  {plan.days.length} exercises included
+                </p>
+                <div className="mt-auto flex justify-between items-center">
+                  <span className="text-xs md:text-sm font-semibold">
+                    View Details
+                  </span>
+                  <span className="text-xl md:text-2xl font-bold">
+                    {plan.price ? `€${plan.price.toFixed(2)}` : 'N/A'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {selectedPlan && (
+        <div
+          className="fixed inset-0 bg-[linear-gradient(to_bottom,#10719B,#000000bf)] bg-opacity-20 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedPlan(null)}
+        >
+          <div
+            className="relative rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* White base layer */}
+            <div className="absolute inset-0 bg-white z-0 rounded-2xl"></div>
+
+            {/* Colored overlay layer */}
+            <div className="absolute inset-0 z-10 rounded-2xl bg-[#56C2F3]/20"></div>
+
+            {/* Content layer */}
+            <div className="relative z-20 p-4 md:p-8 text-[#002C3F]">
+              <div className="flex justify-between items-center mb-4 md:mb-6">
+                <div className="flex items-center space-x-4">
+                  <span className="text-2xl md:text-3xl font-bold">
+                    {selectedPlan.price
+                      ? `€${selectedPlan.price.toFixed(2)}`
+                      : 'N/A'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedPlan(null);
+                    setIsLoading(false);
+                  }}
+                  className="text-gray-600 hover:text-gray-800 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">
+                {selectedPlan.name}
+              </h2>
+
+              {/* Plan Overview */}
+              <div className="mb-6 p-4 bg-white/50 rounded-lg">
+                <h3 className="text-lg font-semibold mb-2">Plan Overview</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Total Training Days:</span>
+                    <span className="ml-2">{selectedPlan.days.length}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">Total Exercises:</span>
+                    <span className="ml-2">
+                      {selectedPlan.days.reduce(
+                        (total, day) => total + day.exercises.length,
+                        0
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Training Split */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3">Training Split</h3>
+                <div className="space-y-3">
+                  {selectedPlan.days.map((day, dayIndex) => {
+                    // Get unique body parts for this day
+                    const bodyParts = Array.from(
+                      new Set(
+                        day.exercises.flatMap((exercise) => exercise.bodyParts)
+                      )
+                    );
+
+                    return (
+                      <div
+                        key={dayIndex}
+                        className="bg-white/50 rounded-lg p-4 border border-gray-200"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-bold text-base text-[#077fb6]">
+                            {day.name}
+                          </h4>
+                          <span className="text-xs text-gray-600">
+                            {day.exercises.length} exercises
+                          </span>
+                        </div>
+                        {bodyParts.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {bodyParts.map((part, idx) => (
+                              <span
+                                key={idx}
+                                className="text-sm bg-[#077fb6]/20 text-[#077fb6] px-3 py-1 rounded-full font-medium"
+                              >
+                                {part}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 sticky bottom-0 bg-white/80 backdrop-blur-sm p-4 -mx-4 -mb-4 rounded-b-2xl">
+                <button
+                  onClick={() => {
+                    setSelectedPlan(null);
+                    setIsLoading(false);
+                  }}
+                  className="w-full sm:w-1/2 py-3 bg-gray-100 border-1 font-semibold text-gray-800 rounded-lg hover:bg-gray-400 transition cursor-pointer text-sm md:text-base"
+                >
+                  Close
+                </button>
+                {isLoading && (
+                  <div className="w-full sm:w-1/2 py-3 bg-gray-100 border-1 font-semibold text-gray-800 rounded-lg hover:bg-gray-400 transition cursor-pointer text-center flex items-center justify-center text-sm md:text-base">
+                    Loading...
+                  </div>
+                )}
+                {!isLoading && (
+                  <button
+                    className="w-full sm:w-1/2 py-3 bg-[#077fb6]  font-semibold text-white rounded-lg hover:bg-[#077fb6b3] transition cursor-pointer text-sm md:text-base"
+                    onClick={async () => {
+                      if (!selectedPlan.priceId) {
+                        alert('Price information not available');
+                        return;
+                      }
+                      setIsLoading(true);
+                      try {
+                        const response = await apiService.post<{
+                          url: string;
+                        }>('/plans/create-checkout-session', {
+                          priceId: selectedPlan.priceId,
+                        });
+                        await stripePromise;
+                        if (response.url) {
+                          window.location.href = response.url;
+                        } else {
+                          throw new Error('No checkout URL returned');
+                        }
+                      } catch (error) {
+                        console.error('Checkout error:', error);
+                        alert('Failed to create checkout session');
+                        setIsLoading(false);
+                      }
+                    }}
+                  >
+                    Purchase Plan
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default WorkoutSplitPlans;

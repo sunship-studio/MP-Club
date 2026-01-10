@@ -1,47 +1,36 @@
 const WhatsIncludedItem = ({ icon, text }: { icon: string; text: string }) => {
   return (
-    <div className="flex flex-row items-center">
-      <div className="rounded-full w-9 h-9 md:w-12 md:h-12 bg-white items-center justify-center shadow-sm shadow-white/50 flex">
+    <div className="flex items-center p-0 bg-white/5 rounded-lg hover:bg-white/10 transition-all border border-white/10">
+      <div className="rounded-full w-12 h-12 bg-[#0B79AB] items-center justify-center shadow-lg flex shrink-0">
         <img
           src={`/assets/online-coaching/${icon}.png`}
           alt={text}
-          className="w-5.5 h-5.5 md:w-6.5 md:h-6.5"
+          className="w-6 h-6"
         />
       </div>
-      <p className="text-left text-xl ml-2 font-bold">{text}</p>
+      <p className="text-left text-lg ml-4 font-semibold text-black">{text}</p>
     </div>
   );
 };
 
 const WhatsIncluded = () => {
   const items = [
-      { icon: "5", text: "Personal Mobile App" },
-    { icon: "1", text: "Check-Ins" },
-    { icon: "2", text: "Progress Tracking" },
-    { icon: "3", text: "Video Tutorials (soon)" },
-    { icon: "4", text: "Custom training plan" },
-
+    { icon: '5', text: 'Personal Mobile App' },
+    { icon: '1', text: 'Check-Ins' },
+    { icon: '2', text: 'Progress Tracking' },
+    { icon: '3', text: 'Video Tutorials (soon)' },
+    { icon: '4', text: 'Custom Training Plan' },
   ];
+
   return (
-    <div className="flex flex-col items-start justify-start w-full ">
-      <h2 className="text-left font-bold text-2xl mb-2">What's Included:</h2>
-      <div className="flex flex-col w-full space-y-3 md:hidden">
+    <div className="bg-white rounded-lg shadow-xl p-8 md:p-8 h-full">
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 text-black">
+        What's Included
+      </h2>
+      <div className="grid grid-cols-1 gap-3 text-black">
         {items.map((item, index) => (
           <WhatsIncludedItem key={index} icon={item.icon} text={item.text} />
         ))}
-      </div>
-      {/* Desktop version row with colum 3/2*/}
-      <div className="hidden md:flex flex-row w-full space-x-8 mt-4">
-            <div className="flex flex-col w-full space-y-3">
-                {items.slice(0, 3).map((item, index) => (
-                    <WhatsIncludedItem key={index} icon={item.icon} text={item.text} />
-                ))}
-            </div>
-            <div className="flex flex-col w-full space-y-3">
-                {items.slice(3).map((item, index) => (
-                    <WhatsIncludedItem key={index} icon={item.icon} text={item.text} />
-                ))}
-            </div>
       </div>
     </div>
   );

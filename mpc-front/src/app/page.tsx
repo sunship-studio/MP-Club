@@ -1,42 +1,64 @@
-import MembershipCard from "@/components/home/MembershipCard";
-import WhatsIncludedSection from "@/components/home/WhatsIncludedSection";
+import MembershipCard from '@/components/home/MembershipCard';
+import WhatsIncludedSection from '@/components/home/WhatsIncludedSection';
 
 export default function Home() {
   return (
-    <>
+    <div className="max-w-7xl mx-auto px-8 md:px-16 py-12">
+      {/* Hero Section */}
+      <section className="text-center mb-16">
+        <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white">
+          Transform Your Fitness Journey
+        </h1>
+        <p className="text-lg md:text-xl text-gray-200 max-w-3xl mx-auto leading-relaxed">
+          Science-backed coaching tailored to your goals. Whether in-person or
+          online, get custom training, nutrition plans, and expert guidance to
+          achieve real results.
+        </p>
+      </section>
 
-
-      <section className="max-w-6xl mx-auto px-8 md:px-16 py-8 text-center">
-        <h1 className="text-3xl md:text-3xl font-semibold mb-4">Memberships</h1>
-        <p className="mb-8 font-medium text-md md:text-lg">I offer science-backed coaching, whether in-person or online. Get custom training, nutrition plans, and expert guidance to reach your goals.</p>
-        <div className="flex flex-col  md:flex-row justify-center gap-6 items-center mb-8">
+      {/* Membership Cards */}
+      <section className="mb-20">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-white">
+          Choose Your Path
+        </h2>
+        <p className="text-center text-gray-300 mb-10 max-w-2xl mx-auto">
+          Select the coaching option that fits your lifestyle and goals
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <MembershipCard
             option={0}
-            title="Start your journey"
+            title="1-on-1 Coaching 🎯 "
             points={[
-              "One-on-One, personalized coaching & diet optimization.",
-              "Train smarter, not harder.",
-              "Science-based methods for real results.",
+              'Get a coach who actually knows YOUR body',
+              'Stop wasting time on cookie-cutter programs',
+              'See real changes in weeks, not months',
             ]}
           />
           <MembershipCard
             option={1}
-            title="Online Coaching"
+            title="Online Coaching 📱"
             points={[
-              "Personalized coaching via mobile app. 📲",
-              "Personalized training plan.",
-              "Train anytime, anywhere.",
-              "Check-ins & progress tracking.",
+              'Your coach in your pocket 24/7 📲',
+              'Workouts that fit YOUR schedule & space',
+              'Weekly check-ins so you never feel lost',
+              'No gym? No problem. Train anywhere',
+            ]}
+          />
+          <MembershipCard
+            option={2}
+            title="Group Classes 👥"
+            points={[
+              'Sweat together, get results together 🏋️',
+              'Never worked out? We got you',
+              'Expert coaches who actually care',
+              'Book classes that fit your life',
             ]}
           />
         </div>
-        <WhatsIncludedSection />
       </section>
 
-
-
-    </>
+      {/* What's Included Section */}
+      <WhatsIncludedSection />
+    </div>
   );
 }
-
-
