@@ -17,35 +17,12 @@ class ModernSearchBar extends StatefulWidget {
 }
 
 class _ModernSearchBarState extends State<ModernSearchBar> {
-  late final FocusNode _focusNode;
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode = FocusNode();
-    widget.controller.addListener(_onTextChanged);
-  }
-
-  @override
-  void dispose() {
-    _focusNode.dispose();
-    widget.controller.removeListener(_onTextChanged);
-    super.dispose();
-  }
-
-  void _onTextChanged() {
-    setState(() {}); // Rebuild to show/hide clear button
-  }
-
   @override
   Widget build(BuildContext context) {
     return TextField(
-      focusNode: _focusNode,
       controller: widget.controller,
       onChanged: widget.onChanged,
-      onTap: () {
-        _focusNode.requestFocus();
-      },
+
       style: const TextStyle(
         fontSize: 16,
         fontFamily: 'SF-Pro',
@@ -64,7 +41,6 @@ class _ModernSearchBarState extends State<ModernSearchBar> {
                   onPressed: () {
                     widget.controller.clear();
                     widget.onChanged('');
-                    _focusNode.requestFocus();
                   },
                 )
                 : null,

@@ -181,54 +181,51 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
     return CustomScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
+        // Safe area at top
+        SliverPadding(
+          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+        ),
+
         // Header with search
         SliverToBoxAdapter(
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ModernSearchBar(
-                  controller: _searchController,
-                  onChanged: (value) {
-                    if (value.isEmpty) {
-                      context.read<PublicPlansCubit>().clearSearch();
-                    } else {
-                      context.read<PublicPlansCubit>().searchExercises(value);
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                ModernTextInput(
-                  hintText: 'Plan Name',
-                  icon: Icons.fitness_center,
-                  onChanged: (value) {
-                    context.read<PublicPlansCubit>().updatePlanName(value);
-                  },
-                  initialValue: state is PublicPlanEditing
-                      ? state.publicPlan.name
-                      : '',
-                ),
-                const SizedBox(height: 12),
-                ModernPriceInput(
-                  onChanged: (value) {
-                    context.read<PublicPlansCubit>().updatePrice(value);
-                  },
-                  initialValue: state is PublicPlanEditing
-                      ? state.publicPlan.price
-                      : 0,
-                ),
-              ],
+          child: Material(
+            color: Colors.white,
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ModernSearchBar(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      if (value.isEmpty) {
+                        context.read<PublicPlansCubit>().clearSearch();
+                      } else {
+                        context.read<PublicPlansCubit>().searchExercises(value);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  ModernTextInput(
+                    hintText: 'Plan Name',
+                    icon: Icons.fitness_center,
+                    onChanged: (value) {
+                      context.read<PublicPlansCubit>().updatePlanName(value);
+                    },
+                    initialValue:
+                        state is PublicPlanEditing ? state.publicPlan.name : '',
+                  ),
+                  const SizedBox(height: 12),
+                  ModernPriceInput(
+                    onChanged: (value) {
+                      context.read<PublicPlansCubit>().updatePrice(value);
+                    },
+                    initialValue:
+                        state is PublicPlanEditing ? state.publicPlan.price : 0,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -256,21 +253,18 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
     return SliverPadding(
       padding: const EdgeInsets.all(20),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            return ModernSuggestedExerciseCard(
-              exercise: state.exercises[index],
-              onTap: () {
-                _searchController.clear();
-                context.read<PublicPlansCubit>().addExercise(
-                      _selectedDay,
-                      state.exercises[index],
-                    );
-              },
-            );
-          },
-          childCount: state.exercises.length,
-        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          return ModernSuggestedExerciseCard(
+            exercise: state.exercises[index],
+            onTap: () {
+              _searchController.clear();
+              context.read<PublicPlansCubit>().addExercise(
+                _selectedDay,
+                state.exercises[index],
+              );
+            },
+          );
+        }, childCount: state.exercises.length),
       ),
     );
   }
@@ -317,9 +311,9 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
               initialValue: currentDay.name ?? 'Day ${_selectedDay + 1}',
               onChanged: (value) {
                 context.read<PublicPlansCubit>().changeDayName(
-                      _selectedDay,
-                      value,
-                    );
+                  _selectedDay,
+                  value,
+                );
               },
             ),
           ),
@@ -354,7 +348,7 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
                   cubit: context.read<PublicPlansCubit>(),
                 ),
               );
-            }).toList(),
+            }),
             const SizedBox(height: 30),
           ],
 
@@ -406,23 +400,23 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
                 .asMap()
                 .entries
                 .map((entry) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 6,
-                ),
-                child: ModernSuggestedExerciseCard(
-                  exercise: entry.value,
-                  onTap: () {
-                    _searchController.clear();
-                    context.read<PublicPlansCubit>().addExercise(
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 6,
+                    ),
+                    child: ModernSuggestedExerciseCard(
+                      exercise: entry.value,
+                      onTap: () {
+                        _searchController.clear();
+                        context.read<PublicPlansCubit>().addExercise(
                           _selectedDay,
                           entry.value,
                         );
-                  },
-                ),
-              );
-            }).toList(),
+                      },
+                    ),
+                  );
+                }),
 
           const SizedBox(height: 30),
 
