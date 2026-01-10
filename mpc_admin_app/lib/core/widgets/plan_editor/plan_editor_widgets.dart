@@ -3,10 +3,10 @@ import 'package:mpc_admin_app/app/models/Exercise.dart';
 
 // Modern Search Bar with glassmorphism effect
 class ModernSearchBar extends StatefulWidget {
-  final TextEditingController controller;
+  TextEditingController controller;
   final Function(String) onChanged;
 
-  const ModernSearchBar({
+  ModernSearchBar({
     super.key,
     required this.controller,
     required this.onChanged,
@@ -43,6 +43,9 @@ class _ModernSearchBarState extends State<ModernSearchBar> {
       focusNode: _focusNode,
       controller: widget.controller,
       onChanged: widget.onChanged,
+      onTap: () {
+        _focusNode.requestFocus();
+      },
       style: const TextStyle(
         fontSize: 16,
         fontFamily: 'SF-Pro',
@@ -54,16 +57,17 @@ class _ModernSearchBarState extends State<ModernSearchBar> {
         fillColor: const Color(0xFFF5F7FA),
         isDense: true,
         prefixIcon: Icon(Icons.search, color: Colors.grey[600], size: 24),
-        suffixIcon: widget.controller.text.isNotEmpty
-            ? IconButton(
-                icon: Icon(Icons.clear, color: Colors.grey[600], size: 20),
-                onPressed: () {
-                  widget.controller.clear();
-                  widget.onChanged('');
-                  _focusNode.requestFocus();
-                },
-              )
-            : null,
+        suffixIcon:
+            widget.controller.text.isNotEmpty
+                ? IconButton(
+                  icon: Icon(Icons.clear, color: Colors.grey[600], size: 20),
+                  onPressed: () {
+                    widget.controller.clear();
+                    widget.onChanged('');
+                    _focusNode.requestFocus();
+                  },
+                )
+                : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(

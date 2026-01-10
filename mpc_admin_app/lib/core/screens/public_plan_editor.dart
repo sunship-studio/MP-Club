@@ -179,6 +179,7 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
 
   Widget _buildEditorContent(PublicPlansState state) {
     return CustomScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
         // Header with search
         SliverToBoxAdapter(
@@ -188,7 +189,7 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),

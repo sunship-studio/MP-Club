@@ -18,7 +18,6 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(child.runtimeType);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Container(
