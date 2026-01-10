@@ -179,12 +179,14 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
 
   Widget _buildEditorContent(PublicPlansState state) {
     return CustomScrollView(
+      physics: ClampingScrollPhysics(),
+      shrinkWrap: true,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       slivers: [
         // Safe area at top
-        SliverPadding(
-          padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-        ),
+        // SliverPadding(
+        //   padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+        // ),
 
         // Header with search
         SliverToBoxAdapter(
