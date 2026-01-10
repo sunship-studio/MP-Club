@@ -48,7 +48,7 @@ export default function Home() {
             option={2}
             title="Group Classes 👥"
             points={[
-              'Sweat together, get results together 🏋️',
+              "Finally, workouts you'll actually enjoy 🏋️",
               'Never worked out? We got you',
               'Expert coaches who actually care',
               'Book classes that fit your life',
