@@ -31,8 +31,10 @@ const FeatureCard = ({
 
     {/* Explore Link */}
     <div className="mt-4 pt-4 border-t border-gray-100">
-      <div className="flex items-center gap-2 text-[#0B79AB] font-semibold text-sm group-hover:gap-3 transition-all">
-        <span>Explore</span>
+      <div className="flex items-center gap-2 text-[#0B79AB] font-semibold text-sm group-hover:gap-3 transition-all hover:cursor-pointer ">
+        <a href="/online-coaching">
+          <span>Explore</span>{' '}
+        </a>
         <svg
           className="w-4 h-4 transform group-hover:translate-x-1 transition-transform"
           fill="none"

@@ -65,6 +65,13 @@ const MobileHeader = () => {
 🛜 COACHING
             </Link>
             <Link
+              href="/group-classes"
+              className="text-gray-800 py-2"
+              onClick={() => setIsOpen(false)}
+            >
+              GROUP CLASSES
+            </Link>
+            <Link
               href="/plans"
               className="text-gray-800 py-2"
               onClick={() => setIsOpen(false)}
@@ -118,6 +125,9 @@ const DesktopHeader = () => {
           </a>
             <a href="/online-coaching" className="hover:text-gray-400">
               🛜 COACHING
+          </a>
+          <a href="/group-classes" className="hover:text-gray-400">
+            GROUP CLASSES
           </a>
           <a href="/plans" className="hover:text-gray-400">
             PLANS

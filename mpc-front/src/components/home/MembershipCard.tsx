@@ -93,7 +93,13 @@ const MembershipCard = ({
 
       {/* Learn More Link */}
       <a
-        href="#"
+        onClick={() => {
+          if (option === 0) {
+            router.push('/waiting-list');
+          } else if (option === 2) {
+            router.push('/group-classes');
+          } else router.push('/online-coaching');
+        }}
         className={`text-center mt-4 text-sm font-semibold hover:underline ${
           option === 0 || option === 2 ? 'text-gray-300' : 'text-gray-600'
         }`}

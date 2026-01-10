@@ -41,7 +41,19 @@ export default function GroupClassesPage() {
   const calendarDays = generateCalendarDays();
 
   return (
-    <div className="max-w-7xl mx-auto px-8 md:px-16 py-12">
+    <div className="max-w-7xl mx-auto px-8 md:px-16 py-12 relative">
+      {/* Disabled Overlay */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center group cursor-not-allowed rounded-lg">
+        <div className="bg-white/10 backdrop-blur-md border-2 border-white/20 rounded-2xl px-12 py-8 transform transition-all opacity-0 group-hover:opacity-100 duration-300">
+          <p className="text-white text-3xl font-bold text-center">
+            Available Next Week 📅
+          </p>
+          <p className="text-gray-200 text-lg text-center mt-2">
+            Group classes coming soon!
+          </p>
+        </div>
+      </div>
+
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
           Group Classes
