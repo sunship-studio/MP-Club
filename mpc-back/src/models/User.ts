@@ -55,33 +55,7 @@ export interface IUser extends Document {
   hasPassword?: boolean;
   lastLogin?: Date;
   password?: string;
-  trainingPlan: {
-    lastUpdated?: Date;
-    name: string;
-    days: [
-      {
-        name: string;
-        exercises: [
-          {
-            bodyParts: [string];
-            exerciseId: string;
-            minutes: number;
-            videoUrl?: string;
-            seconds: number;
-            sets: [
-              {
-                reps: number;
-                rir: number;
-                weight: number;
-              },
-            ];
-            name: string;
-          },
-        ];
-      },
-    ];
-    bodyParts: [string];
-  };
+  trainingPlan: TrainingPlan;
   startDate: Date;
   firstName: string;
   lastName: string;
@@ -193,7 +167,33 @@ const UserSchema = new Schema<IUser>({
   // Optional field for storing the cancel token
 });
 
-// Export the model and return your IUser interface
+export interface TrainingSet {
+  reps: number;
+  rir: number;
+  weight: number;
+}
+
+export interface Exercise {
+  bodyParts: string[];
+  exerciseId: string;
+  minutes: number;
+  videoUrl?: string;
+  seconds: number;
+  sets: TrainingSet[];
+  name: string;
+}
+
+export interface TrainingDay {
+  name: string;
+  exercises: Exercise[];
+}
+
+export interface TrainingPlan {
+  lastUpdated?: Date;
+  name: string;
+  days: TrainingDay[];
+  bodyParts: string[];
+} // Export the model and return your IUser interface
 // @ts-ignore
 const User = mongoose.model<IUser>('User', UserSchema);
 export default User;

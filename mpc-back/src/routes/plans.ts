@@ -1,14 +1,12 @@
 import express from 'express';
 
-import { Request, Response } from 'express';
-import PlansController from '../controllers/web/plans';
-
-import sgMail from '@sendgrid/mail';
 import bodyParser from 'body-parser';
 import console from 'console';
+import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+import PlansController from '../controllers/web/plans';
+
 // Plans Router
 const plansRouter = express.Router();
 const plansController = new PlansController();

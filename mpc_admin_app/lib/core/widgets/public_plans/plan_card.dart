@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/models/PublicPlan.dart';
+import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/theme/app_colors.dart';
-import 'package:mpc_admin_app/core/widgets/public_plans/edit_plan_dialog.dart';
 
 class PlanCard extends StatelessWidget {
   final PublicPlan plan;
@@ -22,7 +23,7 @@ class PlanCard extends StatelessWidget {
       context: context,
       builder:
           (context) => AlertDialog(
-            backgroundColor: AppColors.darkCardColor,
+            backgroundColor: AppColors.lightCardColor,
             title: Text(
               'Delete Plan',
               style: TextStyle(
@@ -55,11 +56,8 @@ class PlanCard extends StatelessWidget {
     );
   }
 
-  void _showEditDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => EditPlanDialog(plan: plan, onSave: onEdit),
-    );
+  void _navigateToEditor(BuildContext context) {
+    context.go(RouteNames.publicPlanEditor, extra: plan);
   }
 
   @override
@@ -95,7 +93,7 @@ class PlanCard extends StatelessWidget {
               Row(
                 children: [
                   IconButton(
-                    onPressed: () => _showEditDialog(context),
+                    onPressed: () => _navigateToEditor(context),
                     icon: Icon(
                       Icons.edit,
                       color: AppColors.blueColor,
@@ -116,7 +114,7 @@ class PlanCard extends StatelessWidget {
               Icon(Icons.attach_money, color: Colors.green, size: 16.w),
               Gap(6.w),
               Text(
-                '\$${plan.price.toStringAsFixed(2)}',
+                '€${plan.price.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontFamily: 'SF-Pro',
@@ -136,7 +134,7 @@ class PlanCard extends StatelessWidget {
               ),
               Gap(6.w),
               Text(
-                '${plan.listOfExercises.length} exercises',
+                '${plan.days.length} training days',
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontFamily: 'SF-Pro',
@@ -146,33 +144,14 @@ class PlanCard extends StatelessWidget {
               ),
             ],
           ),
-          if (plan.excelFileUrl.isNotEmpty) ...[
-            Gap(8.h),
-            Row(
-              children: [
-                Icon(Icons.insert_drive_file, color: Colors.green, size: 16.w),
-                Gap(6.w),
-                Expanded(
-                  child: Text(
-                    'Excel file attached',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontFamily: 'SF-Pro',
-                      color: Colors.green,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-          if (plan.listOfExercises.isNotEmpty) ...[
+
+          if (plan.days.isNotEmpty) ...[
             Gap(12.h),
             Wrap(
               spacing: 8.w,
               runSpacing: 8.h,
               children:
-                  plan.listOfExercises.take(5).map((exercise) {
+                  plan.days.take(1).map((day) {
                     return Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: 10.w,
@@ -183,7 +162,7 @@ class PlanCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Text(
-                        exercise,
+                        day.exercises.map((e) => e.name).join(', '),
                         style: TextStyle(
                           fontSize: 12.sp,
                           fontFamily: 'SF-Pro',
@@ -194,10 +173,10 @@ class PlanCard extends StatelessWidget {
                     );
                   }).toList(),
             ),
-            if (plan.listOfExercises.length > 5) ...[
+            if (plan.days.length > 1) ...[
               Gap(8.h),
               Text(
-                '+${plan.listOfExercises.length - 5} more',
+                '+${plan.days.length - 1} more',
                 style: TextStyle(
                   fontSize: 12.sp,
                   fontFamily: 'SF-Pro',

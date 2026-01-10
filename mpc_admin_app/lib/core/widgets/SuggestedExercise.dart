@@ -1,7 +1,4 @@
-import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mpc_admin_app/app/bloc/training%20plan/cubit.dart';
 import 'package:mpc_admin_app/app/models/Exercise.dart';
 
 class SuggestedExerciseBox extends StatelessWidget {
@@ -10,8 +7,10 @@ class SuggestedExerciseBox extends StatelessWidget {
     required this.exercise,
     required this.selectedDayIndex,
     required this.searchController,
+    required this.onTap,
   });
   final Exercise exercise;
+  final VoidCallback onTap;
   TextEditingController searchController;
   final int selectedDayIndex;
   @override
@@ -57,15 +56,7 @@ class SuggestedExerciseBox extends StatelessWidget {
               ),
             ),
 
-            AddButton(
-              onTap: () {
-                searchController.clear();
-                context.read<TrainingPlanCubit>().addExercise(
-                  selectedDayIndex,
-                  exercise,
-                );
-              },
-            ),
+            AddButton(onTap: onTap),
           ],
         ),
       ),

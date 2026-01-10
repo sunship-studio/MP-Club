@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/bloc/public_plans/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/public_plans/state.dart';
+import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/theme/app_colors.dart';
-import 'package:mpc_admin_app/core/widgets/public_plans/create_plan_dialog.dart';
 import 'package:mpc_admin_app/core/widgets/public_plans/plan_card.dart';
 
 class TrainingPlansScreen extends StatefulWidget {
@@ -16,20 +17,8 @@ class TrainingPlansScreen extends StatefulWidget {
 }
 
 class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<PublicPlansCubit>().loadPlans();
-  }
-
-  void _showCreateDialog() {
-    final cubit = context.read<PublicPlansCubit>();
-    showDialog(
-      context: context,
-      builder:
-          (context) =>
-              BlocProvider.value(value: cubit, child: CreatePlanDialog()),
-    );
+  void _navigateToEditor() {
+    context.go(RouteNames.publicPlanEditor);
   }
 
   @override
@@ -53,7 +42,7 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
                 ),
               ),
               IconButton(
-                onPressed: _showCreateDialog,
+                onPressed: _navigateToEditor,
                 icon: Icon(
                   Icons.add_circle,
                   color: AppColors.blueColor,
@@ -66,10 +55,27 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
           Expanded(
             child: BlocBuilder<PublicPlansCubit, PublicPlansState>(
               builder: (context, state) {
-                if (state is PublicPlansLoading) {
+                if (state is PublicPlansLoading ||
+                    state is PublicPlanUploading) {
                   return Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.blueColor,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(color: AppColors.blueColor),
+                        if (state is PublicPlanUploading) ...[
+                          Gap(12.h),
+                          Text(
+                            'Creating the training plan... be patient',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontFamily: 'SF-Pro',
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                        Gap(100.h),
+                      ],
                     ),
                   );
                 } else if (state is PublicPlansError) {

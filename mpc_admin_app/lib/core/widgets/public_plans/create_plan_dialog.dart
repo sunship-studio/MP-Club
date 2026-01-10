@@ -135,7 +135,7 @@ class _CreatePlanDialogState extends State<CreatePlanDialog> {
 
     final plan = PublicPlan(
       name: _nameController.text.trim(),
-      listOfExercises: _selectedExercises,
+
       excelFileUrl: excelUrl,
       price: price,
     );

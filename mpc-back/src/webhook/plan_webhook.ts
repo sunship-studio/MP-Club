@@ -1,10 +1,9 @@
-import sgMail from '@sendgrid/mail';
 import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import stripe from 'stripe';
-import { TrainingPlan } from '../models/TrainingPlan';
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+import resend from '../config/resend';
+import { PlanForSale } from '../models/PlanForSale';
 
 const Stripe = new stripe.Stripe(
   process.env.NODE_ENV == 'development'
@@ -86,7 +85,7 @@ async function completeTransaction(event: stripe.Event) {
     typeof price.product === 'string' ? price.product : price.product.id;
 
   // Find training plan by Stripe product ID
-  const trainingPlan = await TrainingPlan.findOne({
+  const trainingPlan = await PlanForSale.findOne({
     stripeProductId: productId,
   });
 
@@ -117,7 +116,7 @@ export async function sendTrainingPlanEmail(
 ) {
   const template_path = path.join(
     __dirname,
-    '../',
+    '../../',
     'templates',
     'training_plan.html'
   );
@@ -128,11 +127,17 @@ export async function sendTrainingPlanEmail(
   html = html.replace('{{orderNumber}}', orderNumber);
   html = html.replace('{{planName}}', planName);
 
-  const msg = {
-    to: email,
-    from: 'shanemahon@midlandsperformanceclub.ie',
+  const { data, error } = await resend.emails.send({
+    from: 'Midlands Performance Club <shanemahon@midlandsperformanceclub.ie>',
+    to: [email],
     subject: `Your ${planName} Training Plan is Here!`,
     html: html,
-  };
-  await sgMail.send(msg);
+  });
+
+  if (error) {
+    console.error('Error sending email:', error);
+    throw error;
+  }
+
+  console.log('Email sent successfully:', data);
 }

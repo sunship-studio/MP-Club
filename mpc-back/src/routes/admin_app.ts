@@ -1,6 +1,5 @@
 import express, { Request, Response } from 'express';
 
-import { uploadExcel } from '../config/cloudinary';
 import AdminAppController from '../controllers/admin/admin_app';
 import { adminAppAuth } from '../middleware/auth';
 
@@ -113,7 +112,7 @@ adminAppRouter.post(
   adminAppAuth,
   async (req: Request, res: Response) => {
     console.log('Received request to add training plan to sell:', req.body);
-    await adminAppController.addTrainingPlanToSell(req, res);
+    await adminAppController.addPlanForSell(req, res);
   }
 );
 
@@ -125,11 +124,4 @@ adminAppRouter.get(
   }
 );
 
-adminAppRouter.post(
-  '/upload-training-plan-file',
-  uploadExcel.single('file'),
-  async (req: Request, res: Response) => {
-    await adminAppController.uploadTrainingPlanFile(req, res);
-  }
-);
 export default adminAppRouter;

@@ -1,4 +1,3 @@
-import sgMail from '@sendgrid/mail';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -19,8 +18,6 @@ import plansRouter from './routes/plans';
 import waitingListRouter from './routes/waiting_list';
 import SocketService from './services/socket';
 import { handleWebhook } from './webhook/online_coaching_webhook';
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
 // Load environment variables
 dotenv.config();
@@ -72,6 +69,7 @@ app.post(
 
 import fs from 'fs';
 
+import path from 'path';
 import { handlePlanWebhook } from './webhook/plan_webhook';
 
 const readHTMLFile = (filePath: string) => {
@@ -94,6 +92,15 @@ app.set('socketService', socketService);
 httpServer.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
   console.log(`WebSocket server running at ws://localhost:${port}`);
+});
+
+app.get('/test', async (req, res) => {
+  const template_path = path.join(
+    '__dirname',
+    '../',
+    'templates',
+    'training_plan.xlsx'
+  );
 });
 
 export default app;

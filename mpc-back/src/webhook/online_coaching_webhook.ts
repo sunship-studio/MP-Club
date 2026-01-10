@@ -1,12 +1,11 @@
-import sgMail from '@sendgrid/mail';
 import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import Stripe from 'stripe';
+import resend from '../config/resend';
 import PaymentSession from '../models/PaymentSession';
 import User from '../models/User';
 import { sendNotificationToAdmin } from '../services/notification';
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {});
 
 const handleWebhook = async (req: Request, res: Response) => {
@@ -56,17 +55,23 @@ const completeTransaction = async (event: any) => {
   );
   const templateSource = readHTMLFile(template_path);
 
-  templateSource.replace('{{firstName}}', paymentSession?.firstName || '');
+  const htmlContent = templateSource.replace(
+    '{{firstName}}',
+    paymentSession?.firstName || ''
+  );
 
-  const msg = {
-    from: 'shanemahon@midlandsperformanceclub.ie',
-    to: paymentSession?.email,
+  const { data, error } = await resend.emails.send({
+    from: 'Midlands Performance Club <shanemahon@midlandsperformanceclub.ie>',
+    to: [paymentSession?.email || ''],
     subject: 'Subscription Confirmation',
-    html: templateSource,
-  };
+    html: htmlContent,
+  });
 
-  await sgMail.send(msg);
-  console.log('✅ Email sent successfully');
+  if (error) {
+    console.error('Error sending email:', error);
+  } else {
+    console.log('✅ Email sent successfully:', data);
+  }
   const subscriber = await User.create({
     email: paymentSession?.email,
     firstName: paymentSession?.firstName,

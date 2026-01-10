@@ -5,17 +5,20 @@ import 'package:mpc_admin_app/core/router/route_names.dart';
 
 /// A persistent shell that wraps all app screens with consistent header
 class AppShell extends StatelessWidget {
-  const AppShell({
+  AppShell({
     super.key,
     required this.child,
     required this.showBackButton,
+    this.radius = true,
   });
 
   final Widget child;
   final bool showBackButton;
+  bool radius;
 
   @override
   Widget build(BuildContext context) {
+    print(child.runtimeType);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Container(
@@ -32,11 +35,11 @@ class AppShell extends StatelessWidget {
             // Persistent Header
             Container(
               padding: const EdgeInsets.only(top: 40, left: 10, right: 10),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(10),
-                  bottomRight: Radius.circular(10),
+                  bottomLeft: Radius.circular(radius ? 10 : 0),
+                  bottomRight: Radius.circular(radius ? 10 : 0),
                 ),
               ),
               width: double.infinity,

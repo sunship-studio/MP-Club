@@ -34,10 +34,11 @@ class UserExercise {
 
       minutes: json['minutes'] as int? ?? 0,
       seconds: json['seconds'] as int? ?? 0,
-      bodyParts: (json['bodyParts'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList() ??
-          [], 
+      bodyParts:
+          (json['bodyParts'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
     );
   }
 

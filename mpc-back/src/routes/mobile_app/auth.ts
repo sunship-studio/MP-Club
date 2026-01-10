@@ -161,8 +161,7 @@ async function sendPasswordResetEmail(
   email: string,
   link: string
 ): Promise<void> {
-  const sgMail = require('@sendgrid/mail');
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+  const resend = require('../../../src/config/resend').default;
 
   const templatePath = path.join(
     __dirname,
@@ -171,21 +170,19 @@ async function sendPasswordResetEmail(
   let template = fs.readFileSync(templatePath, 'utf-8');
   template = template.replace('{{resetLink}}', link);
 
-  const msg = {
-    to: email,
-    from: 'forgot_password@midlandsperformanceclub.ie',
+  const { data, error } = await resend.emails.send({
+    from: 'Midlands Performance Club <forgot_password@midlandsperformanceclub.ie>',
+    to: [email],
     subject: 'Password Reset Request',
     html: template,
-    tracking_settings: {
-      click_tracking: {
-        enable: false,
-        enable_text: false,
-      },
-    },
-  };
+  });
 
-  await sgMail.send(msg);
-  console.log('Password reset email sent');
+  if (error) {
+    console.error('Error sending password reset email:', error);
+    throw error;
+  }
+
+  console.log('Password reset email sent:', data);
 }
 
 authRouter.get('/reset-password', (req, res) => {

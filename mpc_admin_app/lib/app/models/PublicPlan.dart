@@ -1,8 +1,11 @@
+import 'package:mpc_admin_app/app/models/TrainingDay.dart';
+
 class PublicPlan {
   String? id;
   String name;
-  String excelFileUrl;
-  List<String> listOfExercises;
+  String? excelFileUrl;
+
+  List<TrainingDay> days;
   double price;
   String? stripeProductId;
   DateTime? createdAt;
@@ -11,13 +14,14 @@ class PublicPlan {
   PublicPlan({
     this.id,
     required this.name,
-    required this.excelFileUrl,
-    required this.listOfExercises,
+    this.excelFileUrl,
+
+    List<TrainingDay>? days,
     required this.price,
     this.stripeProductId,
     this.createdAt,
     this.updatedAt,
-  });
+  }) : days = days ?? [];
 
   factory PublicPlan.fromJson(Map<String, dynamic> json) {
     // Handle listOfExercises which could be a List or might need parsing
@@ -31,11 +35,21 @@ class PublicPlan {
       }
     }
 
+    // Handle days
+    List<TrainingDay> days = [];
+    if (json['days'] != null && json['days'] is List) {
+      days =
+          (json['days'] as List<dynamic>)
+              .map((e) => TrainingDay.fromJson(e as Map<String, dynamic>))
+              .toList();
+    }
+
     return PublicPlan(
       id: json['_id'] as String?,
       name: json['name'] as String,
-      excelFileUrl: json['excelFileUrl'] as String,
-      listOfExercises: exercises,
+      excelFileUrl: json['excelFileUrl'] as String? ?? '',
+
+      days: days,
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       stripeProductId: json['stripeProductId'] as String?,
       createdAt:
@@ -54,7 +68,8 @@ class PublicPlan {
       if (id != null) '_id': id,
       'name': name,
       'excelFileUrl': excelFileUrl,
-      'listOfExercises': listOfExercises,
+
+      'days': days.map((e) => e.toJson()).toList(),
       'price': price,
       if (stripeProductId != null) 'stripeProductId': stripeProductId,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),

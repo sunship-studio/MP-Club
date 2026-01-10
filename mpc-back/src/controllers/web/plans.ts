@@ -1,62 +1,15 @@
 import { Request, Response } from 'express';
 import stripe from '../../config/stripe';
-import { TrainingPlan } from '../../models/TrainingPlan';
+import { PlanForSale } from '../../models/PlanForSale';
 export default class PlansController {
   constructor() {}
 
   async getPlans(req: Request, res: Response) {
     try {
       // Get all training plans from database
-      const trainingPlans = await TrainingPlan.find();
+      const trainingPlans = await PlanForSale.find();
 
-      // Fetch price information from Stripe for each plan
-      const plansWithPrices = await Promise.all(
-        trainingPlans.map(async (plan) => {
-          try {
-            // Get the product from Stripe
-            const product = await stripe.products.retrieve(
-              plan.stripeProductId
-            );
-
-            // Get prices for this product
-            const prices = await stripe.prices.list({
-              product: plan.stripeProductId,
-              active: true,
-            });
-            console.log('Fetched prices from Stripe:', prices.data);
-            const price = prices.data[0]; // Get the first active price
-
-            return {
-              id: plan._id,
-              name: plan.name,
-              excelFileUrl: plan.excelFileUrl,
-              listOfExercises: plan.listOfExercises,
-              stripeProductId: plan.stripeProductId,
-              price: plan.price, // Convert from cents
-              currency: price ? price.currency : null,
-              priceId: price ? price.id : null,
-            };
-          } catch (error) {
-            console.error(
-              `Error fetching Stripe data for plan ${plan._id}:`,
-              error
-            );
-            // Return plan without price data if Stripe fetch fails
-            return {
-              id: plan._id,
-              name: plan.name,
-              excelFileUrl: plan.excelFileUrl,
-              listOfExercises: plan.listOfExercises,
-              stripeProductId: plan.stripeProductId,
-              price: plan.price,
-              currency: null,
-              priceId: null,
-            };
-          }
-        })
-      );
-
-      res.status(200).json(plansWithPrices);
+      res.status(200).json(trainingPlans);
     } catch (error) {
       console.error('Error fetching training plans:', error);
       res.status(500).json({ error: 'Failed to fetch training plans' });

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:mpc_admin_app/app/models/Exercise.dart';
 import 'package:mpc_admin_app/app/models/PublicPlan.dart';
 
 abstract class PublicPlansState extends Equatable {
@@ -28,4 +29,34 @@ class PublicPlansError extends PublicPlansState {
 
   @override
   List<Object?> get props => [message];
+}
+
+class PublicPlanUploading extends PublicPlansState {}
+
+class PublicPlanEditing extends PublicPlansState {
+  final PublicPlan publicPlan;
+  final DateTime lastUpdated;
+  final List<Exercise>? exercisesDatabase;
+
+  const PublicPlanEditing({
+    required this.publicPlan,
+    required this.lastUpdated,
+    this.exercisesDatabase,
+  });
+
+  @override
+  List<Object?> get props => [publicPlan, lastUpdated, exercisesDatabase];
+}
+
+class PublicPlanSearchingExercises extends PublicPlansState {
+  final List<Exercise> exercises;
+  final String query;
+
+  const PublicPlanSearchingExercises({
+    required this.exercises,
+    required this.query,
+  });
+
+  @override
+  List<Object?> get props => [exercises, query];
 }

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/bloc/add_subscriber.dart';
 import 'package:mpc_admin_app/app/bloc/public_plans/cubit.dart';
+import 'package:mpc_admin_app/app/models/PublicPlan.dart';
 import 'package:mpc_admin_app/app/models/User.dart';
 import 'package:mpc_admin_app/app/services/socket.dart';
 import 'package:mpc_admin_app/core/router/route_names.dart';
@@ -10,6 +11,7 @@ import 'package:mpc_admin_app/core/screens/add_subscriber.dart';
 import 'package:mpc_admin_app/core/screens/chat.dart';
 import 'package:mpc_admin_app/core/screens/home.dart';
 import 'package:mpc_admin_app/core/screens/online_coaching.dart';
+import 'package:mpc_admin_app/core/screens/public_plan_editor.dart';
 import 'package:mpc_admin_app/core/screens/training_plans.dart';
 import 'package:mpc_admin_app/core/screens/waiting_list.dart';
 import 'package:mpc_admin_app/core/widgets/app_shell.dart';
@@ -28,8 +30,14 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state, child) {
         // Determine if back button should show based on current location
         final showBackButton = state.uri.path != RouteNames.home;
+        final radius =
+            state.uri.path == RouteNames.publicPlanEditor ? false : true;
 
-        return AppShell(showBackButton: showBackButton, child: child);
+        return AppShell(
+          showBackButton: showBackButton,
+          radius: radius,
+          child: child,
+        );
       },
       routes: [
         GoRoute(
@@ -97,8 +105,21 @@ final GoRouter appRouter = GoRouter(
           pageBuilder: (context, state) {
             return NoTransitionPage(
               child: BlocProvider<PublicPlansCubit>(
-                create: (context) => PublicPlansCubit(),
+                create: (context) => PublicPlansCubit()..loadPlans(),
                 child: const TrainingPlansScreen(),
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: RouteNames.publicPlanEditor,
+          name: 'publicPlanEditor',
+          pageBuilder: (context, state) {
+            final plan = state.extra as PublicPlan?;
+            return NoTransitionPage(
+              child: BlocProvider<PublicPlansCubit>(
+                create: (context) => PublicPlansCubit(),
+                child: PublicPlanEditorScreen(plan: plan),
               ),
             );
           },

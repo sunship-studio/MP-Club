@@ -74,6 +74,13 @@ class _PlanEditorState extends State<PlanEditor> {
                         padding: EdgeInsets.only(),
                         itemBuilder:
                             (context, index) => SuggestedExerciseBox(
+                              onTap: () {
+                                _searchController.clear();
+                                context.read<TrainingPlanCubit>().addExercise(
+                                  selectedDay,
+                                  state.exercises[index],
+                                );
+                              },
                               searchController: _searchController,
                               selectedDayIndex: selectedDay,
                               exercise: state.exercises[index],
@@ -126,6 +133,92 @@ class _PlanEditorState extends State<PlanEditor> {
                                   padding: EdgeInsets.only(),
                                   itemBuilder:
                                       (context, index) => ExerciseBox(
+                                        onAddSet: () {
+                                          context
+                                              .read<TrainingPlanCubit>()
+                                              .addSet(
+                                                state
+                                                    .trainingPlan
+                                                    .days[selectedDay]
+                                                    .exercises[index]
+                                                    .id!,
+                                              );
+                                        },
+                                        onDelete: () {
+                                          context
+                                              .read<TrainingPlanCubit>()
+                                              .deleteExercise(
+                                                state
+                                                    .trainingPlan
+                                                    .days[selectedDay]
+                                                    .exercises[index]
+                                                    .id!,
+                                              );
+                                        },
+                                        onRIRChange: (rir, setIndex) {
+                                          context
+                                              .read<TrainingPlanCubit>()
+                                              .updateSetRIR(
+                                                state
+                                                    .trainingPlan
+                                                    .days[selectedDay]
+                                                    .exercises[index]
+                                                    .id!,
+                                                rir,
+                                                setIndex,
+                                              );
+                                        },
+                                        onRepsChange: (reps, setIndex) {
+                                          context
+                                              .read<TrainingPlanCubit>()
+                                              .updateSetReps(
+                                                state
+                                                    .trainingPlan
+                                                    .days[selectedDay]
+                                                    .exercises[index]
+                                                    .id!,
+                                                reps,
+                                                setIndex,
+                                              );
+                                        },
+
+                                        onRemoveSet: (setIndex) {
+                                          context
+                                              .read<TrainingPlanCubit>()
+                                              .deleteLastIndexSet(
+                                                state
+                                                    .trainingPlan
+                                                    .days[selectedDay]
+                                                    .exercises[index]
+                                                    .id!,
+                                              );
+                                        },
+                                        onWeightChange: (weight, setIndex) {
+                                          context
+                                              .read<TrainingPlanCubit>()
+                                              .changeSetWeight(
+                                                state
+                                                    .trainingPlan
+                                                    .days[selectedDay]
+                                                    .exercises[index]
+                                                    .id!,
+                                                weight,
+                                                setIndex,
+                                              );
+                                        },
+                                        onRestTimeChange: (minutes, seconds) {
+                                          context
+                                              .read<TrainingPlanCubit>()
+                                              .updateRestTime(
+                                                state
+                                                    .trainingPlan
+                                                    .days[selectedDay]
+                                                    .exercises[index]
+                                                    .id!,
+                                                minutes,
+                                                seconds,
+                                              );
+                                        },
                                         exercise:
                                             state
                                                 .trainingPlan
@@ -163,6 +256,18 @@ class _PlanEditorState extends State<PlanEditor> {
                                   padding: EdgeInsets.only(),
                                   itemBuilder:
                                       (context, index) => SuggestedExerciseBox(
+                                        onTap: () {
+                                          _searchController.clear();
+                                          context
+                                              .read<TrainingPlanCubit>()
+                                              .addExercise(
+                                                selectedDay,
+                                                state
+                                                    .trainingPlan
+                                                    .days[selectedDay]
+                                                    .suggestedExercises[index],
+                                              );
+                                        },
                                         searchController: _searchController,
                                         selectedDayIndex: selectedDay,
                                         exercise:

@@ -1,16 +1,16 @@
-import sgMail from '@sendgrid/mail';
 import console from 'console';
 import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { uploadExcelToCloudinary } from '../../config/cloudinary';
+import resend from '../../config/resend';
 import stripe from '../../config/stripe';
 import AdminSettings from '../../models/AdminSettings';
 import Exercise from '../../models/Exercise';
-import { TrainingPlan } from '../../models/TrainingPlan';
+import { PlanForSale } from '../../models/PlanForSale';
 import User from '../../models/User';
 import { WaitingListEntry } from '../../models/WaitingListEntry';
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+import excelService from '../../services/excel';
 export default class AdminAppController {
   public async getAllExercises(req: Request, res: Response): Promise<Response> {
     try {
@@ -202,15 +202,18 @@ export default class AdminAppController {
     );
     const templateSource = this.readHTMLFile(template_path);
 
-    const msg = {
-      from: 'shanemahon@midlandsperformanceclub.ie',
-      to: req.body.email,
+    const { data, error } = await resend.emails.send({
+      from: 'Midlands Performance Club <shanemahon@midlandsperformanceclub.ie>',
+      to: [req.body.email],
       subject: 'Subscription Confirmation',
       html: templateSource,
-    };
+    });
 
-    await sgMail.send(msg);
-    console.log('✅ Email sent successfully');
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('✅ Email sent successfully:', data);
+    }
     try {
       const { email, firstName, lastName, age } = req.body;
       const existingUser = await User.findOne({ email });
@@ -241,7 +244,8 @@ export default class AdminAppController {
     res: Response
   ): Promise<Response> {
     try {
-      const trainingPlans = await TrainingPlan.find();
+      console.log('Fetching training plans...');
+      const trainingPlans = await PlanForSale.find();
       return res.status(200).json(trainingPlans);
     } catch (error) {
       console.error('Error fetching training plans:', error);
@@ -253,17 +257,18 @@ export default class AdminAppController {
   public async editTrainingPlan(req: Request, res: Response): Promise<void> {
     try {
       const { id, updatedPlan } = req.body;
-      const trainingPlan = await TrainingPlan.findById(id);
+      const trainingPlan = await PlanForSale.findById(id);
       if (!trainingPlan) {
         res.status(404).json({ message: 'Training plan not found' });
         return;
       }
-
+      console.log('Updated Plan:', updatedPlan.days[0].exercises);
       trainingPlan.name = updatedPlan.name;
-      trainingPlan.excelFileUrl = updatedPlan.excelFileUrl;
-      trainingPlan.listOfExercises = updatedPlan.listOfExercises;
+      trainingPlan.price = updatedPlan.price;
+      trainingPlan.days = updatedPlan.days;
 
       await trainingPlan.save();
+      res.status(200).json({ message: 'Training plan updated' });
     } catch (error) {
       console.error('Error editing training plan:', error);
     }
@@ -272,30 +277,21 @@ export default class AdminAppController {
   public async deleteTrainingPlan(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.body;
-      const trainingPlan = await TrainingPlan.findById(id);
+      const trainingPlan = await PlanForSale.findById(id);
       if (!trainingPlan) {
         res.status(404).json({ message: 'Training plan not found' });
         return;
       }
-      await TrainingPlan.findByIdAndDelete(id);
+      await PlanForSale.findByIdAndDelete(id);
       res.status(200).json({ message: 'Training plan deleted' });
     } catch (error) {
       console.error('Error deleting training plan:', error);
     }
   }
 
-  public async addTrainingPlanToSell(
-    req: Request,
-    res: Response
-  ): Promise<Response> {
+  public async addPlanForSell(req: Request, res: Response): Promise<Response> {
     try {
-      const {
-        name,
-        excelFileUrl,
-        listOfExercises,
-        price,
-        currency = 'eur',
-      } = req.body;
+      const { name, days, price, currency = 'eur' } = req.body;
 
       // Create Stripe product
       const stripeProduct = await stripe.products.create({
@@ -314,13 +310,32 @@ export default class AdminAppController {
       });
 
       // Save training plan with Stripe product ID
-      const newPlan = new TrainingPlan({
+      const newPlan = new PlanForSale({
         name,
-        excelFileUrl,
+
         price,
-        listOfExercises,
+        days,
+        priceId: stripePrice.id,
         stripeProductId: stripeProduct.id,
       });
+      const excelFile = await excelService.generateBufferFromTemplate(newPlan, {
+        templatePath: path.join(
+          __dirname,
+          '../../../templates/training_plan.xlsx'
+        ),
+
+        clientName: '',
+        startDate: new Date(),
+        weekOnProgramme: 23,
+      });
+
+      const uploadResponse = await uploadExcelToCloudinary(
+        excelFile,
+        `${newPlan._id}_training_plan.xlsx`,
+        'training_plans'
+      );
+      newPlan.excelFileUrl = uploadResponse.url;
+
       await newPlan.save();
 
       console.log(
@@ -333,27 +348,6 @@ export default class AdminAppController {
       });
     } catch (error) {
       console.error('Error adding training plan:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-    }
-  }
-
-  public async uploadTrainingPlanFile(
-    req: Request,
-    res: Response
-  ): Promise<Response> {
-    try {
-      if (!req.file || !req.file.buffer) {
-        return res.status(400).json({ message: 'No file uploaded' });
-      }
-      const response = await uploadExcelToCloudinary(
-        req.file.buffer,
-        req.file.originalname,
-        'training_plans'
-      );
-
-      return res.status(200).json({ url: response.url });
-    } catch (error) {
-      console.error('Error uploading training plan file:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   }

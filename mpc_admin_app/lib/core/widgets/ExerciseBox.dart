@@ -1,12 +1,27 @@
 import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mpc_admin_app/app/bloc/training%20plan/cubit.dart';
 import 'package:mpc_admin_app/app/models/UserExercise.dart';
 
 class ExerciseBox extends StatefulWidget {
-  ExerciseBox({super.key, required this.exercise});
+  ExerciseBox({
+    super.key,
+    required this.exercise,
+    required this.onDelete,
+    required this.onAddSet,
+    required this.onRemoveSet,
+    required this.onWeightChange,
+    required this.onRepsChange,
+    required this.onRestTimeChange,
+    required this.onRIRChange,
+  });
   UserExercise exercise;
+  Function onDelete;
+  Function onAddSet;
+  Function onRemoveSet;
+  Function onWeightChange;
+  Function onRepsChange;
+  Function onRIRChange;
+  Function onRestTimeChange;
 
   @override
   State<ExerciseBox> createState() => _ExerciseBoxState();
@@ -84,18 +99,16 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             NumberInput(
+                              value: widget.exercise.sets!.length,
                               label: "Sets",
+
                               initialValue: widget.exercise.sets!.length,
                               onChanged: (value) {
                                 if (value > widget.exercise.sets!.length) {
-                                  context.read<TrainingPlanCubit>().addSet(
-                                    widget.exercise.id!,
-                                  );
+                                  widget.onAddSet();
                                 } else if (value <
                                     widget.exercise.sets!.length) {
-                                  context
-                                      .read<TrainingPlanCubit>()
-                                      .deleteLastIndexSet(widget.exercise.id!);
+                                  widget.onRemoveSet();
                                 }
                               },
                             ),
@@ -170,13 +183,10 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                                 0;
                                             int seconds =
                                                 int.tryParse(value) ?? 0;
-                                            context
-                                                .read<TrainingPlanCubit>()
-                                                .updateRestTime(
-                                                  widget.exercise.id!,
-                                                  minutes,
-                                                  seconds,
-                                                );
+                                            widget.onRestTimeChange(
+                                              minutes,
+                                              seconds,
+                                            );
                                           },
                                           textAlign: TextAlign.center,
                                           decoration: InputDecoration(
@@ -219,9 +229,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                         children: [
                           GestureDetector(
                             onTap: () {
-                              context.read<TrainingPlanCubit>().deleteExercise(
-                                widget.exercise.id!,
-                              );
+                              widget.onDelete();
                             },
                             child: Container(
                               padding: EdgeInsets.all(4),
@@ -303,30 +311,20 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                               ),
                               SizedBox(width: 12),
                               NumberInput(
+                                value: widget.exercise.sets![i].reps,
                                 label: "Reps",
                                 initialValue: widget.exercise.sets![i].reps,
                                 onChanged: (value) {
-                                  context
-                                      .read<TrainingPlanCubit>()
-                                      .updateSetReps(
-                                        widget.exercise.id!,
-                                        value,
-                                        i,
-                                      );
+                                  widget.onRepsChange(value, i);
                                 },
                               ),
                               SizedBox(width: 10),
                               NumberInput(
+                                value: widget.exercise.sets![i].rir,
                                 label: "RiR",
                                 initialValue: widget.exercise.sets![i].rir,
                                 onChanged: (value) {
-                                  context
-                                      .read<TrainingPlanCubit>()
-                                      .updateSetRIR(
-                                        widget.exercise.id!,
-                                        value,
-                                        i,
-                                      );
+                                  widget.onRIRChange(value, i);
                                 },
                               ),
                               SizedBox(width: 10),
@@ -355,13 +353,9 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                     ),
                                     child: TextField(
                                       onChanged: (value) {
-                                        context
-                                            .read<TrainingPlanCubit>()
-                                            .changeSetWeight(
-                                              widget.exercise.id!,
-                                              int.tryParse(value) ?? 0,
-                                              i,
-                                            );
+                                        double weight =
+                                            double.tryParse(value) ?? 0;
+                                        widget.onWeightChange(weight, i);
                                       },
                                       decoration: InputDecoration(
                                         isDense: true,
@@ -411,23 +405,23 @@ class NumberInput extends StatefulWidget {
     super.key,
     this.label = "Sets",
     this.initialValue = 2,
+    this.value = 0,
     this.onChanged,
   });
 
   String label;
   Function? onChanged;
   int initialValue;
+  int value = 0;
 
   @override
   State<NumberInput> createState() => _NumberInputState();
 }
 
 class _NumberInputState extends State<NumberInput> {
-  int value = 0;
-
   @override
   void initState() {
-    value = widget.initialValue;
+    widget.value = widget.initialValue;
     super.initState();
   }
 
@@ -456,11 +450,11 @@ class _NumberInputState extends State<NumberInput> {
             children: [
               GestureDetector(
                 onTap: () {
-                  if (value > 1) {
-                    value = value - 1;
+                  if (widget.value > 1) {
+                    widget.value = widget.value - 1;
                     setState(() {});
                     if (widget.onChanged != null) {
-                      widget.onChanged!(value);
+                      widget.onChanged!(widget.value);
                     }
                   }
                 },
@@ -475,7 +469,7 @@ class _NumberInputState extends State<NumberInput> {
               ),
               SizedBox(width: 10),
               Text(
-                "$value",
+                "${widget.value}",
                 style: TextStyle(
                   fontSize: 12,
                   fontFamily: 'SF-Pro',
@@ -486,10 +480,10 @@ class _NumberInputState extends State<NumberInput> {
               SizedBox(width: 10),
               GestureDetector(
                 onTap: () {
-                  value = value + 1;
+                  widget.value = widget.value + 1;
                   setState(() {});
                   if (widget.onChanged != null) {
-                    widget.onChanged!(value);
+                    widget.onChanged!(widget.value);
                   }
                 },
                 child: Container(
