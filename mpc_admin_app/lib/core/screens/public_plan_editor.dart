@@ -178,65 +178,63 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
   }
 
   Widget _buildEditorContent(PublicPlansState state) {
-    return CustomScrollView(
-      physics: ClampingScrollPhysics(),
-      shrinkWrap: true,
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      slivers: [
-        // Safe area at top
-        // SliverPadding(
-        //   padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
-        // ),
-
-        // Header with search
-        SliverToBoxAdapter(
-          child: Material(
-            color: Colors.white,
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ModernSearchBar(
-                    controller: _searchController,
-                    onChanged: (value) {
-                      if (value.isEmpty) {
-                        context.read<PublicPlansCubit>().clearSearch();
-                      } else {
-                        context.read<PublicPlansCubit>().searchExercises(value);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  ModernTextInput(
-                    hintText: 'Plan Name',
-                    icon: Icons.fitness_center,
-                    onChanged: (value) {
-                      context.read<PublicPlansCubit>().updatePlanName(value);
-                    },
-                    initialValue:
-                        state is PublicPlanEditing ? state.publicPlan.name : '',
-                  ),
-                  const SizedBox(height: 12),
-                  ModernPriceInput(
-                    onChanged: (value) {
-                      context.read<PublicPlansCubit>().updatePrice(value);
-                    },
-                    initialValue:
-                        state is PublicPlanEditing ? state.publicPlan.price : 0,
-                  ),
-                ],
-              ),
+    return Column(
+      children: [
+        // Fixed header - not part of scroll view
+        Material(
+          color: Colors.white,
+          elevation: 2,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ModernSearchBar(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    if (value.isEmpty) {
+                      context.read<PublicPlansCubit>().clearSearch();
+                    } else {
+                      context.read<PublicPlansCubit>().searchExercises(value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                ModernTextInput(
+                  hintText: 'Plan Name',
+                  icon: Icons.fitness_center,
+                  onChanged: (value) {
+                    context.read<PublicPlansCubit>().updatePlanName(value);
+                  },
+                  initialValue:
+                      state is PublicPlanEditing ? state.publicPlan.name : '',
+                ),
+                const SizedBox(height: 12),
+                ModernPriceInput(
+                  onChanged: (value) {
+                    context.read<PublicPlansCubit>().updatePrice(value);
+                  },
+                  initialValue:
+                      state is PublicPlanEditing ? state.publicPlan.price : 0,
+                ),
+              ],
             ),
           ),
         ),
 
-        // Search results or editor content
-        if (state is PublicPlanSearchingExercises)
-          _buildSearchResults(state)
-        else if (state is PublicPlanEditing)
-          _buildPlanEditor(state),
+        // Scrollable content
+        Expanded(
+          child: CustomScrollView(
+            physics: const ClampingScrollPhysics(),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            slivers: [
+              if (state is PublicPlanSearchingExercises)
+                _buildSearchResults(state)
+              else if (state is PublicPlanEditing)
+                _buildPlanEditor(state),
+            ],
+          ),
+        ),
       ],
     );
   }

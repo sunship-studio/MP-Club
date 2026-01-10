@@ -19,7 +19,7 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true, // CHANGED: allow keyboard to resize
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -28,59 +28,61 @@ class AppShell extends StatelessWidget {
             colors: [Color.fromARGB(255, 17, 138, 194), Colors.black],
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Persistent Header
-            Container(
-              padding: const EdgeInsets.only(top: 40, left: 10, right: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(radius ? 10 : 0),
-                  bottomRight: Radius.circular(radius ? 10 : 0),
+        child: SafeArea(
+          // ADDED: SafeArea here
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Persistent Header
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 10,
+                ), // CHANGED: simplified padding
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(radius ? 10 : 0),
+                    bottomRight: Radius.circular(radius ? 10 : 0),
+                  ),
                 ),
-              ),
-              width: double.infinity,
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      showBackButton
-                          ? Expanded(
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: IconButton(
-                                onPressed: () {
-                                  if (context.canPop()) {
-                                    context.pop();
-                                  } else {
-                                    context.go(RouteNames.home);
-                                  }
-                                },
-                                icon: const Icon(
-                                  Coolicons.chevron_big_left,
-                                  size: 30,
-                                  color: Colors.black,
-                                ),
+                width: double.infinity,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    showBackButton
+                        ? Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                              onPressed: () {
+                                if (context.canPop()) {
+                                  context.pop();
+                                } else {
+                                  context.go(RouteNames.home);
+                                }
+                              },
+                              icon: const Icon(
+                                Coolicons.chevron_big_left,
+                                size: 30,
+                                color: Colors.black,
                               ),
                             ),
-                          )
-                          : Expanded(child: Container()),
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.5,
-                        child: Image.asset('assets/logo.png'),
-                      ),
-                      Expanded(child: Container()),
-                    ],
-                  ),
-                ],
+                          ),
+                        )
+                        : Expanded(child: Container()),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.5,
+                      child: Image.asset('assets/logo.png'),
+                    ),
+                    Expanded(child: Container()),
+                  ],
+                ),
               ),
-            ),
-            // Content area - this changes based on route
-            Expanded(child: child),
-          ],
+              // Content area - this changes based on route
+              Expanded(child: child),
+            ],
+          ),
         ),
       ),
     );

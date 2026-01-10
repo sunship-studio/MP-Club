@@ -18,7 +18,7 @@ const WhatsIncluded = () => {
     { icon: '5', text: 'Personal Mobile App' },
     { icon: '1', text: 'Check-Ins' },
     { icon: '2', text: 'Progress Tracking' },
-    { icon: '3', text: 'Video Tutorials (soon)' },
+    { icon: '3', text: 'Video Tutorials' },
     { icon: '4', text: 'Custom Training Plan' },
   ];
 
