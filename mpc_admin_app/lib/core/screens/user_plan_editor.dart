@@ -50,16 +50,22 @@ class _UserPlanEditorScreenState extends State<UserPlanEditorScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocBuilder<TrainingPlanCubit, TrainingPlanState>(
-        builder: (context, state) {
-          if (state is TrainingPlanError) {
-            return _buildErrorState(state);
-          } else if (state is TrainingPlanEditing ||
-              state is TrainingPlanSearchingExercises) {
-            return _buildEditorContent(state);
-          }
-          return _buildLoadingState();
+      resizeToAvoidBottomInset: true,
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
         },
+        child: BlocBuilder<TrainingPlanCubit, TrainingPlanState>(
+          builder: (context, state) {
+            if (state is TrainingPlanError) {
+              return _buildErrorState(state);
+            } else if (state is TrainingPlanEditing ||
+                state is TrainingPlanSearchingExercises) {
+              return _buildEditorContent(state);
+            }
+            return _buildLoadingState();
+          },
+        ),
       ),
     );
   }
@@ -143,14 +149,14 @@ class _UserPlanEditorScreenState extends State<UserPlanEditorScreen>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
               ],
             ),
             child: CircularProgressIndicator(
-              color: Theme.of(context).primaryColor,
+              color: Theme.of(context).colorScheme.primary,
               strokeWidth: 3,
             ),
           ),
@@ -430,11 +436,13 @@ class _UserPlanEditorScreenState extends State<UserPlanEditorScreen>
             padding: const EdgeInsets.all(20),
             child: ModernSaveButton(
               label: 'Save Plan',
-              onPressed: () {
+              onPressed: () async {
                 // Validate the form before saving
                 if (_formKey.currentState!.validate()) {
-                  context.read<TrainingPlanCubit>().savePlan(widget.user);
-                  context.push(RouteNames.onlineCoaching);
+                  await context.read<TrainingPlanCubit>().savePlan(widget.user);
+                  if (mounted) {
+                    context.push(RouteNames.onlineCoaching);
+                  }
                 }
               },
             ),

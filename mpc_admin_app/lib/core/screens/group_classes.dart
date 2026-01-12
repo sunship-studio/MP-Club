@@ -55,14 +55,14 @@ class _GroupClassesScreenState extends State<GroupClassesScreen> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
               ],
             ),
             child: CircularProgressIndicator(
-              color: Theme.of(context).primaryColor,
+              color: Theme.of(context).colorScheme.primary,
               strokeWidth: 3,
             ),
           ),
@@ -72,7 +72,7 @@ class _GroupClassesScreenState extends State<GroupClassesScreen> {
             style: TextStyle(
               fontSize: 16,
               fontFamily: 'SF-Pro',
-              color: Colors.grey[600],
+              color: Theme.of(context).textTheme.bodyMedium?.color,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -284,8 +284,21 @@ class GroupClassCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2), width: 1),
+        border: Border.all(
+          color:
+              groupClass.isToday
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.grey.withValues(alpha: 0.2),
+          width: groupClass.isToday ? 2 : 1,
+        ),
         boxShadow: [
+          if (groupClass.isToday)
+            BoxShadow(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 0),
+            ),
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 15,
@@ -363,6 +376,51 @@ class GroupClassCard extends StatelessWidget {
                 const SizedBox(height: 16),
                 Divider(color: Colors.grey.withValues(alpha: 0.2)),
                 const SizedBox(height: 16),
+                if (groupClass.isToday) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).colorScheme.primary,
+                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.today,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'HAPPENING TODAY',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontFamily: 'SF-Pro',
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 if (groupClass.recurring && groupClass.dayOfWeek != null) ...[
                   _InfoChip(
                     icon: Icons.repeat,

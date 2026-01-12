@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/bloc/theme/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/theme/state.dart';
-import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/theme/design_system.dart';
 
 /// A persistent shell that wraps all app screens with consistent header
@@ -67,11 +66,7 @@ class _AppShellState extends State<AppShell> {
                             alignment: Alignment.centerLeft,
                             child: IconButton(
                               onPressed: () {
-                                if (context.canPop()) {
-                                  context.pop();
-                                } else {
-                                  context.go(RouteNames.home);
-                                }
+                                context.pop();
                               },
                               icon: Icon(
                                 Coolicons.chevron_big_left,

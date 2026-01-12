@@ -101,7 +101,7 @@ class _AddButtonState extends State<AddButton> {
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor,
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(8),
               topLeft: Radius.circular(8),

@@ -64,6 +64,7 @@ class GroupClass {
   final int spotsAvailable;
   final bool recurring;
   final String? dayOfWeek;
+  final bool isToday;
 
   GroupClass({
     this.id,
@@ -74,6 +75,7 @@ class GroupClass {
     required this.spotsAvailable,
     this.recurring = false,
     this.dayOfWeek,
+    this.isToday = false,
   });
 
   factory GroupClass.fromJson(Map<String, dynamic> json) {
@@ -89,6 +91,7 @@ class GroupClass {
       spotsAvailable: json['spotsAvailable'],
       recurring: json['recurring'] ?? false,
       dayOfWeek: json['dayOfWeek'],
+      isToday: json['isToday'] ?? false,
     );
   }
 
@@ -114,6 +117,7 @@ class GroupClass {
     int? spotsAvailable,
     bool? recurring,
     String? dayOfWeek,
+    bool? isToday,
   }) {
     return GroupClass(
       id: id ?? this.id,
@@ -124,6 +128,7 @@ class GroupClass {
       spotsAvailable: spotsAvailable ?? this.spotsAvailable,
       recurring: recurring ?? this.recurring,
       dayOfWeek: dayOfWeek ?? this.dayOfWeek,
+      isToday: isToday ?? this.isToday,
     );
   }
 }

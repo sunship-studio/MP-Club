@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mpc_admin_app/app/services/image.dart';
-import 'package:mpc_admin_app/core/theme/app_colors.dart';
 
 ImageService imageService = ImageService();
 
@@ -34,7 +33,7 @@ Future<File?> showBrowseFileSheet(
                 bottom: MediaQuery.of(context).padding.bottom + 16.h,
               ),
               decoration: BoxDecoration(
-                color: AppColors.lightScaffoldColor,
+                color: Theme.of(context).scaffoldBackgroundColor,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
               ),
               child: Column(
@@ -64,7 +63,7 @@ Future<File?> showBrowseFileSheet(
                           child: Icon(
                             Icons.close,
                             size: 24.w,
-                            color: Colors.black,
+                            color: Theme.of(context).iconTheme.color,
                           ),
                         ),
                       ),
@@ -165,10 +164,18 @@ class _TakePhotoButtonState extends State<TakePhotoButton> {
             child: Container(
               height: 100.w,
               decoration: BoxDecoration(
-                color: AppColors.darkScaffoldColor,
+                color: Theme.of(context).cardTheme.color,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Center(child: SvgPicture.asset("assets/camera-plus.svg")),
+              child: Center(
+                child: SvgPicture.asset(
+                  "assets/camera-plus.svg",
+                  colorFilter: ColorFilter.mode(
+                    Theme.of(context).iconTheme.color!,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -269,7 +276,7 @@ class _ChooseFromGalleryButtonState extends State<ChooseFromGalleryButton> {
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardTheme.color,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.03),
@@ -284,12 +291,17 @@ class _ChooseFromGalleryButtonState extends State<ChooseFromGalleryButton> {
                 "assets/photo-filled.svg",
                 width: 24.w,
                 height: 24.w,
+                colorFilter: ColorFilter.mode(
+                  Theme.of(context).iconTheme.color!.withValues(alpha: 0.7),
+                  BlendMode.srcIn,
+                ),
               ),
               SizedBox(width: 12.w),
               Text(
                 'Choose from Gallery',
                 style: TextStyle(
                   fontSize: 14.sp,
+                  color: Theme.of(context).textTheme.bodyMedium!.color,
                   fontWeight: FontWeight.w500,
                   fontFamily: 'Inter',
                   letterSpacing: -0.4,

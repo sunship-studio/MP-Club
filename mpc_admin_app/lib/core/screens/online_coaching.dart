@@ -218,14 +218,14 @@ class _CaloriesSetState extends State<CaloriesSet> {
         children: [
           isEditing
               ? SizedBox(
-                width: 70,
+                width: 120,
                 child: TextField(
                   controller: _controller,
                   keyboardType: TextInputType.number,
                   style: TextStyle(
                     fontSize: 16,
                     fontFamily: 'SF-Pro',
-                    color: Colors.black,
+                    color: Theme.of(context).iconTheme.color,
                     fontWeight: FontWeight.w600,
                   ),
 
@@ -238,7 +238,7 @@ class _CaloriesSetState extends State<CaloriesSet> {
                     hintStyle: TextStyle(
                       fontSize: 16,
                       fontFamily: 'SF-Pro',
-                      color: Colors.grey,
+                      color: Theme.of(context).textTheme.bodyMedium!.color,
                       fontWeight: FontWeight.w600,
                     ),
                     border: InputBorder.none,
@@ -259,7 +259,7 @@ class _CaloriesSetState extends State<CaloriesSet> {
                   color:
                       widget.user.caloriesPerDay == null
                           ? Colors.red[800]
-                          : Colors.black,
+                          : Theme.of(context).iconTheme.color,
                   fontWeight:
                       widget.user.caloriesPerDay == null
                           ? FontWeight.w700
@@ -288,7 +288,7 @@ class _CaloriesSetState extends State<CaloriesSet> {
             },
             onTapDown: (details) {
               setState(() {
-                color = Theme.of(context).primaryColor.withOpacity(0.8);
+                color = Theme.of(context).colorScheme.primary.withOpacity(0.8);
               });
             },
             onTapUp: (details) {
@@ -298,7 +298,7 @@ class _CaloriesSetState extends State<CaloriesSet> {
             },
             child: Container(
               decoration: BoxDecoration(
-                color: color ?? Theme.of(context).primaryColor,
+                color: color ?? Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(5),
               ),
               child: Padding(
@@ -412,7 +412,7 @@ class _WeightGoalSetState extends State<WeightGoalSet> {
             },
             onTapDown: (details) {
               setState(() {
-                color = Theme.of(context).primaryColor.withOpacity(0.8);
+                color = Theme.of(context).colorScheme.primary.withOpacity(0.8);
               });
             },
             onTapUp: (details) {
@@ -422,7 +422,7 @@ class _WeightGoalSetState extends State<WeightGoalSet> {
             },
             child: Container(
               decoration: BoxDecoration(
-                color: color ?? Theme.of(context).primaryColor,
+                color: color ?? Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(5),
               ),
               child: Padding(

@@ -274,7 +274,7 @@ class TrainingPlanCubit extends Cubit<TrainingPlanState> {
     }
   }
 
-  void savePlan(User user) async {
+  Future<void> savePlan(User user) async {
     print('Training Plan: ${this.trainingPlan.toJson()}');
     for (var day in this.trainingPlan.days) {
       for (var exercise in day.exercises) {

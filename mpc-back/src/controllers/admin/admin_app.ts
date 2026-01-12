@@ -355,8 +355,67 @@ export default class AdminAppController {
 
   public async getGroupClasses(req: Request, res: Response): Promise<Response> {
     console.log('Fetching group classes...');
-    const groupClasses = await GroupClass.find().sort({ date: 1 });
-    return res.json(groupClasses);
+    const groupClasses = await GroupClass.find();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Calculate next date for recurring classes
+    const updatedClasses = groupClasses.map((groupClass) => {
+      let classDate = groupClass.date;
+
+      if (groupClass.recurring && groupClass.dayOfWeek) {
+        const nextDate = this.getNextDayOfWeek(groupClass.dayOfWeek);
+        classDate = nextDate;
+      }
+
+      // Check if class is today
+      const classDayStart = new Date(classDate!);
+      classDayStart.setHours(0, 0, 0, 0);
+      const isToday = classDayStart.getTime() === today.getTime();
+
+      return {
+        ...groupClass.toObject(),
+        date: classDate,
+        isToday,
+      };
+    });
+
+    return res.json(updatedClasses);
+  }
+
+  private getNextDayOfWeek(dayOfWeek: string): Date {
+    const daysOfWeek = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
+    const targetDay = daysOfWeek.indexOf(dayOfWeek);
+
+    if (targetDay === -1) {
+      // If day not found, return current date
+      return new Date();
+    }
+
+    const today = new Date();
+    const currentDay = today.getDay();
+
+    // Calculate days until next occurrence
+    let daysUntilTarget = targetDay - currentDay;
+    if (daysUntilTarget <= 0) {
+      daysUntilTarget += 7; // Move to next week
+    }
+
+    // Create next date
+    const nextDate = new Date(today);
+    nextDate.setDate(today.getDate() + daysUntilTarget);
+    nextDate.setHours(0, 0, 0, 0); // Reset time to midnight
+
+    return nextDate;
   }
 
   public async createGroupClass(
@@ -386,7 +445,7 @@ export default class AdminAppController {
 
       await newGroupClass.save();
       return res
-        .status(201)
+        .status(200)
         .json({ message: 'Group class created', groupClass: newGroupClass });
     } catch (error) {
       console.error('Error creating group class:', error);
@@ -421,6 +480,7 @@ export default class AdminAppController {
       if (dayOfWeek) groupClass.dayOfWeek = dayOfWeek;
 
       await groupClass.save();
+      console.log('Group class updated:', groupClass);
       return res
         .status(200)
         .json({ message: 'Group class updated', groupClass });

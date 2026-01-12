@@ -291,7 +291,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                 height: 30,
 
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).primaryColor,
+                                  color: Theme.of(context).colorScheme.primary,
                                   borderRadius: kBorderRadiusMediumAll,
                                 ),
                                 child: Center(

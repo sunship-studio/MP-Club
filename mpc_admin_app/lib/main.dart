@@ -9,7 +9,7 @@ import 'package:mpc_admin_app/app/services/notification_service.dart';
 import 'package:mpc_admin_app/core/router/app_router.dart';
 import 'package:mpc_admin_app/core/theme/app_theme.dart';
 
-bool debug = false;
+bool debug = true;
 String admin_key = 'shanempc113@';
 
 void main() async {

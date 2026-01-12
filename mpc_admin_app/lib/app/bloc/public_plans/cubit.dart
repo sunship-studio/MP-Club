@@ -449,6 +449,8 @@ class PublicPlansCubit extends Cubit<PublicPlansState> {
       print(publicPlan.toJson());
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        // Small delay to ensure backend has committed changes
+        await Future.delayed(const Duration(milliseconds: 100));
         await loadPlans();
       } else {
         emit(

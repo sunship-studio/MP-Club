@@ -132,10 +132,8 @@ class ChatMessage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13.sp,
                     fontWeight: FontWeight.w500,
-                    color:
-                        isSentByMe
-                            ? Colors.white
-                            : AppColors.darkTextColor.withValues(alpha: 0.9),
+                    color: Theme.of(context).textTheme.bodyLarge!.color!
+                        .withValues(alpha: isSentByMe ? 1.0 : 0.9),
                   ),
                 ),
                 SizedBox(height: 2.h),
@@ -147,12 +145,8 @@ class ChatMessage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 10.sp,
                         fontWeight: FontWeight.w400,
-                        color:
-                            isSentByMe
-                                ? Colors.white.withValues(alpha: 0.8)
-                                : AppColors.darkTextColor.withValues(
-                                  alpha: 0.6,
-                                ),
+                        color: Theme.of(context).textTheme.bodyLarge!.color!
+                            .withValues(alpha: isSentByMe ? 1.0 : 0.7),
                       ),
                     ),
                     if (isSentByMe) ...[
@@ -166,7 +160,7 @@ class ChatMessage extends StatelessWidget {
                         size: 12.w,
                         color:
                             status == "read"
-                                ? Colors.blue
+                                ? const Color.fromARGB(255, 154, 210, 255)
                                 : Colors.white.withValues(alpha: 0.8),
                       ),
                     ],

@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/models/User.dart';
-import 'package:mpc_admin_app/core/router/route_names.dart';
-import 'package:mpc_admin_app/core/theme/app_colors.dart';
 import 'package:mpc_admin_app/core/widgets/profile_avatar.dart';
 
 class ChatScreenHeader extends StatelessWidget {
@@ -24,12 +22,12 @@ class ChatScreenHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(color: Colors.white),
+      decoration: BoxDecoration(color: Theme.of(context).cardTheme.color),
       child: Row(
         children: [
           GestureDetector(
             onTap: () {
-              context.push(RouteNames.onlineCoaching);
+              context.pop();
             },
             behavior: HitTestBehavior.translucent,
             child: Container(
@@ -42,7 +40,7 @@ class ChatScreenHeader extends StatelessWidget {
               child: Icon(
                 Coolicons.chevron_big_left,
                 size: 20.w,
-                color: AppColors.darkTextColor,
+                color: Theme.of(context).iconTheme.color,
               ),
             ),
           ),
@@ -63,7 +61,7 @@ class ChatScreenHeader extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.darkTextColor,
+                        color: Theme.of(context).textTheme.bodyLarge!.color,
                       ),
                     ),
                   ],

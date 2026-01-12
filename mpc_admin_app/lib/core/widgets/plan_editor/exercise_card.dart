@@ -554,7 +554,7 @@ class _SetRow extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -616,7 +616,7 @@ class _SetRow extends StatelessWidget {
 }
 
 // Set input widget
-class _SetInput extends StatelessWidget {
+class _SetInput extends StatefulWidget {
   final String label;
   final int value;
   final Function(int) onChanged;
@@ -628,12 +628,41 @@ class _SetInput extends StatelessWidget {
   });
 
   @override
+  State<_SetInput> createState() => _SetInputState();
+}
+
+class _SetInputState extends State<_SetInput> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value.toString());
+  }
+
+  @override
+  void didUpdateWidget(_SetInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only update if value changed externally (not from user typing)
+    if (oldWidget.value != widget.value &&
+        _controller.text != widget.value.toString()) {
+      _controller.text = widget.value.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: TextStyle(
             fontSize: 10,
             fontFamily: 'SF-Pro',
@@ -643,10 +672,10 @@ class _SetInput extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         TextField(
-          controller: TextEditingController(text: value.toString()),
+          controller: _controller,
           onChanged: (val) {
             final intVal = int.tryParse(val) ?? 0;
-            onChanged(intVal);
+            widget.onChanged(intVal);
           },
           keyboardType: TextInputType.number,
           textAlign: TextAlign.center,
@@ -668,11 +697,42 @@ class _SetInput extends StatelessWidget {
 }
 
 // Weight input widget
-class _WeightInput extends StatelessWidget {
+class _WeightInput extends StatefulWidget {
   final int value;
   final Function(int) onChanged;
 
   const _WeightInput({required this.value, required this.onChanged});
+
+  @override
+  State<_WeightInput> createState() => _WeightInputState();
+}
+
+class _WeightInputState extends State<_WeightInput> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.value > 0 ? widget.value.toString() : '',
+    );
+  }
+
+  @override
+  void didUpdateWidget(_WeightInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only update if value changed externally (not from user typing)
+    final expectedText = widget.value > 0 ? widget.value.toString() : '';
+    if (oldWidget.value != widget.value && _controller.text != expectedText) {
+      _controller.text = expectedText;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -690,12 +750,10 @@ class _WeightInput extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         TextField(
-          controller: TextEditingController(
-            text: value > 0 ? value.toString() : '',
-          ),
+          controller: _controller,
           onChanged: (val) {
             final intVal = int.tryParse(val) ?? 0;
-            onChanged(intVal);
+            widget.onChanged(intVal);
           },
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           textAlign: TextAlign.center,

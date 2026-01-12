@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/bloc/public_plans/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/public_plans/state.dart';
 import 'package:mpc_admin_app/app/models/PublicPlan.dart';
-import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/widgets/plan_editor/exercise_card.dart';
 import 'package:mpc_admin_app/core/widgets/plan_editor/plan_editor_widgets.dart';
 
@@ -58,16 +57,20 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocBuilder<PublicPlansCubit, PublicPlansState>(
-        builder: (context, state) {
-          if (state is PublicPlansError) {
-            return _buildErrorState(state);
-          } else if (state is PublicPlanEditing ||
-              state is PublicPlanSearchingExercises) {
-            return _buildEditorContent(state);
-          }
-          return _buildLoadingState();
-        },
+      resizeToAvoidBottomInset: true,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: BlocBuilder<PublicPlansCubit, PublicPlansState>(
+          builder: (context, state) {
+            if (state is PublicPlansError) {
+              return _buildErrorState(state);
+            } else if (state is PublicPlanEditing ||
+                state is PublicPlanSearchingExercises) {
+              return _buildEditorContent(state);
+            }
+            return _buildLoadingState();
+          },
+        ),
       ),
     );
   }
@@ -127,11 +130,10 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
             const SizedBox(height: 24),
             ModernButton(
               onPressed: () {
-                context.read<PublicPlansCubit>().savePublicPlan();
-                context.push(RouteNames.trainingPlans);
+                context.pop();
               },
-              label: 'Retry',
-              icon: Icons.refresh,
+              label: 'Go Back',
+              icon: Icons.arrow_back,
             ),
           ],
         ),
@@ -151,14 +153,14 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
               ],
             ),
             child: CircularProgressIndicator(
-              color: Theme.of(context).primaryColor,
+              color: Theme.of(context).colorScheme.primary,
               strokeWidth: 3,
             ),
           ),
@@ -451,11 +453,13 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
             padding: const EdgeInsets.all(20),
             child: ModernSaveButton(
               label: 'Save Plan',
-              onPressed: () {
+              onPressed: () async {
                 // Validate the form before saving
                 if (_formKey.currentState!.validate()) {
-                  context.read<PublicPlansCubit>().savePublicPlan();
-                  context.push(RouteNames.trainingPlans);
+                  await context.read<PublicPlansCubit>().savePublicPlan();
+                  if (mounted) {
+                    context.pop();
+                  }
                 }
               },
             ),

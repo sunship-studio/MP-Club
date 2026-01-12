@@ -404,7 +404,7 @@ class _SaveButtonState extends State<SaveButton> {
           padding: EdgeInsets.symmetric(vertical: 12),
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor,
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Center(

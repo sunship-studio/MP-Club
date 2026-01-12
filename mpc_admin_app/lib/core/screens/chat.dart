@@ -422,6 +422,26 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     return Icon(icon, color: color, size: 16.w);
   }
 
+  bool _shouldShowDivider(int messageIndex) {
+    if (messageIndex >= _messages.length - 1) return false;
+
+    final currentMessage = _messages[messageIndex];
+    final nextMessage = _messages[messageIndex + 1];
+
+    final currentDate = DateTime(
+      currentMessage.timestamp.year,
+      currentMessage.timestamp.month,
+      currentMessage.timestamp.day,
+    );
+    final nextDate = DateTime(
+      nextMessage.timestamp.year,
+      nextMessage.timestamp.month,
+      nextMessage.timestamp.day,
+    );
+
+    return currentDate != nextDate;
+  }
+
   Widget _buildMessageList() {
     if (_messages.isEmpty && _isLoadingMessages) {
       return Center(child: CircularProgressIndicator());
@@ -434,7 +454,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       itemCount: _messages.length + (_isTyping ? 1 : 0) + 1,
       itemBuilder: (context, index) {
         if (index == _messages.length + (_isTyping ? 1 : 0)) {
-          return DayDivider();
+          // Show divider for the oldest message
+          if (_messages.isNotEmpty) {
+            return DayDivider(date: _messages.last.timestamp);
+          }
+          return SizedBox.shrink();
         }
 
         if (index == 0 && _isTyping) {
@@ -444,21 +468,39 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         final messageIndex = _isTyping ? index - 1 : index;
         final message = _messages[messageIndex];
 
-        return ChatMessage(
-          isNextMessageFromSameSender:
-              messageIndex < _messages.length - 1
-                  ? (widget.isAdmin
-                      ? _messages[messageIndex + 1].fromShane ==
-                          message.fromShane
-                      : !_messages[messageIndex + 1].fromShane ==
-                          !message.fromShane)
-                  : false,
-          attachment: message.attachment,
-          content: message.content,
-          isSentByMe: widget.isAdmin ? message.fromShane : !message.fromShane,
-          status: _getMessageStatus(message),
-          time: _formatTime(message.timestamp),
-          replyTo: null,
+        return Column(
+          crossAxisAlignment:
+              widget.isAdmin
+                  ? (message.fromShane
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start)
+                  : (!message.fromShane
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start),
+          children: [
+            if (_shouldShowDivider(messageIndex))
+              DayDivider(date: _messages[messageIndex].timestamp),
+
+            ChatMessage(
+              isNextMessageFromSameSender:
+                  messageIndex < _messages.length - 1
+                      ? (widget.isAdmin
+                          ? _messages[messageIndex + 1].fromShane ==
+                              message.fromShane
+                          : !_messages[messageIndex + 1].fromShane ==
+                              !message.fromShane)
+                      : false,
+              attachment: message.attachment,
+              content: message.content,
+              isSentByMe:
+                  widget.isAdmin ? message.fromShane : !message.fromShane,
+              status: _getMessageStatus(message),
+              time: _formatTime(message.timestamp),
+              replyTo: null,
+            ),
+
+            // Show divider if day changes between this and next message
+          ],
         );
       },
     );
@@ -585,7 +627,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
         bottom: 30.h,
         top: 10.h,
       ),
-      color: Colors.white,
+      color: Theme.of(context).cardTheme.color,
       child: Column(
         children: [
           if (selectedFile != null) ...[
@@ -601,9 +643,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.darkTextColor,
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
                   ),
                   decoration: InputDecoration(
+                    fillColor: Theme.of(
+                      context,
+                    ).scaffoldBackgroundColor.withOpacity(0.05),
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(vertical: 2.h),
                     border: InputBorder.none,
@@ -611,8 +656,13 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     hintStyle: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w400,
-                      color: AppColors.darkTextColor.withValues(alpha: 0.5),
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge!.color!.withValues(alpha: 0.7),
                     ),
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    enabledBorder: InputBorder.none,
                   ),
                   maxLines: null,
                   textCapitalization: TextCapitalization.sentences,
@@ -654,7 +704,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   child: Icon(
                     CupertinoIcons.camera,
                     size: 24.w,
-                    color: AppColors.darkTextColor.withValues(alpha: 0.5),
+                    color: Theme.of(context).iconTheme.color,
                   ),
                 ),
               ),
@@ -667,7 +717,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     child: Icon(
                       CupertinoIcons.mic,
                       size: 24.w,
-                      color: AppColors.darkTextColor.withValues(alpha: 0.5),
+                      color: Theme.of(
+                        context,
+                      ).iconTheme.color!.withValues(alpha: 0.5),
                     ),
                   ),
                   Container(
@@ -695,14 +747,6 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ],
               ),
               Gap(12.w),
-              Text(
-                "Submit check-in 📝",
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.blueColor.withValues(alpha: 0.9),
-                ),
-              ),
             ],
           ),
         ],

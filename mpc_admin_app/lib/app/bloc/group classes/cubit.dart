@@ -1,3 +1,4 @@
+import 'package:dio/src/response.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mpc_admin_app/app/bloc/group%20classes/state.dart';
 import 'package:mpc_admin_app/app/models/group_class.dart';
@@ -80,7 +81,17 @@ class GroupClassesCubit extends Cubit<GroupClassesState> {
     if (currentState is GroupClassEditing) {
       emit(
         GroupClassEditing(
-          groupClass: currentState.groupClass.copyWith(spotsAvailable: spots),
+          groupClass: currentState.groupClass.copyWith(
+            spotsAvailable: spots,
+            timeSlots:
+                currentState.groupClass.timeSlots.map((slot) {
+                  final updatedSpots =
+                      slot.spots.length > spots
+                          ? slot.spots.sublist(0, spots)
+                          : slot.spots;
+                  return TimeSlot(time: slot.time, spots: updatedSpots);
+                }).toList(),
+          ),
         ),
       );
     }
@@ -181,20 +192,26 @@ class GroupClassesCubit extends Cubit<GroupClassesState> {
   Future<void> saveGroupClass() async {
     final currentState = state;
     if (currentState is GroupClassEditing) {
+      Response<dynamic> response;
       try {
         emit(GroupClassesLoading());
         if (currentState.groupClass.id == null) {
-          await apiService.post(
+          response = await apiService.post(
             '/add-group-class',
             currentState.groupClass.toJson(),
           );
         } else {
-          await apiService.post(
+          response = await apiService.post(
             '/edit-group-class',
             currentState.groupClass.toJson(),
           );
+          print(response.data);
         }
-        await loadGroupClasses();
+        if (response.statusCode == 200) {
+          await loadGroupClasses();
+        } else {
+          emit(const GroupClassesError(message: 'Failed to save group class'));
+        }
       } catch (e) {
         emit(GroupClassesError(message: e.toString()));
       }

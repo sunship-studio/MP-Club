@@ -61,7 +61,7 @@ class _ModernSearchBarState extends State<ModernSearchBar> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
             width: 2,
           ),
         ),
@@ -458,7 +458,9 @@ class _ModernSaveButtonState extends State<ModernSaveButton> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.4),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -520,9 +522,8 @@ class ModernButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 5,
-        shadowColor: (color ?? Theme.of(context).primaryColor).withValues(
-          alpha: 0.4,
-        ),
+        shadowColor: (color ?? Theme.of(context).colorScheme.primary)
+            .withValues(alpha: 0.4),
       ),
     );
   }
