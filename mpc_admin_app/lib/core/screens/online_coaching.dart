@@ -509,7 +509,7 @@ class Checkpoints extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18.sp,
                       fontFamily: 'SF-Pro',
-                      color: Colors.white,
+                      color: Theme.of(context).textTheme.bodyLarge!.color,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

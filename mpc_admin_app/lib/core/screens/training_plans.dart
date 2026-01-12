@@ -118,7 +118,8 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
                             Icon(
                               Icons.folder_open,
                               size: 64.w,
-                              color: Colors.grey[300],
+                              color:
+                                  Theme.of(context).textTheme.bodyLarge!.color,
                             ),
                             Gap(16.h),
                             Text(
@@ -126,7 +127,10 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
                               style: TextStyle(
                                 fontSize: 18.sp,
                                 fontFamily: 'SF-Pro',
-                                color: Colors.grey[300],
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium!.color,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -136,7 +140,10 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 fontFamily: 'SF-Pro',
-                                color: Colors.grey[300],
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall!.color,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),

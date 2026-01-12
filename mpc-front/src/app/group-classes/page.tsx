@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 interface TimeSlot {
   time: string;
-  availableSpots: number;
+  spots: [];
 }
 
 interface GroupClass {
@@ -50,11 +50,21 @@ export default function GroupClassesPage() {
     const month = today.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const days = [];
+    const days: (Date | null)[] = [];
 
+    // Get the day of the week the month starts on (0 = Sunday, 6 = Saturday)
+    const startingDayOfWeek = firstDay.getDay();
+
+    // Add empty cells for days before the month starts
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+
+    // Add all days of the month
     for (let i = 1; i <= lastDay.getDate(); i++) {
       days.push(new Date(year, month, i));
     }
+
     return days;
   };
 
@@ -90,6 +100,15 @@ export default function GroupClassesPage() {
     const lastName = lastNameParts.join(' ') || '';
 
     setIsSubmitting(true);
+    console.log('Booking data:', {
+      classId: selectedClass.split('-')[0],
+      timeSlot: selectedClass.split('-')[1],
+      firstName,
+      lastName,
+      email,
+      date: selectedDate.toISOString(),
+    });
+
     try {
       await apiService.post('/group-classes/book', {
         classId: selectedClass.split('-')[0],
@@ -122,7 +141,7 @@ export default function GroupClassesPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-8 md:px-16 py-12 relative overflow-hidden">
-      Disabled Overlay
+      {/* Disabled Overlay
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center group cursor-not-allowed">
         <div className="bg-white/10 backdrop-blur-md border-2 border-white/20 rounded-2xl px-8 md:px-12 py-6 md:py-8 transform transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 duration-300 mx-4">
           <p className="text-white text-2xl md:text-3xl font-bold text-center">
@@ -132,7 +151,7 @@ export default function GroupClassesPage() {
             Group classes coming soon!
           </p>
         </div>
-      </div>
+      </div> */}
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
           Group Classes
@@ -157,7 +176,12 @@ export default function GroupClassesPage() {
                 {day}
               </div>
             ))}
-            {calendarDays.map((date) => {
+            {calendarDays.map((date, index) => {
+              if (!date) {
+                // Empty cell for days before the month starts
+                return <div key={`empty-${index}`} className="py-3" />;
+              }
+
               const isSelected =
                 selectedDate?.toDateString() === date.toDateString();
               const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
@@ -223,13 +247,13 @@ export default function GroupClassesPage() {
                         onClick={() =>
                           setSelectedClass(`${classItem._id}-${slot.time}`)
                         }
-                        disabled={slot.availableSpots === 0}
+                        disabled={slot.spots.length >= classItem.spotsAvailable}
                         className={`
                           py-2 px-3 rounded text-sm font-medium transition-all
                           ${
                             selectedClass === `${classItem._id}-${slot.time}`
                               ? 'bg-[#0B79AB] text-white'
-                              : slot.availableSpots === 0
+                              : slot.spots.length >= classItem.spotsAvailable
                                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                 : 'bg-gray-100 text-black hover:bg-gray-200'
                           }
@@ -237,9 +261,9 @@ export default function GroupClassesPage() {
                       >
                         <div>{slot.time}</div>
                         <div className="text-xs">
-                          {slot.availableSpots === 0
+                          {slot.spots.length >= classItem.spotsAvailable
                             ? 'Full'
-                            : `${slot.availableSpots} left`}
+                            : `${classItem.spotsAvailable - slot.spots.length} spots left`}
                         </div>
                       </button>
                     ))}

@@ -148,99 +148,109 @@ class _GroupClassesScreenState extends State<GroupClassesScreen> {
   }
 
   Widget _buildLoadedState(GroupClassesLoaded state) {
-    return Container(
-      alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(horizontal: 25),
-      child: Column(
-        children: [
-          Gap(12.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Group Classes',
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontFamily: 'SF-Pro',
-                  color: Theme.of(context).textTheme.bodyLarge!.color,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              IconButton(
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  context.push(RouteNames.groupClassEditor);
-                },
-                icon: Icon(
-                  Icons.add_circle,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 32.w,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Expanded(
-            child: state.groupClasses.isEmpty
-                ? const EmptyState(
-                    icon: Icons.class_,
-                    title: 'No group classes',
-                    subtitle: 'Create your first group class to get started',
-                  )
-                : ListView.builder(
-                    itemCount: state.groupClasses.length,
-                    itemBuilder: (context, index) {
-                      final groupClass = state.groupClasses[index];
-                      return GroupClassCard(
-                        groupClass: groupClass,
-                        onTap: () {
-                          context.push(
-                            RouteNames.groupClassEditor,
-                            extra: groupClass,
-                          );
-                        },
-                        onDelete: () {
-                          showDialog(
-                            context: context,
-                            builder: (dialogContext) => AlertDialog(
-                              title: const Text('Delete Group Class'),
-                              content: const Text(
-                                'Are you sure you want to delete this group class?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(dialogContext).pop();
-                                  },
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    context
-                                        .read<GroupClassesCubit>()
-                                        .deleteGroupClass(groupClass.id!);
-                                    Navigator.of(dialogContext).pop();
-                                  },
-                                  child: const Text(
-                                    'Delete',
-                                    style: TextStyle(color: Colors.red),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        onViewAttendees: () {
-                          context
-                              .read<GroupClassesCubit>()
-                              .viewAttendees(groupClass);
-                          context.push(RouteNames.groupClassEditor);
-                        },
-                      );
-                    },
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<GroupClassesCubit>().loadGroupClasses();
+      },
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 25),
+        child: Column(
+          children: [
+            Gap(12.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Group Classes',
+                  style: TextStyle(
+                    fontSize: 24.sp,
+                    fontFamily: 'SF-Pro',
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
+                    fontWeight: FontWeight.w700,
                   ),
-          ),
-        ],
+                ),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: () {
+                    context.push(RouteNames.groupClassEditor);
+                  },
+                  icon: Icon(
+                    Icons.add_circle,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 32.w,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child:
+                  state.groupClasses.isEmpty
+                      ? const EmptyState(
+                        icon: Icons.class_,
+                        title: 'No group classes',
+                        subtitle:
+                            'Create your first group class to get started',
+                      )
+                      : ListView.builder(
+                        itemCount: state.groupClasses.length,
+                        itemBuilder: (context, index) {
+                          final groupClass = state.groupClasses[index];
+                          return GroupClassCard(
+                            groupClass: groupClass,
+                            onTap: () {
+                              context.push(
+                                RouteNames.groupClassEditor,
+                                extra: groupClass,
+                              );
+                            },
+                            onDelete: () {
+                              showDialog(
+                                context: context,
+                                builder:
+                                    (dialogContext) => AlertDialog(
+                                      title: const Text('Delete Group Class'),
+                                      content: const Text(
+                                        'Are you sure you want to delete this group class?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(dialogContext).pop();
+                                          },
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            context
+                                                .read<GroupClassesCubit>()
+                                                .deleteGroupClass(
+                                                  groupClass.id!,
+                                                );
+                                            Navigator.of(dialogContext).pop();
+                                          },
+                                          child: const Text(
+                                            'Delete',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                              );
+                            },
+                            onViewAttendees: () {
+                              context.push(
+                                RouteNames.groupClassEditor,
+                                extra: groupClass,
+                              );
+                            },
+                          );
+                        },
+                      ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -266,17 +276,15 @@ class GroupClassCard extends StatelessWidget {
       0,
       (sum, slot) => sum + slot.spots.length,
     );
-    final totalAvailable = groupClass.timeSlots.length * groupClass.spotsAvailable;
+    final totalAvailable =
+        groupClass.timeSlots.length * groupClass.spotsAvailable;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.grey.withValues(alpha: 0.2),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -303,10 +311,9 @@ class GroupClassCard extends StatelessWidget {
                         gradient: LinearGradient(
                           colors: [
                             Theme.of(context).colorScheme.primary,
-                            Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.7),
+                            Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.7),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -329,7 +336,8 @@ class GroupClassCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 18,
                               fontFamily: 'SF-Pro',
-                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                              color:
+                                  Theme.of(context).textTheme.bodyLarge?.color,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -347,10 +355,7 @@ class GroupClassCard extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(
-                        Icons.delete_outline,
-                        color: Colors.red[400],
-                      ),
+                      icon: Icon(Icons.delete_outline, color: Colors.red[400]),
                       onPressed: onDelete,
                     ),
                   ],
@@ -358,13 +363,23 @@ class GroupClassCard extends StatelessWidget {
                 const SizedBox(height: 16),
                 Divider(color: Colors.grey.withValues(alpha: 0.2)),
                 const SizedBox(height: 16),
+                if (groupClass.recurring && groupClass.dayOfWeek != null) ...[
+                  _InfoChip(
+                    icon: Icons.repeat,
+                    label: 'Recurring - ${groupClass.dayOfWeek}',
+                    color: Colors.purple,
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _InfoChip(
                       icon: Icons.calendar_today,
                       label:
-                          '${groupClass.date.day}/${groupClass.date.month}/${groupClass.date.year}',
+                          groupClass.recurring
+                              ? 'Next: ${groupClass.date.day}/${groupClass.date.month}/${groupClass.date.year}'
+                              : '${groupClass.date.day}/${groupClass.date.month}/${groupClass.date.year}',
                       color: Colors.blue,
                     ),
                     _InfoChip(
@@ -375,9 +390,10 @@ class GroupClassCard extends StatelessWidget {
                     _InfoChip(
                       icon: Icons.people,
                       label: '$totalSpots/$totalAvailable',
-                      color: totalSpots >= totalAvailable
-                          ? Colors.red
-                          : Colors.green,
+                      color:
+                          totalSpots >= totalAvailable
+                              ? Colors.red
+                              : Colors.green,
                     ),
                   ],
                 ),

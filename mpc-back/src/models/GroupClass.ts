@@ -1,4 +1,4 @@
-import mongoose, { Document, ObjectId, Schema } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IGroupClass extends Document {
   title: string;
@@ -8,7 +8,6 @@ export interface IGroupClass extends Document {
       time: string;
       spots: [
         {
-          id: ObjectId;
           firstName: string;
           lastName: string;
           email: string;

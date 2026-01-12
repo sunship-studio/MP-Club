@@ -50,7 +50,7 @@ export default function Home() {
             points={[
               "Finally, workouts you'll actually enjoy 🏋️",
               'Never worked out? We got you',
-              'Expert coaches who actually care',
+              'Expert coach who actually cares',
               'Book classes that fit your life',
             ]}
           />

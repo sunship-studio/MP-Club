@@ -1,8 +1,9 @@
 // src/config/cloudinary.ts
 import { v2 as cloudinary } from 'cloudinary';
+import dotenv from 'dotenv';
 import { Request } from 'express';
 import multer from 'multer';
-
+dotenv.config();
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

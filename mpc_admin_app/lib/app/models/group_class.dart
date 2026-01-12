@@ -38,25 +38,20 @@ class TimeSlot {
   final String time;
   final List<GroupClassSpot> spots;
 
-  TimeSlot({
-    required this.time,
-    required this.spots,
-  });
+  TimeSlot({required this.time, required this.spots});
 
   factory TimeSlot.fromJson(Map<String, dynamic> json) {
     return TimeSlot(
       time: json['time'],
-      spots: (json['spots'] as List)
-          .map((spot) => GroupClassSpot.fromJson(spot))
-          .toList(),
+      spots:
+          (json['spots'] as List)
+              .map((spot) => GroupClassSpot.fromJson(spot))
+              .toList(),
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'time': time,
-      'spots': spots.map((spot) => spot.toJson()).toList(),
-    };
+    return {'time': time, 'spots': spots.map((spot) => spot.toJson()).toList()};
   }
 }
 
@@ -86,9 +81,10 @@ class GroupClass {
       id: json['_id'] ?? json['id'],
       title: json['title'],
       durationMinutes: json['durationMinutes'],
-      timeSlots: (json['timeSlots'] as List)
-          .map((slot) => TimeSlot.fromJson(slot))
-          .toList(),
+      timeSlots:
+          (json['timeSlots'] as List)
+              .map((slot) => TimeSlot.fromJson(slot))
+              .toList(),
       date: DateTime.parse(json['date']),
       spotsAvailable: json['spotsAvailable'],
       recurring: json['recurring'] ?? false,
