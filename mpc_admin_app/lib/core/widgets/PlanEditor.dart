@@ -1,3 +1,4 @@
+import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,8 +7,10 @@ import 'package:mpc_admin_app/app/bloc/training%20plan/state.dart';
 import 'package:mpc_admin_app/app/models/TrainingPlan.dart';
 import 'package:mpc_admin_app/app/models/User.dart';
 import 'package:mpc_admin_app/core/router/route_names.dart';
+import 'package:mpc_admin_app/core/theme/design_system.dart';
 import 'package:mpc_admin_app/core/widgets/ExerciseBox.dart';
 import 'package:mpc_admin_app/core/widgets/SuggestedExercise.dart';
+import 'package:mpc_admin_app/core/widgets/plan_editor/plan_editor_widgets.dart';
 
 TextEditingController _searchController = TextEditingController();
 
@@ -46,13 +49,14 @@ class _PlanEditorState extends State<PlanEditor> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 12),
-                ElevatedButton(
+                const SizedBox(height: kSpacingMedium),
+                ModernButton(
                   onPressed: () async {
                     context.read<TrainingPlanCubit>().savePlan(widget.user);
-                    context.go(RouteNames.onlineCoaching);
+                    context.push(RouteNames.onlineCoaching);
                   },
-                  child: const Text("Retry"),
+                  label: "Retry",
+                  icon: Coolicons.refresh,
                 ),
               ],
             ),
@@ -391,7 +395,7 @@ class _SaveButtonState extends State<SaveButton> {
         );
 
         context.read<TrainingPlanCubit>().savePlan(widget.user);
-        context.go(RouteNames.onlineCoaching);
+        context.push(RouteNames.onlineCoaching);
       },
       child: AnimatedScale(
         scale: _isPressed ? 0.95 : 1.0,

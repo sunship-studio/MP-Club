@@ -5,6 +5,7 @@ import express, { Express } from 'express';
 import http from 'http';
 import connectToDatabase from './config/database';
 import adminAppRouter from './routes/admin_app';
+import groupClassRouter from './routes/group_classes';
 import authRouter from './routes/mobile_app/auth';
 import caloriesRouter from './routes/mobile_app/calories';
 import chatRouter from './routes/mobile_app/chat';
@@ -18,7 +19,6 @@ import plansRouter from './routes/plans';
 import waitingListRouter from './routes/waiting_list';
 import SocketService from './services/socket';
 import { handleWebhook } from './webhook/online_coaching_webhook';
-
 // Load environment variables
 dotenv.config();
 
@@ -46,6 +46,7 @@ app.use('/web', bodyParser.json());
 app.use('/web/online-coaching', onlineCoachingRouter);
 app.use('/web/waiting-list', waitingListRouter);
 app.use('/web/plans', plansRouter);
+app.use('/web/group-classes', groupClassRouter);
 
 app.use('/mobile-app/auth', authRouter);
 
@@ -70,6 +71,7 @@ app.post(
 import fs from 'fs';
 
 import path from 'path';
+
 import { handlePlanWebhook } from './webhook/plan_webhook';
 
 const readHTMLFile = (filePath: string) => {

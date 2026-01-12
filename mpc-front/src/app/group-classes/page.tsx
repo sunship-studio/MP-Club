@@ -1,5 +1,22 @@
 'use client';
-import { useState } from 'react';
+import apiService from '@/services/api.service';
+import { useEffect, useState } from 'react';
+
+interface TimeSlot {
+  time: string;
+  availableSpots: number;
+}
+
+interface GroupClass {
+  _id: string;
+  title: string;
+  durationMinutes: number;
+  timeSlots: TimeSlot[];
+  date?: string;
+  recurring?: boolean;
+  dayOfWeek?: string;
+  spotsAvailable: number;
+}
 
 export default function GroupClassesPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -7,21 +24,24 @@ export default function GroupClassesPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [classes, setClasses] = useState<GroupClass[]>([]);
+  const [isLoadingClasses, setIsLoadingClasses] = useState(true);
 
-  // Sample class schedule
-  const classTypes = [
-    {
-      id: 'strength',
-      name: 'Strength Training',
-      duration: '60 min',
-      spots: 12,
-    },
-    { id: 'hiit', name: 'HIIT', duration: '45 min', spots: 15 },
-    { id: 'yoga', name: 'Yoga & Mobility', duration: '60 min', spots: 10 },
-    { id: 'cardio', name: 'Cardio Blast', duration: '45 min', spots: 15 },
-  ];
+  useEffect(() => {
+    const fetchGroupClasses = async () => {
+      try {
+        setIsLoadingClasses(true);
+        const response = await apiService.get<GroupClass[]>('/group-classes');
+        setClasses(response);
+      } catch (error) {
+        console.error('Error fetching group classes:', error);
+      } finally {
+        setIsLoadingClasses(false);
+      }
+    };
 
-  const timeSlots = ['06:00', '09:00', '12:00', '17:00', '18:30', '20:00'];
+    fetchGroupClasses();
+  }, []);
 
   // Generate calendar days for current month
   const generateCalendarDays = () => {
@@ -40,9 +60,69 @@ export default function GroupClassesPage() {
 
   const calendarDays = generateCalendarDays();
 
+  // Filter classes for the selected date
+  const getClassesForDate = (date: Date | null) => {
+    if (!date) return [];
+
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+    return classes.filter((cls) => {
+      if (cls.recurring && cls.dayOfWeek) {
+        return cls.dayOfWeek === dayOfWeek;
+      }
+      if (cls.date) {
+        const classDate = new Date(cls.date);
+        return classDate.toDateString() === date.toDateString();
+      }
+      return false;
+    });
+  };
+
+  const availableClasses = getClassesForDate(selectedDate);
+
+  const handleBooking = async () => {
+    if (!name || !email || !selectedClass || !selectedDate) {
+      alert('Please fill in all fields and select a class');
+      return;
+    }
+
+    const [firstName, ...lastNameParts] = name.trim().split(' ');
+    const lastName = lastNameParts.join(' ') || '';
+
+    setIsSubmitting(true);
+    try {
+      await apiService.post('/group-classes/book', {
+        classId: selectedClass.split('-')[0],
+        timeSlot: selectedClass.split('-')[1],
+        firstName,
+        lastName,
+        email,
+        date: selectedDate.toISOString(),
+      });
+
+      alert('Booking confirmed! Check your email for details.');
+      setName('');
+      setEmail('');
+      setSelectedDate(null);
+      setSelectedClass(null);
+
+      // Refresh classes to update available spots
+      const response = await apiService.get<GroupClass[]>('/group-classes');
+      setClasses(response);
+    } catch (error: any) {
+      console.error('Booking error:', error);
+      alert(
+        error.response?.data?.message ||
+          'Failed to complete booking. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-8 md:px-16 py-12 relative overflow-hidden">
-      {/* Disabled Overlay */}
+      Disabled Overlay
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center group cursor-not-allowed">
         <div className="bg-white/10 backdrop-blur-md border-2 border-white/20 rounded-2xl px-8 md:px-12 py-6 md:py-8 transform transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 duration-300 mx-4">
           <p className="text-white text-2xl md:text-3xl font-bold text-center">
@@ -53,7 +133,6 @@ export default function GroupClassesPage() {
           </p>
         </div>
       </div>
-
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
           Group Classes
@@ -63,7 +142,6 @@ export default function GroupClassesPage() {
           book your spot.
         </p>
       </div>
-
       <div className="grid md:grid-cols-2 gap-8">
         {/* Calendar Section */}
         <div className="bg-white rounded-lg p-6 shadow-xl">
@@ -112,40 +190,57 @@ export default function GroupClassesPage() {
           <h2 className="text-2xl font-semibold mb-4 text-black">
             Available Classes
           </h2>
-          {!selectedDate ? (
+          {isLoadingClasses ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0B79AB]"></div>
+            </div>
+          ) : !selectedDate ? (
             <p className="text-gray-600 text-center py-12">
               Please select a date to view available classes
             </p>
+          ) : availableClasses.length === 0 ? (
+            <p className="text-gray-600 text-center py-12">
+              No classes available for this date
+            </p>
           ) : (
             <div className="space-y-4">
-              {classTypes.map((classItem) => (
+              {availableClasses.map((classItem) => (
                 <div
-                  key={classItem.id}
+                  key={classItem._id}
                   className="border border-gray-200 rounded-lg p-4 hover:border-[#0B79AB] transition-all"
                 >
                   <h3 className="font-semibold text-lg text-black">
-                    {classItem.name}
+                    {classItem.title}
                   </h3>
                   <p className="text-sm text-gray-600 mb-3">
-                    {classItem.duration} • {classItem.spots} spots available
+                    {classItem.durationMinutes} min • {classItem.spotsAvailable}{' '}
+                    spots per session
                   </p>
                   <div className="grid grid-cols-3 gap-2">
-                    {timeSlots.slice(0, 3).map((time) => (
+                    {classItem.timeSlots.map((slot) => (
                       <button
-                        key={time}
+                        key={slot.time}
                         onClick={() =>
-                          setSelectedClass(`${classItem.id}-${time}`)
+                          setSelectedClass(`${classItem._id}-${slot.time}`)
                         }
+                        disabled={slot.availableSpots === 0}
                         className={`
                           py-2 px-3 rounded text-sm font-medium transition-all
                           ${
-                            selectedClass === `${classItem.id}-${time}`
+                            selectedClass === `${classItem._id}-${slot.time}`
                               ? 'bg-[#0B79AB] text-white'
-                              : 'bg-gray-100 text-black hover:bg-gray-200'
+                              : slot.availableSpots === 0
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : 'bg-gray-100 text-black hover:bg-gray-200'
                           }
                         `}
                       >
-                        {time}
+                        <div>{slot.time}</div>
+                        <div className="text-xs">
+                          {slot.availableSpots === 0
+                            ? 'Full'
+                            : `${slot.availableSpots} left`}
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -155,7 +250,6 @@ export default function GroupClassesPage() {
           )}
         </div>
       </div>
-
       {/* Booking Summary & Sign Up Form */}
       {selectedDate && selectedClass && (
         <div className="mt-8 bg-white rounded-lg p-8 shadow-xl">
@@ -165,7 +259,9 @@ export default function GroupClassesPage() {
 
           {/* Booking Details */}
           <div className="bg-[#0B79AB]/5 rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold mb-3 text-gray-900">Booking Details</h3>
+            <h3 className="text-lg font-semibold mb-3 text-gray-900">
+              Booking Details
+            </h3>
             <div className="grid md:grid-cols-3 gap-4 text-black">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Date</p>
@@ -185,8 +281,8 @@ export default function GroupClassesPage() {
                 <p className="text-sm text-gray-600 mb-1">Class</p>
                 <p className="font-semibold">
                   {
-                    classTypes.find((c) => c.id === selectedClass.split('-')[0])
-                      ?.name
+                    classes.find((c) => c._id === selectedClass.split('-')[0])
+                      ?.title
                   }
                 </p>
               </div>
@@ -195,10 +291,15 @@ export default function GroupClassesPage() {
 
           {/* Sign Up Form */}
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">Your Information</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">
+              Your Information
+            </h3>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   Full Name
                 </label>
                 <input
@@ -212,7 +313,10 @@ export default function GroupClassesPage() {
                 />
               </div>
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
                   Email Address
                 </label>
                 <input
@@ -230,22 +334,7 @@ export default function GroupClassesPage() {
 
           {/* Submit Button */}
           <button
-            onClick={() => {
-              if (!name || !email) {
-                alert('Please fill in all fields');
-                return;
-              }
-              setIsSubmitting(true);
-              // Handle booking submission here
-              setTimeout(() => {
-                alert('Booking confirmed! Check your email for details.');
-                setIsSubmitting(false);
-                setName('');
-                setEmail('');
-                setSelectedDate(null);
-                setSelectedClass(null);
-              }, 1500);
-            }}
+            onClick={handleBooking}
             disabled={isSubmitting || !name || !email}
             className="w-full bg-[#0B79AB] text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-[#0b78ab9e] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-100"
           >
@@ -260,7 +349,6 @@ export default function GroupClassesPage() {
           </button>
         </div>
       )}
-
       {/* Info Section */}
       <div className="mt-12 grid md:grid-cols-3 gap-6 text-center">
         <div className="bg-white/10 backdrop-blur rounded-lg p-6">

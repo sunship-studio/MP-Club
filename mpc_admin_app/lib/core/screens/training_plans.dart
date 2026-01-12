@@ -1,3 +1,4 @@
+import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,6 +8,7 @@ import 'package:mpc_admin_app/app/bloc/public_plans/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/public_plans/state.dart';
 import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/theme/app_colors.dart';
+import 'package:mpc_admin_app/core/widgets/plan_editor/plan_editor_widgets.dart';
 import 'package:mpc_admin_app/core/widgets/public_plans/plan_card.dart';
 
 class TrainingPlansScreen extends StatefulWidget {
@@ -18,7 +20,7 @@ class TrainingPlansScreen extends StatefulWidget {
 
 class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
   void _navigateToEditor() {
-    context.go(RouteNames.publicPlanEditor);
+    context.push(RouteNames.publicPlanEditor);
   }
 
   @override
@@ -33,11 +35,12 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Public Training Plans',
+                'Plans for sale',
                 style: TextStyle(
                   fontSize: 24.sp,
                   fontFamily: 'SF-Pro',
-                  color: Colors.white,
+
+                  color: Theme.of(context).textTheme.bodyLarge!.color,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -45,7 +48,7 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
                 onPressed: _navigateToEditor,
                 icon: Icon(
                   Icons.add_circle,
-                  color: AppColors.blueColor,
+                  color: Theme.of(context).colorScheme.primary,
                   size: 32.w,
                 ),
               ),
@@ -94,14 +97,12 @@ class _TrainingPlansScreenState extends State<TrainingPlansScreen> {
                           textAlign: TextAlign.center,
                         ),
                         Gap(16.h),
-                        ElevatedButton(
+                        ModernButton(
                           onPressed: () {
                             context.read<PublicPlansCubit>().loadPlans();
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.blueColor,
-                          ),
-                          child: Text('Retry'),
+                          label: 'Retry',
+                          icon: Coolicons.refresh,
                         ),
                       ],
                     ),

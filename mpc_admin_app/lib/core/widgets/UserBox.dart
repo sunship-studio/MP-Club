@@ -6,6 +6,8 @@ import 'package:mpc_admin_app/app/models/User.dart';
 import 'package:mpc_admin_app/app/services/socket.dart';
 import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/screens/online_coaching.dart';
+import 'package:mpc_admin_app/core/theme/app_colors.dart';
+import 'package:mpc_admin_app/core/theme/design_system.dart';
 
 class UserBox extends StatefulWidget {
   const UserBox({super.key, required this.user});
@@ -25,20 +27,16 @@ class _UserBoxState extends State<UserBox> {
       stream: SocketService().getClientUnreadCountStream(widget.user.id),
       builder: (context, snapshot) {
         return Container(
-          margin: EdgeInsets.only(bottom: 10),
+          margin: const EdgeInsets.only(bottom: kSpacingMedium),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 5,
-                offset: Offset(0, 3),
-              ),
-            ],
+            color: Theme.of(context).cardTheme.color,
+            borderRadius: kBorderRadiusCardAll,
+            boxShadow: kShadowMedium(context),
           ),
-          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: kSpacingLarge,
+            vertical: kSpacingMedium,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -65,16 +63,24 @@ class _UserBoxState extends State<UserBox> {
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontFamily: 'SF-Pro',
-                                  color: Colors.black,
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.color,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                               Container(
-                                margin: EdgeInsets.symmetric(horizontal: 6),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: kSpacingSmall,
+                                ),
                                 height: 18,
                                 width: 1.5,
                                 decoration: BoxDecoration(
-                                  color: Colors.black,
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.color,
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
@@ -83,7 +89,10 @@ class _UserBoxState extends State<UserBox> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontFamily: 'SF-Pro',
-                                  color: Colors.black,
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.color,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -97,11 +106,14 @@ class _UserBoxState extends State<UserBox> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontFamily: 'SF-Pro',
-                                  color: Colors.black,
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.color,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              SizedBox(width: 6),
+                              const SizedBox(width: kSpacingSmall),
                               SizedBox(
                                 width: 24,
                                 height: 24,
@@ -117,7 +129,8 @@ class _UserBoxState extends State<UserBox> {
                                   style: ButtonStyle(
                                     backgroundColor:
                                         WidgetStateProperty.all<Color>(
-                                          Colors.white,
+                                          Theme.of(context).cardTheme.color ??
+                                              Colors.white,
                                         ),
                                     padding: WidgetStateProperty.all<
                                       EdgeInsetsGeometry
@@ -148,7 +161,7 @@ class _UserBoxState extends State<UserBox> {
                       const Spacer(),
                       snapshot.hasData && snapshot.data! > 0
                           ? Container(
-                            padding: EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(kSpacingMedium),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: Colors.red[700],
@@ -156,7 +169,7 @@ class _UserBoxState extends State<UserBox> {
                             child: Center(
                               child: Text(
                                 "${snapshot.data}",
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 14,
                                   fontFamily: 'SF-Pro',
                                   color: Colors.white,
@@ -166,13 +179,13 @@ class _UserBoxState extends State<UserBox> {
                             ),
                           )
                           : Container(),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: kSpacingMedium),
                       Icon(
                         isExpanded
                             ? Coolicons.chevron_big_down
                             : Coolicons.chevron_big_right,
                         size: 24,
-                        color: Colors.black,
+                        color: Theme.of(context).iconTheme.color,
                       ),
                     ],
                   ),
@@ -183,12 +196,12 @@ class _UserBoxState extends State<UserBox> {
 
               isExpanded
                   ? Container(
-                    margin: EdgeInsets.only(top: 5),
+                    margin: const EdgeInsets.only(top: kSpacingSmall),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 5),
+                        const SizedBox(height: kSpacingSmall),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -198,24 +211,32 @@ class _UserBoxState extends State<UserBox> {
                               },
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Color.fromRGBO(227, 227, 227, 0.5),
-                                  borderRadius: BorderRadius.circular(8),
+                                  color: Theme.of(context).colorScheme.surface,
+                                  borderRadius: kBorderRadiusMediumAll,
+                                  boxShadow: kShadowLight(context),
                                 ),
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 6,
-                                  horizontal: 10,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: kSpacingSmall,
+                                  horizontal: kSpacingMedium,
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Image.asset('assets/gmail.png', width: 24),
-                                    const SizedBox(width: 5),
+                                    Image.asset(
+                                      'assets/gmail.png',
+                                      width: 24,
+                                      height: 24,
+                                    ),
+                                    const SizedBox(width: kSpacingSmall),
                                     Text(
                                       "Go to Gmail",
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontFamily: 'SF-Pro',
-                                        color: Colors.black,
+                                        color:
+                                            Theme.of(
+                                              context,
+                                            ).textTheme.bodyLarge?.color,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -228,13 +249,14 @@ class _UserBoxState extends State<UserBox> {
                               decoration: BoxDecoration(
                                 color:
                                     widget.user.status == "active"
-                                        ? Color.fromRGBO(44, 199, 46, 0.6)
-                                        : Color.fromRGBO(255, 0, 0, 0.6),
-                                borderRadius: BorderRadius.circular(8),
+                                        ? Colors.green.withValues(alpha: 0.8)
+                                        : Colors.red.withValues(alpha: 0.8),
+                                borderRadius: kBorderRadiusMediumAll,
+                                boxShadow: kShadowLight(context),
                               ),
-                              padding: EdgeInsets.symmetric(
-                                vertical: 6,
-                                horizontal: 10,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: kSpacingSmall,
+                                horizontal: kSpacingMedium,
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -250,7 +272,7 @@ class _UserBoxState extends State<UserBox> {
                                     widget.user.status == "active"
                                         ? "Active"
                                         : "Inactive",
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontFamily: 'SF-Pro',
                                       color: Colors.white,
@@ -262,36 +284,43 @@ class _UserBoxState extends State<UserBox> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: kSpacingSmall),
                         Row(
                           children: [
                             GestureDetector(
                               onTap: () {
-                                context.go(RouteNames.chat, extra: widget.user);
+                                context.push(
+                                  RouteNames.chat,
+                                  extra: widget.user,
+                                );
                               },
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Color.fromRGBO(227, 227, 227, 0.5),
-                                  borderRadius: BorderRadius.circular(8),
+                                  color: Theme.of(context).colorScheme.surface,
+                                  borderRadius: kBorderRadiusMediumAll,
+                                  boxShadow: kShadowLight(context),
                                 ),
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 6,
-                                  horizontal: 10,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: kSpacingSmall,
+                                  horizontal: kSpacingMedium,
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       Coolicons.chat,
-                                      color: Theme.of(context).primaryColor,
+                                      color: Theme.of(context).iconTheme.color,
                                     ),
-                                    const SizedBox(width: 5),
+                                    const SizedBox(width: kSpacingSmall),
                                     Text(
                                       "Chat",
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontFamily: 'SF-Pro',
-                                        color: Colors.black,
+                                        color:
+                                            Theme.of(
+                                              context,
+                                            ).textTheme.bodyLarge?.color,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -302,17 +331,17 @@ class _UserBoxState extends State<UserBox> {
                             Spacer(),
                             snapshot.hasData && snapshot.data! > 0
                                 ? Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: kSpacingSmall,
+                                    vertical: kSpacingXSmall,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.red[700],
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: kBorderRadiusMediumAll,
                                   ),
                                   child: Text(
                                     "${snapshot.data} new messages",
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 14,
                                       fontFamily: 'SF-Pro',
@@ -323,14 +352,14 @@ class _UserBoxState extends State<UserBox> {
                                 : Container(),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: kSpacingMedium),
 
                         Row(children: [TrainingPlanButton(user: widget.user)]),
 
-                        const SizedBox(height: 12),
+                        const SizedBox(height: kSpacingMedium),
 
                         Row(children: [CheckInsButton(user: widget.user)]),
-                        SizedBox(height: 8),
+                        const SizedBox(height: kSpacingSmall),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -339,11 +368,14 @@ class _UserBoxState extends State<UserBox> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontFamily: 'SF-Pro',
-                                color: Colors.black,
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge?.color,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: kSpacingXSmall),
                             CaloriesSet(user: widget.user),
                           ],
                         ),
@@ -356,11 +388,14 @@ class _UserBoxState extends State<UserBox> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontFamily: 'SF-Pro',
-                                color: Colors.black,
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge?.color,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: kSpacingXSmall),
                             WeightGoalSet(user: widget.user),
                           ],
                         ),
@@ -392,11 +427,11 @@ class _TrainingPlanButtonState extends State<TrainingPlanButton> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        context.go(RouteNames.planEditor, extra: widget.user);
+        context.push(RouteNames.planEditor, extra: widget.user);
       },
       onTapDown: (details) {
         setState(() {
-          color = Theme.of(context).primaryColor.withOpacity(0.8);
+          color = AppColors.blueColor.withOpacity(0.8);
         });
       },
       onTapUp: (details) {
@@ -406,10 +441,14 @@ class _TrainingPlanButtonState extends State<TrainingPlanButton> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: color ?? Theme.of(context).primaryColor,
-          borderRadius: BorderRadius.circular(8),
+          color: color ?? AppColors.blueColor,
+          borderRadius: kBorderRadiusMediumAll,
+          boxShadow: kShadowLight(context),
         ),
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        padding: const EdgeInsets.symmetric(
+          vertical: kSpacingSmall,
+          horizontal: kSpacingMedium,
+        ),
         child: Center(
           child: Text(
             "Edit training plan 🏋️‍♂️",
@@ -442,11 +481,11 @@ class _CheckInsButtonState extends State<CheckInsButton> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        context.go(RouteNames.checkIns, extra: widget.user);
+        context.push(RouteNames.checkIns, extra: widget.user);
       },
       onTapDown: (details) {
         setState(() {
-          color = Theme.of(context).primaryColor.withOpacity(0.8);
+          color = AppColors.blueColor.withOpacity(0.8);
         });
       },
       onTapUp: (details) {
@@ -456,10 +495,14 @@ class _CheckInsButtonState extends State<CheckInsButton> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: color ?? Theme.of(context).primaryColor,
-          borderRadius: BorderRadius.circular(8),
+          color: color ?? AppColors.blueColor,
+          borderRadius: kBorderRadiusMediumAll,
+          boxShadow: kShadowLight(context),
         ),
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        padding: const EdgeInsets.symmetric(
+          vertical: kSpacingSmall,
+          horizontal: kSpacingMedium,
+        ),
         child: Center(
           child: Text(
             "View Check-Ins 📅",

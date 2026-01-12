@@ -29,7 +29,7 @@ class ChatScreenHeader extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: () {
-              context.go(RouteNames.onlineCoaching);
+              context.push(RouteNames.onlineCoaching);
             },
             behavior: HitTestBehavior.translucent,
             child: Container(

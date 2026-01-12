@@ -7,6 +7,7 @@ import resend from '../../config/resend';
 import stripe from '../../config/stripe';
 import AdminSettings from '../../models/AdminSettings';
 import Exercise from '../../models/Exercise';
+import GroupClass from '../../models/GroupClass';
 import { PlanForSale } from '../../models/PlanForSale';
 import User from '../../models/User';
 import { WaitingListEntry } from '../../models/WaitingListEntry';
@@ -348,6 +349,102 @@ export default class AdminAppController {
       });
     } catch (error) {
       console.error('Error adding training plan:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  public async getGroupClasses(req: Request, res: Response): Promise<Response> {
+    console.log('Fetching group classes...');
+    const groupClasses = await GroupClass.find().sort({ date: 1 });
+    return res.json(groupClasses);
+  }
+
+  public async createGroupClass(
+    req: Request,
+    res: Response
+  ): Promise<Response> {
+    try {
+      const {
+        title,
+        durationMinutes,
+        timeSlots,
+        date,
+        spotsAvailable,
+        recurring,
+        dayOfWeek,
+      } = req.body;
+
+      const newGroupClass = new GroupClass({
+        title,
+        durationMinutes,
+        timeSlots,
+        date,
+        recurring,
+        dayOfWeek,
+        spotsAvailable,
+      });
+
+      await newGroupClass.save();
+      return res
+        .status(201)
+        .json({ message: 'Group class created', groupClass: newGroupClass });
+    } catch (error) {
+      console.error('Error creating group class:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  public async editGroupClass(req: Request, res: Response): Promise<Response> {
+    try {
+      const {
+        _id,
+        title,
+        durationMinutes,
+        timeSlots,
+        date,
+        spotsAvailable,
+        recurring,
+        dayOfWeek,
+      } = req.body;
+
+      const groupClass = await GroupClass.findById(_id);
+      if (!groupClass) {
+        return res.status(404).json({ message: 'Group class not found' });
+      }
+
+      groupClass.title = title;
+      groupClass.durationMinutes = durationMinutes;
+      groupClass.timeSlots = timeSlots;
+      groupClass.date = date;
+      groupClass.spotsAvailable = spotsAvailable;
+      if (recurring !== undefined) groupClass.recurring = recurring;
+      if (dayOfWeek) groupClass.dayOfWeek = dayOfWeek;
+
+      await groupClass.save();
+      return res
+        .status(200)
+        .json({ message: 'Group class updated', groupClass });
+    } catch (error) {
+      console.error('Error editing group class:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  public async deleteGroupClass(
+    req: Request,
+    res: Response
+  ): Promise<Response> {
+    try {
+      const { id } = req.body;
+      const groupClass = await GroupClass.findById(id);
+      if (!groupClass) {
+        return res.status(404).json({ message: 'Group class not found' });
+      }
+
+      await GroupClass.findByIdAndDelete(id);
+      return res.status(200).json({ message: 'Group class deleted' });
+    } catch (error) {
+      console.error('Error deleting group class:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   }

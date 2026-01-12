@@ -57,7 +57,7 @@ class PlanCard extends StatelessWidget {
   }
 
   void _navigateToEditor(BuildContext context) {
-    context.go(RouteNames.publicPlanEditor, extra: plan);
+    context.push(RouteNames.publicPlanEditor, extra: plan);
   }
 
   @override
@@ -66,7 +66,7 @@ class PlanCard extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 16.h),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: AppColors.lightCardColor.withValues(alpha: 0.9),
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: AppColors.lightCardColor2.withValues(alpha: 0.1),
@@ -85,7 +85,7 @@ class PlanCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 24.sp,
                     fontFamily: 'SF-Pro',
-                    color: Colors.black.withValues(alpha: 0.7),
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -111,10 +111,8 @@ class PlanCard extends StatelessWidget {
           Gap(12.h),
           Row(
             children: [
-              Icon(Icons.attach_money, color: Colors.green, size: 16.w),
-              Gap(6.w),
               Text(
-                '€${plan.price.toStringAsFixed(2)}',
+                '€ ${plan.price.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontFamily: 'SF-Pro',
@@ -138,7 +136,7 @@ class PlanCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontFamily: 'SF-Pro',
-                  color: Colors.black.withValues(alpha: 0.7),
+                  color: Theme.of(context).textTheme.bodyLarge!.color,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -180,7 +178,7 @@ class PlanCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12.sp,
                   fontFamily: 'SF-Pro',
-                  color: Colors.black.withValues(alpha: 0.7),
+                  color: Theme.of(context).textTheme.bodyLarge!.color,
                   fontWeight: FontWeight.w500,
                 ),
               ),

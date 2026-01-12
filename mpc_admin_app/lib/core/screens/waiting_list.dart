@@ -66,7 +66,7 @@ class WaitingList extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 26,
                           fontFamily: 'SF-Pro',
-                          color: Colors.white,
+                          color: Theme.of(context).textTheme.bodyLarge!.color,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -101,7 +101,7 @@ class WaitingList extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 26,
                             fontFamily: 'SF-Pro',
-                            color: Colors.white,
+                            color: Theme.of(context).textTheme.bodyLarge!.color,
                             fontWeight: FontWeight.w700,
                           ),
                         )
@@ -188,7 +188,7 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
     return Container(
       margin: EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -226,7 +226,8 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                             style: TextStyle(
                               fontSize: 18,
                               fontFamily: 'SF-Pro',
-                              color: Colors.black,
+                              color:
+                                  Theme.of(context).textTheme.bodyLarge!.color,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -235,7 +236,7 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                             height: 18,
                             width: 1.5,
                             decoration: BoxDecoration(
-                              color: Colors.black,
+                              color: Theme.of(context).dividerColor,
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),
@@ -244,7 +245,8 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                             style: TextStyle(
                               fontSize: 16,
                               fontFamily: 'SF-Pro',
-                              color: Colors.black,
+                              color:
+                                  Theme.of(context).textTheme.bodyLarge!.color,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -258,7 +260,8 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                             style: TextStyle(
                               fontSize: 16,
                               fontFamily: 'SF-Pro',
-                              color: Colors.black,
+                              color:
+                                  Theme.of(context).textTheme.bodyMedium!.color,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -276,9 +279,6 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                               icon: Icon(Coolicons.copy),
                               iconSize: 20,
                               style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all<Color>(
-                                  Colors.white,
-                                ),
                                 padding:
                                     WidgetStateProperty.all<EdgeInsetsGeometry>(
                                       const EdgeInsets.symmetric(
@@ -307,7 +307,7 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                         ? Coolicons.chevron_big_down
                         : Coolicons.chevron_big_right,
                     size: 24,
-                    color: Colors.black,
+                    color: Theme.of(context).iconTheme.color,
                   ),
                 ],
               ),
@@ -326,7 +326,7 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Color.fromRGBO(227, 227, 227, 0.5),
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         padding: EdgeInsets.symmetric(
@@ -343,7 +343,10 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontFamily: 'SF-Pro',
-                                color: Colors.black,
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge!.color,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -362,7 +365,8 @@ class _WaitingListEntryBoxState extends State<WaitingListEntryBox> {
                             style: TextStyle(
                               fontSize: 18,
                               fontFamily: 'SF-Pro',
-                              color: Colors.black,
+                              color:
+                                  Theme.of(context).textTheme.bodyLarge!.color,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -486,7 +490,7 @@ class AvailabilityDay extends StatelessWidget {
           Container(
             padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
             decoration: BoxDecoration(
-              color: Color.fromRGBO(227, 227, 227, 0.5),
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -510,7 +514,7 @@ class AvailabilityDay extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontFamily: 'SF-Pro',
-                    color: Colors.black,
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

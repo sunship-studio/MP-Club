@@ -1,6 +1,7 @@
 import 'package:coolicons/coolicons.dart';
 import 'package:flutter/material.dart';
 import 'package:mpc_admin_app/app/models/UserExercise.dart';
+import 'package:mpc_admin_app/core/theme/design_system.dart';
 
 class ExerciseBox extends StatefulWidget {
   ExerciseBox({
@@ -41,19 +42,15 @@ class _ExerciseBoxState extends State<ExerciseBox> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.symmetric(vertical: 10),
+      margin: const EdgeInsets.only(bottom: kSpacingMedium),
+      padding: const EdgeInsets.symmetric(
+        vertical: kSpacingMedium,
+        horizontal: kSpacingLarge,
+      ),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: Offset(0, 3),
-          ),
-        ],
+        color: kBackgroundWhite,
+        borderRadius: kBorderRadiusCardAll,
+        boxShadow: kShadowMedium(context),
       ),
       child: Column(
         children: [
@@ -78,7 +75,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                     //     fit: BoxFit.cover,
                     //   ),
                     // ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: kSpacingMedium),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -94,7 +91,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 6),
+                        const SizedBox(height: kSpacingSmall),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
@@ -112,7 +109,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                 }
                               },
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: kSpacingMedium),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -125,11 +122,11 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                SizedBox(height: 4),
+                                const SizedBox(height: kSpacingXSmall),
                                 Container(
                                   decoration: BoxDecoration(
                                     color: Colors.grey[200],
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: kBorderRadiusMediumAll,
                                   ),
                                   child: Row(
                                     mainAxisAlignment:
@@ -247,7 +244,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                               ),
                             ),
                           ),
-                          SizedBox(height: 30),
+                          const SizedBox(height: kSpacingXXLarge),
                           Icon(
                             isExapnded
                                 ? Coolicons.chevron_down
@@ -283,7 +280,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                           ),
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: kBorderRadiusMediumAll,
                           ),
                           margin: EdgeInsets.only(bottom: 10),
 
@@ -295,7 +292,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
 
                                 decoration: BoxDecoration(
                                   color: Theme.of(context).primaryColor,
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: kBorderRadiusMediumAll,
                                 ),
                                 child: Center(
                                   child: Text(
@@ -309,7 +306,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 12),
+                              const SizedBox(width: kSpacingMedium),
                               NumberInput(
                                 value: widget.exercise.sets![i].reps,
                                 label: "Reps",
@@ -318,7 +315,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                   widget.onRepsChange(value, i);
                                 },
                               ),
-                              SizedBox(width: 10),
+                              const SizedBox(width: kSpacingMedium),
                               NumberInput(
                                 value: widget.exercise.sets![i].rir,
                                 label: "RiR",
@@ -327,7 +324,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                   widget.onRIRChange(value, i);
                                 },
                               ),
-                              SizedBox(width: 10),
+                              const SizedBox(width: kSpacingMedium),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -340,7 +337,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: kSpacingXSmall),
                                   Container(
                                     width: 70,
                                     padding: EdgeInsets.symmetric(
@@ -349,7 +346,7 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                     ),
                                     decoration: BoxDecoration(
                                       color: Colors.grey[200],
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: kBorderRadiusMediumAll,
                                     ),
                                     child: TextField(
                                       onChanged: (value) {
@@ -439,11 +436,11 @@ class _NumberInputState extends State<NumberInput> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: kSpacingXSmall),
         Container(
           decoration: BoxDecoration(
             color: Colors.grey[800],
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: kBorderRadiusMediumAll,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -461,13 +458,13 @@ class _NumberInputState extends State<NumberInput> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(255, 77, 77, 77),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: kBorderRadiusMediumAll,
                   ),
                   padding: EdgeInsets.all(6),
                   child: Icon(Icons.remove, color: Colors.white, size: 16),
                 ),
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: kSpacingMedium),
               Text(
                 "${widget.value}",
                 style: TextStyle(
@@ -477,7 +474,7 @@ class _NumberInputState extends State<NumberInput> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: kSpacingMedium),
               GestureDetector(
                 onTap: () {
                   widget.value = widget.value + 1;
@@ -489,7 +486,7 @@ class _NumberInputState extends State<NumberInput> {
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(255, 77, 77, 77),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: kBorderRadiusMediumAll,
                   ),
                   padding: EdgeInsets.all(6),
                   child: Icon(Icons.add, color: Colors.white, size: 16),

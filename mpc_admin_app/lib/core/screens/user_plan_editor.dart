@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mpc_admin_app/app/bloc/public_plans/cubit.dart';
-import 'package:mpc_admin_app/app/bloc/public_plans/state.dart';
-import 'package:mpc_admin_app/app/models/PublicPlan.dart';
+import 'package:mpc_admin_app/app/bloc/training%20plan/cubit.dart';
+import 'package:mpc_admin_app/app/bloc/training%20plan/state.dart';
+import 'package:mpc_admin_app/app/models/User.dart';
 import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/widgets/plan_editor/exercise_card.dart';
 import 'package:mpc_admin_app/core/widgets/plan_editor/plan_editor_widgets.dart';
 
-class PublicPlanEditorScreen extends StatefulWidget {
-  final PublicPlan? plan;
+class UserPlanEditorScreen extends StatefulWidget {
+  final User user;
 
-  const PublicPlanEditorScreen({super.key, this.plan});
+  const UserPlanEditorScreen({super.key, required this.user});
 
   @override
-  State<PublicPlanEditorScreen> createState() => _PublicPlanEditorScreenState();
+  State<UserPlanEditorScreen> createState() => _UserPlanEditorScreenState();
 }
 
-class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
+class _UserPlanEditorScreenState extends State<UserPlanEditorScreen>
     with SingleTickerProviderStateMixin {
   late final TextEditingController _searchController;
   late final AnimationController _animationController;
@@ -32,14 +32,6 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.plan != null) {
-        context.read<PublicPlansCubit>().initEditPlan(widget.plan!);
-      } else {
-        context.read<PublicPlansCubit>().initNewPlan();
-      }
-    });
   }
 
   @override
@@ -58,12 +50,12 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocBuilder<PublicPlansCubit, PublicPlansState>(
+      body: BlocBuilder<TrainingPlanCubit, TrainingPlanState>(
         builder: (context, state) {
-          if (state is PublicPlansError) {
+          if (state is TrainingPlanError) {
             return _buildErrorState(state);
-          } else if (state is PublicPlanEditing ||
-              state is PublicPlanSearchingExercises) {
+          } else if (state is TrainingPlanEditing ||
+              state is TrainingPlanSearchingExercises) {
             return _buildEditorContent(state);
           }
           return _buildLoadingState();
@@ -72,7 +64,7 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
     );
   }
 
-  Widget _buildErrorState(PublicPlansError state) {
+  Widget _buildErrorState(TrainingPlanError state) {
     return Center(
       child: Container(
         margin: const EdgeInsets.all(24),
@@ -127,8 +119,8 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
             const SizedBox(height: 24),
             ModernButton(
               onPressed: () {
-                context.read<PublicPlansCubit>().savePublicPlan();
-                context.push(RouteNames.trainingPlans);
+                context.read<TrainingPlanCubit>().savePlan(widget.user);
+                context.push(RouteNames.onlineCoaching);
               },
               label: 'Retry',
               icon: Icons.refresh,
@@ -177,7 +169,7 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
     );
   }
 
-  Widget _buildEditorContent(PublicPlansState state) {
+  Widget _buildEditorContent(TrainingPlanState state) {
     return Form(
       key: _formKey,
       child: Column(
@@ -194,9 +186,11 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
                     controller: _searchController,
                     onChanged: (value) {
                       if (value.isEmpty) {
-                        context.read<PublicPlansCubit>().clearSearch();
+                        context.read<TrainingPlanCubit>().clearSearch();
                       } else {
-                        context.read<PublicPlansCubit>().searchExercises(value);
+                        context.read<TrainingPlanCubit>().searchExercises(
+                          value,
+                        );
                       }
                     },
                   ),
@@ -211,28 +205,13 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
                       return null;
                     },
                     onChanged: (value) {
-                      context.read<PublicPlansCubit>().updatePlanName(value);
+                      // Training plan name is typically not changed for user plans
+                      // But we can keep this for consistency
                     },
                     initialValue:
-                        state is PublicPlanEditing ? state.publicPlan.name : '',
-                  ),
-                  const SizedBox(height: 12),
-                  ModernPriceInput(
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Price cannot be empty';
-                      }
-                      final parsed = double.tryParse(value);
-                      if (parsed == null || parsed < 0) {
-                        return 'Enter a valid price';
-                      }
-                      return null;
-                    },
-                    onChanged: (value) {
-                      context.read<PublicPlansCubit>().updatePrice(value);
-                    },
-                    initialValue:
-                        state is PublicPlanEditing ? state.publicPlan.price : 0,
+                        state is TrainingPlanEditing
+                            ? state.trainingPlan.name
+                            : '',
                   ),
                 ],
               ),
@@ -245,9 +224,9 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
               physics: const ClampingScrollPhysics(),
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               slivers: [
-                if (state is PublicPlanSearchingExercises)
+                if (state is TrainingPlanSearchingExercises)
                   _buildSearchResults(state)
-                else if (state is PublicPlanEditing)
+                else if (state is TrainingPlanEditing)
                   _buildPlanEditor(state),
               ],
             ),
@@ -257,9 +236,9 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
     );
   }
 
-  Widget _buildSearchResults(PublicPlanSearchingExercises state) {
+  Widget _buildSearchResults(TrainingPlanSearchingExercises state) {
     if (state.exercises.isEmpty) {
-      return SliverFillRemaining(
+      return const SliverFillRemaining(
         child: EmptyState(
           icon: Icons.search_off,
           title: 'No exercises found',
@@ -276,7 +255,7 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
             exercise: state.exercises[index],
             onTap: () {
               _searchController.clear();
-              context.read<PublicPlansCubit>().addExercise(
+              context.read<TrainingPlanCubit>().addExercise(
                 _selectedDay,
                 state.exercises[index],
               );
@@ -287,8 +266,8 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
     );
   }
 
-  Widget _buildPlanEditor(PublicPlanEditing state) {
-    if (state.publicPlan.days.isEmpty) {
+  Widget _buildPlanEditor(TrainingPlanEditing state) {
+    if (state.trainingPlan.days.isEmpty) {
       return const SliverFillRemaining(
         child: EmptyState(
           icon: Icons.calendar_today,
@@ -298,11 +277,11 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
       );
     }
 
-    if (_selectedDay >= state.publicPlan.days.length) {
+    if (_selectedDay >= state.trainingPlan.days.length) {
       _selectedDay = 0;
     }
 
-    final currentDay = state.publicPlan.days[_selectedDay];
+    final currentDay = state.trainingPlan.days[_selectedDay];
 
     return SliverToBoxAdapter(
       child: Column(
@@ -311,10 +290,10 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
           // Day selector
           ModernDaySelector(
             selectedDay: _selectedDay,
-            days: state.publicPlan.days,
+            days: state.trainingPlan.days,
             onDaySelected: _selectDay,
             onAddDay: () {
-              context.read<PublicPlansCubit>().addDay();
+              context.read<TrainingPlanCubit>().addDay();
             },
           ),
 
@@ -334,7 +313,7 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
               },
               initialValue: currentDay.name ?? 'Day ${_selectedDay + 1}',
               onChanged: (value) {
-                context.read<PublicPlansCubit>().changeDayName(
+                context.read<TrainingPlanCubit>().changeDayName(
                   _selectedDay,
                   value,
                 );
@@ -369,7 +348,7 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
                 ),
                 child: ModernExerciseCard(
                   exercise: exercise,
-                  cubit: context.read<PublicPlansCubit>(),
+                  cubit: context.read<TrainingPlanCubit>() as dynamic,
                 ),
               );
             }),
@@ -435,7 +414,7 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
                       exercise: entry.value,
                       onTap: () {
                         _searchController.clear();
-                        context.read<PublicPlansCubit>().addExercise(
+                        context.read<TrainingPlanCubit>().addExercise(
                           _selectedDay,
                           entry.value,
                         );
@@ -454,8 +433,8 @@ class _PublicPlanEditorScreenState extends State<PublicPlanEditorScreen>
               onPressed: () {
                 // Validate the form before saving
                 if (_formKey.currentState!.validate()) {
-                  context.read<PublicPlansCubit>().savePublicPlan();
-                  context.push(RouteNames.trainingPlans);
+                  context.read<TrainingPlanCubit>().savePlan(widget.user);
+                  context.push(RouteNames.onlineCoaching);
                 }
               },
             ),

@@ -6,6 +6,8 @@ class RouteNames {
   static const String home = '/';
   static const String waitingList = '/waiting-list';
   static const String onlineCoaching = '/online-coaching';
+  static const String groupClasses = '/group-classes';
+  static const String groupClassEditor = '/group-class-editor';
   static const String trainingPlans = '/training-plans';
   static const String publicPlanEditor = '/public-plan-editor';
   static const String addSubscriber = '/add-subscriber';

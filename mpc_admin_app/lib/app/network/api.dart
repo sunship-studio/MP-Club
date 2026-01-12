@@ -18,6 +18,8 @@ class ApiService {
   Future<Response> get(String endpoint) async {
     try {
       Response response = await dio.get(endpoint);
+      print('GET $endpoint: ${response.statusCode}');
+      print(response.data);
       return response;
     } catch (e) {
       throw Exception('Failed to load data: $e');

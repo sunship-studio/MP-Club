@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/bloc/add_subscriber.dart';
+import 'package:mpc_admin_app/core/widgets/modern/index.dart';
 
 class AddSubscriberScreen extends StatefulWidget {
   const AddSubscriberScreen({super.key});
@@ -38,7 +39,7 @@ class _AddSubscriberScreenState extends State<AddSubscriberScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Subscriber added successfully')),
           );
-          context.go('/waiting-list');
+          context.push('/waiting-list');
         } else if (state is AddSubscriberFailure) {
           // Show error message
           ScaffoldMessenger.of(
@@ -77,10 +78,10 @@ class _AddSubscriberScreenState extends State<AddSubscriberScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Add Subscriber Manually',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Theme.of(context).textTheme.bodyLarge!.color,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'SF-Pro',
@@ -160,52 +161,15 @@ class _AddSubscriberScreenState extends State<AddSubscriberScreen> {
                           },
                         ),
 
-                        const Spacer(), // Pushes button to bottom
                         // Submit Button
                         Padding(
                           padding: const EdgeInsets.only(top: 20),
                           child: SizedBox(
                             width: double.infinity,
-                            child: FilledButton(
-                              onPressed:
-                                  state is AddSubscriberLoading
-                                      ? null
-                                      : _submitForm,
-                              style: ButtonStyle(
-                                padding:
-                                    WidgetStateProperty.all<EdgeInsetsGeometry>(
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                    ),
-                                backgroundColor: WidgetStateProperty.all<Color>(
-                                  const Color.fromARGB(255, 19, 157, 221),
-                                ),
-                                shape: WidgetStateProperty.all<
-                                  RoundedRectangleBorder
-                                >(
-                                  RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12.0),
-                                  ),
-                                ),
-                              ),
-                              child:
-                                  state is AddSubscriberLoading
-                                      ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                      : const Text(
-                                        'Add Subscriber',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontFamily: 'SF-Pro',
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
+                            child: ModernButton(
+                              onPressed: _submitForm,
+                              label: 'Add Subscriber',
+                              icon: Icons.add,
                             ),
                           ),
                         ),
@@ -236,90 +200,21 @@ class _AddSubscriberScreenState extends State<AddSubscriberScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyLarge!.color,
             fontSize: 16,
             fontWeight: FontWeight.w600,
             fontFamily: 'SF-Pro',
           ),
         ),
         const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          inputFormatters: inputFormatters,
+        ModernTextInput(
           validator: validator,
-          textInputAction: textInputAction,
+          controller: controller,
+          hintText: hint,
           onChanged: (value) {
             setState(() {});
           },
-          onEditingComplete: () {
-            // Move to next field or dismiss keyboard
-            FocusScope.of(context).nextFocus();
-          },
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 16,
-            fontFamily: 'SF-Pro',
-          ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 16,
-              fontFamily: 'SF-Pro',
-            ),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color.fromARGB(255, 19, 157, 221),
-                width: 2,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red, width: 2),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red, width: 2),
-            ),
-            errorStyle: const TextStyle(
-              color: Colors.red,
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              fontFamily: 'SF-Pro',
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
-            // Show suffix icon only for age field
-            suffixIcon:
-                showDoneButton && controller.text.isNotEmpty
-                    ? IconButton(
-                      padding: const EdgeInsets.all(12),
-                      icon: const Icon(
-                        Icons.check_circle,
-                        color: Color.fromARGB(255, 19, 157, 221),
-                        size: 24,
-                      ),
-                      onPressed: () {
-                        FocusScope.of(context).unfocus();
-                      },
-                    )
-                    : null,
-          ),
         ),
       ],
     );
@@ -331,6 +226,7 @@ class _AddSubscriberScreenState extends State<AddSubscriberScreen> {
       final email = _emailController.text;
       final firstName = _firstNameController.text;
       final lastName = _lastNameController.text;
+      print('Age: ${_ageController.text}');
       final age = int.parse(_ageController.text);
 
       // TODO: Send data to API or handle submission

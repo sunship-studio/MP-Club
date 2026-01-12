@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:mpc_admin_app/app/bloc/public_plans/cubit.dart';
 import 'package:mpc_admin_app/app/models/UserExercise.dart';
 
 class ModernExerciseCard extends StatefulWidget {
   final UserExercise exercise;
-  final PublicPlansCubit cubit;
+  var cubit;
 
-  const ModernExerciseCard({
-    super.key,
-    required this.exercise,
-    required this.cubit,
-  });
+  ModernExerciseCard({super.key, required this.exercise, required this.cubit});
 
   @override
   State<ModernExerciseCard> createState() => _ModernExerciseCardState();
@@ -67,11 +62,14 @@ class _ModernExerciseCardState extends State<ModernExerciseCard>
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withValues(
+              alpha:
+                  Theme.of(context).brightness == Brightness.dark ? 0.4 : 0.08,
+            ),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -93,8 +91,10 @@ class _ModernExerciseCardState extends State<ModernExerciseCard>
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Theme.of(context).primaryColor,
-                          Theme.of(context).primaryColor.withValues(alpha: 0.7),
+                          Theme.of(context).colorScheme.primary,
+                          Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.7),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -125,10 +125,10 @@ class _ModernExerciseCardState extends State<ModernExerciseCard>
                       children: [
                         Text(
                           widget.exercise.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 17,
                             fontFamily: 'SF-Pro',
-                            color: Colors.black87,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -239,7 +239,8 @@ class _ModernExerciseCardState extends State<ModernExerciseCard>
                             style: TextStyle(
                               fontSize: 15,
                               fontFamily: 'SF-Pro',
-                              color: Colors.grey[700],
+                              color:
+                                  Theme.of(context).textTheme.bodyMedium?.color,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -321,20 +322,24 @@ class _InfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: Colors.grey[700]),
+          Icon(
+            icon,
+            size: 14,
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+          ),
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
               fontSize: 12,
               fontFamily: 'SF-Pro',
-              color: Colors.grey[700],
+              color: Theme.of(context).textTheme.bodyMedium?.color,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -394,45 +399,37 @@ class _RestTimeInput extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontFamily: 'SF-Pro',
-            color: Colors.grey[600],
+            color: Theme.of(context).textTheme.bodySmall?.color,
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 6),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.grey.withValues(alpha: 0.3),
-              width: 1,
-            ),
+        TextField(
+          controller: controller,
+          onChanged: onChanged,
+          keyboardType: TextInputType.number,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 16,
+            fontFamily: 'SF-Pro',
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
-          child: TextField(
-            controller: controller,
-            onChanged: onChanged,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
+          decoration: InputDecoration(
+            fillColor: Theme.of(context).cardTheme.color!,
+            filled: true,
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
+            hintText: '0',
+            hintStyle: TextStyle(
               fontSize: 16,
               fontFamily: 'SF-Pro',
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-            decoration: InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
-              hintText: '0',
-              hintStyle: TextStyle(
-                fontSize: 16,
-                fontFamily: 'SF-Pro',
-                color: Colors.grey[400],
-                fontWeight: FontWeight.w600,
-              ),
+              color: Theme.of(context).textTheme.bodySmall?.color,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
@@ -457,7 +454,7 @@ class _NumberAdjuster extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -472,11 +469,11 @@ class _NumberAdjuster extends StatelessWidget {
             child: Text(
               '$value',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontFamily: 'SF-Pro',
                 fontWeight: FontWeight.w700,
-                color: Colors.black87,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
           ),
@@ -500,13 +497,21 @@ class _AdjusterButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: onTap != null ? Colors.grey[800] : Colors.grey[300],
+          color:
+              onTap != null
+                  ? (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[700]
+                      : Colors.grey[800])
+                  : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
           icon,
           size: 18,
-          color: onTap != null ? Colors.white : Colors.grey[500],
+          color:
+              onTap != null
+                  ? Colors.white
+                  : Theme.of(context).textTheme.bodySmall?.color,
         ),
       ),
     );
@@ -541,8 +546,8 @@ class _SetRow extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).primaryColor.withValues(alpha: 0.05),
-            Theme.of(context).primaryColor.withValues(alpha: 0.02),
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.02),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -562,8 +567,8 @@ class _SetRow extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Theme.of(context).primaryColor,
-                  Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -632,39 +637,29 @@ class _SetInput extends StatelessWidget {
           style: TextStyle(
             fontSize: 10,
             fontFamily: 'SF-Pro',
-            color: Colors.grey[600],
+            color: Theme.of(context).textTheme.bodySmall?.color,
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 4),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.grey.withValues(alpha: 0.3),
-              width: 1,
-            ),
+        TextField(
+          controller: TextEditingController(text: value.toString()),
+          onChanged: (val) {
+            final intVal = int.tryParse(val) ?? 0;
+            onChanged(intVal);
+          },
+          keyboardType: TextInputType.number,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14,
+            fontFamily: 'SF-Pro',
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
           ),
-          child: TextField(
-            controller: TextEditingController(text: value.toString()),
-            onChanged: (val) {
-              final intVal = int.tryParse(val) ?? 0;
-              onChanged(intVal);
-            },
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 14,
-              fontFamily: 'SF-Pro',
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-            decoration: const InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            ),
+          decoration: const InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           ),
         ),
       ],
@@ -689,47 +684,40 @@ class _WeightInput extends StatelessWidget {
           style: TextStyle(
             fontSize: 10,
             fontFamily: 'SF-Pro',
-            color: Colors.grey[600],
+            color: Theme.of(context).textTheme.bodySmall?.color,
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 4),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Colors.grey.withValues(alpha: 0.3),
-              width: 1,
-            ),
+        TextField(
+          controller: TextEditingController(
+            text: value > 0 ? value.toString() : '',
           ),
-          child: TextField(
-            controller: TextEditingController(
-              text: value > 0 ? value.toString() : '',
+          onChanged: (val) {
+            final intVal = int.tryParse(val) ?? 0;
+            onChanged(intVal);
+          },
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14,
+            fontFamily: 'SF-Pro',
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
+          decoration: InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 8,
             ),
-            onChanged: (val) {
-              final intVal = int.tryParse(val) ?? 0;
-              onChanged(intVal);
-            },
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 14,
+            hintText: 'kg',
+            hintStyle: TextStyle(
+              fontSize: 11,
               fontFamily: 'SF-Pro',
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-            decoration: const InputDecoration(
-              isDense: true,
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              hintText: 'kg',
-              hintStyle: TextStyle(
-                fontSize: 11,
-                fontFamily: 'SF-Pro',
-                color: Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
+              color: Theme.of(context).textTheme.bodySmall?.color,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),

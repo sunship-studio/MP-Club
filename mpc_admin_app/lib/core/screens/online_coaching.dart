@@ -10,6 +10,7 @@ import 'package:mpc_admin_app/app/models/User.dart';
 import 'package:mpc_admin_app/app/models/checkin.dart';
 import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/theme/app_colors.dart';
+import 'package:mpc_admin_app/core/theme/design_system.dart';
 import 'package:mpc_admin_app/core/widgets/PlanEditor.dart';
 import 'package:mpc_admin_app/core/widgets/UserBox.dart';
 import 'package:mpc_admin_app/core/widgets/check-ins/checkpoint_card.dart';
@@ -69,13 +70,7 @@ class OnlineCoaching extends StatelessWidget {
                       children: [
                         Text(
                           "CURRENT SUBSCRIBERS",
-                          style: TextStyle(
-                            color: AppColors.lightTextColor,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Inter',
-                            letterSpacing: -0.4,
-                          ),
+                          style: Theme.of(context).textTheme.labelMedium,
                         ),
                         Spacer(),
                         IconButton(
@@ -84,23 +79,23 @@ class OnlineCoaching extends StatelessWidget {
                           },
                           icon: Icon(
                             Coolicons.refresh,
-                            color: AppColors.lightTextColor,
+                            color: Theme.of(context).iconTheme.color,
                             size: 20.w,
                           ),
                         ),
                         GestureDetector(
                           onTap: () {
-                            context.go(RouteNames.addSubscriber);
+                            context.push(RouteNames.addSubscriber);
                           },
                           child: Container(
-                            padding: EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(kSpacingSmall),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: Colors.black87,
+                              borderRadius: kBorderRadiusMediumAll,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                             child: Icon(
                               Coolicons.plus,
-                              color: AppColors.lightTextColor,
+                              color: Colors.white,
                               size: 20.w,
                             ),
                           ),
@@ -111,7 +106,7 @@ class OnlineCoaching extends StatelessWidget {
                       Expanded(
                         child: Center(
                           child: CircularProgressIndicator(
-                            color: Color.fromARGB(255, 19, 157, 221),
+                            color: AppColors.blueColor,
                             strokeWidth: 2,
                           ),
                         ),
@@ -354,7 +349,7 @@ class _WeightGoalSetState extends State<WeightGoalSet> {
                   style: TextStyle(
                     fontSize: 16,
                     fontFamily: 'SF-Pro',
-                    color: Colors.black,
+                    color: Theme.of(context).iconTheme.color,
                     fontWeight: FontWeight.w600,
                   ),
 
@@ -388,7 +383,7 @@ class _WeightGoalSetState extends State<WeightGoalSet> {
                   color:
                       widget.user.targetWeight == null
                           ? Colors.red[800]
-                          : Colors.black,
+                          : Theme.of(context).iconTheme.color,
                   fontWeight:
                       widget.user.targetWeight == null
                           ? FontWeight.w700
@@ -494,7 +489,7 @@ class Checkpoints extends StatelessWidget {
               Text(
                 "${user.firstName.toUpperCase()} CHECKPOINTS",
                 style: TextStyle(
-                  color: AppColors.lightTextColor,
+                  color: Theme.of(context).textTheme.bodyLarge!.color,
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'Inter',
@@ -529,7 +524,7 @@ class Checkpoints extends StatelessWidget {
                 final checkIn = user.checkIns.reversed.toList()[index];
                 return CheckpointCard(
                   onTap: () {
-                    _showDetailsModal(context, checkIn, user);
+                    // _showDetailsModal(context, checkIn, user);
                   },
                   checkIn: checkIn,
                 );

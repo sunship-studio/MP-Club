@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:mpc_admin_app/app/models/checkin.dart';
-import 'package:mpc_admin_app/core/theme/app_colors.dart';
 
 class CheckpointCard extends StatefulWidget {
   CheckpointCard({super.key, required this.onTap, required this.checkIn});
@@ -52,7 +51,7 @@ class _MyCheckpointCardState extends State<CheckpointCard> {
       child: Container(
         margin: EdgeInsets.only(bottom: 10.h),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(10.r),
         ),
         padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16.w),
@@ -80,7 +79,7 @@ class _MyCheckpointCardState extends State<CheckpointCard> {
                       fontSize: 12.sp,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'Inter',
-                      color: AppColors.darkTextColor,
+                      color: Theme.of(context).textTheme.bodyLarge!.color,
                     ),
                   ),
                   Gap(4.h),
@@ -95,7 +94,7 @@ class _MyCheckpointCardState extends State<CheckpointCard> {
                         fontSize: 11.sp,
                         fontWeight: FontWeight.w400,
                         fontFamily: 'Inter',
-                        color: AppColors.greyTextColor,
+                        color: Theme.of(context).textTheme.bodyMedium!.color,
                       ),
                       maxLines: 3,
                       textAlign: TextAlign.start,
@@ -110,7 +109,7 @@ class _MyCheckpointCardState extends State<CheckpointCard> {
                 Text(
                   widget.checkIn.weight.toStringAsFixed(0),
                   style: TextStyle(
-                    color: AppColors.darkTextColor,
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w700,
                     fontFamily: 'Inter',
@@ -122,7 +121,7 @@ class _MyCheckpointCardState extends State<CheckpointCard> {
                 Text(
                   "kg",
                   style: TextStyle(
-                    color: AppColors.greyTextColor.withValues(alpha: 0.6),
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w500,
                     fontFamily: 'Inter',

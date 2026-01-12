@@ -23,15 +23,15 @@ class _ModernSearchBarState extends State<ModernSearchBar> {
       controller: widget.controller,
       onChanged: widget.onChanged,
 
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 16,
         fontFamily: 'SF-Pro',
         fontWeight: FontWeight.w500,
-        color: Colors.black87,
+        color: Theme.of(context).textTheme.bodyLarge!.color,
       ),
       decoration: InputDecoration(
         filled: true,
-        fillColor: const Color(0xFFF5F7FA),
+        fillColor: Theme.of(context).cardTheme.color,
         isDense: true,
         prefixIcon: Icon(Icons.search, color: Colors.grey[600], size: 24),
         suffixIcon:
@@ -84,16 +84,22 @@ class _ModernSearchBarState extends State<ModernSearchBar> {
 // Modern Text Input with icon
 class ModernTextInput extends StatefulWidget {
   final String hintText;
-  final IconData icon;
+  final IconData? icon;
   final Function(String) onChanged;
+  final TextEditingController? controller;
   final String initialValue;
+  final String? Function(String?)? validator;
+  final TextInputType? keyboardType;
 
   const ModernTextInput({
     super.key,
     required this.hintText,
-    required this.icon,
+    this.controller,
+    this.icon,
     required this.onChanged,
     this.initialValue = '',
+    this.validator,
+    this.keyboardType,
   });
 
   @override
@@ -101,79 +107,76 @@ class ModernTextInput extends StatefulWidget {
 }
 
 class _ModernTextInputState extends State<ModernTextInput> {
-  late TextEditingController _controller;
+  TextEditingController? _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialValue);
+    _controller = widget.controller ?? TextEditingController();
+    _controller!.text = widget.initialValue;
   }
 
   @override
   void didUpdateWidget(ModernTextInput oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialValue != widget.initialValue &&
-        _controller.text != widget.initialValue) {
-      _controller.text = widget.initialValue;
+        _controller!.text != widget.initialValue) {
+      _controller!.text = widget.initialValue;
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    if (widget.controller == null) {
+      _controller!.dispose();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.grey[50]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey.withValues(alpha: 0.2),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    return TextFormField(
+      controller: _controller,
+      onChanged: widget.onChanged,
+      validator: widget.validator,
+      keyboardType: widget.keyboardType,
+      style: TextStyle(
+        fontSize: 16,
+        fontFamily: 'SF-Pro',
+        fontWeight: FontWeight.w600,
+        color: Theme.of(context).textTheme.bodyLarge!.color,
       ),
-      child: TextField(
-        controller: _controller,
-        onChanged: widget.onChanged,
-        style: const TextStyle(
-          fontSize: 16,
+      decoration: InputDecoration(
+        fillColor: Theme.of(context).cardTheme.color,
+        isDense: true,
+        prefixIcon:
+            widget.icon != null
+                ? Icon(
+                  widget.icon,
+                  color: Theme.of(context).iconTheme.color,
+                  size: 22,
+                )
+                : null,
+        border: InputBorder.none,
+        errorBorder: InputBorder.none,
+        focusedErrorBorder: InputBorder.none,
+        errorStyle: const TextStyle(
+          fontSize: 13,
           fontFamily: 'SF-Pro',
           fontWeight: FontWeight.w600,
-          color: Colors.black87,
+
+          height: 2.5, // Increase for more vertical spacing
         ),
-        decoration: InputDecoration(
-          isDense: true,
-          prefixIcon: Icon(
-            widget.icon,
-            color: Theme.of(context).primaryColor,
-            size: 22,
-          ),
-          border: InputBorder.none,
-          hintText: widget.hintText,
-          hintStyle: TextStyle(
-            fontSize: 16,
-            fontFamily: 'SF-Pro',
-            color: Colors.grey[400],
-            fontWeight: FontWeight.w500,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
+        hintText: widget.hintText,
+        hintStyle: TextStyle(
+          fontSize: 16,
+          fontFamily: 'SF-Pro',
+          color: Theme.of(context).textTheme.bodyMedium!.color,
+          fontWeight: FontWeight.w600,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
         ),
       ),
     );
@@ -184,11 +187,13 @@ class _ModernTextInputState extends State<ModernTextInput> {
 class ModernPriceInput extends StatefulWidget {
   final Function(double) onChanged;
   final double initialValue;
+  final String? Function(String?)? validator;
 
   const ModernPriceInput({
     super.key,
     required this.onChanged,
     this.initialValue = 0,
+    this.validator,
   });
 
   @override
@@ -214,57 +219,51 @@ class _ModernPriceInputState extends State<ModernPriceInput> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).primaryColor.withValues(alpha: 0.1),
-            Theme.of(context).primaryColor.withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
+    return TextFormField(
+      controller: _controller,
+      onChanged: (value) {
+        final price = double.tryParse(value) ?? 0;
+        widget.onChanged(price);
+      },
+      validator: widget.validator,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      style: TextStyle(
+        fontSize: 18,
+        fontFamily: 'SF-Pro',
+        fontWeight: FontWeight.w700,
+        color: Theme.of(context).textTheme.bodyLarge!.color,
       ),
-      child: TextField(
-        controller: _controller,
-        onChanged: (value) {
-          final price = double.tryParse(value) ?? 0;
-          widget.onChanged(price);
-        },
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        style: TextStyle(
+      textAlign: TextAlign.center,
+      decoration: InputDecoration(
+        isDense: true,
+        fillColor: Theme.of(context).cardTheme.color,
+        filled: true,
+        border: InputBorder.none,
+        errorBorder: InputBorder.none,
+        focusedErrorBorder: InputBorder.none,
+        errorStyle: const TextStyle(
+          fontSize: 13,
+          fontFamily: 'SF-Pro',
+          fontWeight: FontWeight.w600,
+          height: 2.5, // Increase for more vertical spacing
+        ),
+        hintText: 'Set Price',
+        prefixText: '€ ',
+        prefixStyle: TextStyle(
           fontSize: 18,
           fontFamily: 'SF-Pro',
           fontWeight: FontWeight.w700,
-          color: Theme.of(context).primaryColor,
+          color: Theme.of(context).iconTheme.color,
         ),
-        textAlign: TextAlign.center,
-        decoration: InputDecoration(
-          isDense: true,
-          border: InputBorder.none,
-          hintText: 'Set Price',
-          prefixText: '€ ',
-          prefixStyle: TextStyle(
-            fontSize: 18,
-            fontFamily: 'SF-Pro',
-            fontWeight: FontWeight.w700,
-            color: Theme.of(context).primaryColor,
-          ),
-          hintStyle: TextStyle(
-            fontSize: 16,
-            fontFamily: 'SF-Pro',
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
-            fontWeight: FontWeight.w600,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
+        hintStyle: TextStyle(
+          fontSize: 16,
+          fontFamily: 'SF-Pro',
+          color: Theme.of(context).textTheme.bodyMedium!.color,
+          fontWeight: FontWeight.w600,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
         ),
       ),
     );
@@ -291,7 +290,7 @@ class ModernDaySelector extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -346,14 +345,16 @@ class _DayChip extends StatelessWidget {
               isSelected
                   ? LinearGradient(
                     colors: [
-                      Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.4),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
                   : null,
-          color: isSelected ? null : Colors.grey[100],
+          color: isSelected ? null : Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(12),
           boxShadow:
               isSelected
@@ -395,15 +396,21 @@ class _AddDayButton extends StatelessWidget {
         margin: const EdgeInsets.all(8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.grey[100],
+          color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.grey[300]!,
+            color: Theme.of(
+              context,
+            ).textTheme.bodyMedium!.color!.withOpacity(0.0),
             width: 1.5,
             style: BorderStyle.solid,
           ),
         ),
-        child: Icon(Icons.add, color: Colors.grey[700], size: 20),
+        child: Icon(
+          Icons.add,
+          color: Theme.of(context).iconTheme.color,
+          size: 20,
+        ),
       ),
     );
   }
@@ -412,8 +419,12 @@ class _AddDayButton extends StatelessWidget {
 // Modern Save Button with gradient
 class ModernSaveButton extends StatefulWidget {
   final VoidCallback onPressed;
-
-  const ModernSaveButton({super.key, required this.onPressed});
+  final String label;
+  const ModernSaveButton({
+    super.key,
+    required this.onPressed,
+    required this.label,
+  });
 
   @override
   State<ModernSaveButton> createState() => _ModernSaveButtonState();
@@ -438,8 +449,8 @@ class _ModernSaveButtonState extends State<ModernSaveButton> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Theme.of(context).primaryColor,
-                Theme.of(context).primaryColor.withValues(alpha: 0.8),
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -458,8 +469,8 @@ class _ModernSaveButtonState extends State<ModernSaveButton> {
             children: [
               const Icon(Icons.save_rounded, color: Colors.white, size: 24),
               const SizedBox(width: 12),
-              const Text(
-                'Save Plan',
+              Text(
+                widget.label,
                 style: TextStyle(
                   fontSize: 18,
                   fontFamily: 'SF-Pro',
@@ -504,7 +515,7 @@ class ModernButton extends StatelessWidget {
         ),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: color ?? Theme.of(context).primaryColor,
+        backgroundColor: color ?? Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -589,7 +600,7 @@ class ModernSuggestedExerciseCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardTheme.color,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: Colors.grey.withValues(alpha: 0.2),
@@ -608,12 +619,14 @@ class ModernSuggestedExerciseCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 Icons.add_circle_outline,
-                color: Theme.of(context).primaryColor,
+                color: Theme.of(context).colorScheme.primary,
                 size: 24,
               ),
             ),
@@ -624,10 +637,10 @@ class ModernSuggestedExerciseCard extends StatelessWidget {
                 children: [
                   Text(
                     exercise.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontFamily: 'SF-Pro',
-                      color: Colors.black87,
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -644,7 +657,11 @@ class ModernSuggestedExerciseCard extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: Colors.grey[400], size: 24),
+            Icon(
+              Icons.chevron_right,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+              size: 24,
+            ),
           ],
         ),
       ),

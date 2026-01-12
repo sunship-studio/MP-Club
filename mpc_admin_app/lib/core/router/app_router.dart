@@ -2,17 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/bloc/add_subscriber.dart';
+import 'package:mpc_admin_app/app/bloc/group%20classes/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/public_plans/cubit.dart';
+import 'package:mpc_admin_app/app/bloc/training%20plan/cubit.dart';
 import 'package:mpc_admin_app/app/models/PublicPlan.dart';
 import 'package:mpc_admin_app/app/models/User.dart';
+import 'package:mpc_admin_app/app/models/group_class.dart';
 import 'package:mpc_admin_app/app/services/socket.dart';
 import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/screens/add_subscriber.dart';
 import 'package:mpc_admin_app/core/screens/chat.dart';
+import 'package:mpc_admin_app/core/screens/group_class_editor.dart';
+import 'package:mpc_admin_app/core/screens/group_classes.dart';
 import 'package:mpc_admin_app/core/screens/home.dart';
 import 'package:mpc_admin_app/core/screens/online_coaching.dart';
 import 'package:mpc_admin_app/core/screens/public_plan_editor.dart';
 import 'package:mpc_admin_app/core/screens/training_plans.dart';
+import 'package:mpc_admin_app/core/screens/user_plan_editor.dart';
 import 'package:mpc_admin_app/core/screens/waiting_list.dart';
 import 'package:mpc_admin_app/core/widgets/app_shell.dart';
 import 'package:mpc_admin_app/main.dart';
@@ -31,7 +37,11 @@ final GoRouter appRouter = GoRouter(
         // Determine if back button should show based on current location
         final showBackButton = state.uri.path != RouteNames.home;
         final radius =
-            state.uri.path == RouteNames.publicPlanEditor ? false : true;
+            state.uri.path == RouteNames.publicPlanEditor ||
+                    state.uri.path == RouteNames.planEditor ||
+                    state.uri.path == RouteNames.groupClassEditor
+                ? false
+                : true;
 
         return AppShell(
           showBackButton: showBackButton,
@@ -83,7 +93,10 @@ final GoRouter appRouter = GoRouter(
           pageBuilder: (context, state) {
             final user = state.extra as User?;
             return NoTransitionPage(
-              child: OnlineCoaching(planEditor: true, user: user),
+              child: BlocProvider<TrainingPlanCubit>(
+                create: (context) => TrainingPlanCubit()..init(user),
+                child: UserPlanEditorScreen(user: user!),
+              ),
             );
           },
         ),
@@ -120,6 +133,31 @@ final GoRouter appRouter = GoRouter(
               child: BlocProvider<PublicPlansCubit>(
                 create: (context) => PublicPlansCubit(),
                 child: PublicPlanEditorScreen(plan: plan),
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: RouteNames.groupClasses,
+          name: 'groupClasses',
+          pageBuilder: (context, state) {
+            return NoTransitionPage(
+              child: BlocProvider<GroupClassesCubit>(
+                create: (context) => GroupClassesCubit(),
+                child: const GroupClassesScreen(),
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: RouteNames.groupClassEditor,
+          name: 'groupClassEditor',
+          pageBuilder: (context, state) {
+            final groupClass = state.extra as GroupClass?;
+            return NoTransitionPage(
+              child: BlocProvider<GroupClassesCubit>(
+                create: (context) => GroupClassesCubit(),
+                child: GroupClassEditorScreen(groupClass: groupClass),
               ),
             );
           },

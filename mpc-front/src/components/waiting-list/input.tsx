@@ -23,10 +23,10 @@ const Input = ({
         placeholder={`Enter your ${label.toLowerCase()}`}
         name={id}
         onChange={handleInputChange}
-        className="bg-white/10 backdrop-blur text-white rounded-lg py-3 px-4 w-full
+        className="bg-white/10 backdrop-blur text-gray-900 rounded-lg py-3 px-4 w-full
                    border border-white/20
                    focus:outline-none focus:ring-2 focus:ring-[#0B79AB] focus:border-transparent
-                   placeholder:text-gray-400
+                   placeholder:text-gray-500
                    transition-all duration-200
                    hover:bg-white/15
                    font-medium text-sm md:text-base"

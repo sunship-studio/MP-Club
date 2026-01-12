@@ -124,4 +124,36 @@ adminAppRouter.get(
   }
 );
 
+adminAppRouter.get(
+  '/group-classes',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    await adminAppController.getGroupClasses(req, res);
+  }
+);
+
+adminAppRouter.post(
+  '/add-group-class',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    await adminAppController.createGroupClass(req, res);
+  }
+);
+
+adminAppRouter.post(
+  '/edit-group-class',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    await adminAppController.editGroupClass(req, res);
+  }
+);
+
+adminAppRouter.post(
+  '/delete-group-class',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    await adminAppController.deleteGroupClass(req, res);
+  }
+);
+
 export default adminAppRouter;
