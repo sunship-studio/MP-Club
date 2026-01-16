@@ -26,6 +26,9 @@ import 'package:mpc_admin_app/main.dart';
 // Key for the shell navigator
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
+// Shared cubit instance for public plans (list + editor)
+final PublicPlansCubit _publicPlansCubit = PublicPlansCubit();
+
 /// Global router configuration for the app
 final GoRouter appRouter = GoRouter(
   initialLocation: RouteNames.home,
@@ -116,9 +119,10 @@ final GoRouter appRouter = GoRouter(
           path: RouteNames.trainingPlans,
           name: 'trainingPlans',
           pageBuilder: (context, state) {
+            _publicPlansCubit.loadPlans();
             return NoTransitionPage(
-              child: BlocProvider<PublicPlansCubit>(
-                create: (context) => PublicPlansCubit()..loadPlans(),
+              child: BlocProvider<PublicPlansCubit>.value(
+                value: _publicPlansCubit,
                 child: const TrainingPlansScreen(),
               ),
             );
@@ -130,8 +134,8 @@ final GoRouter appRouter = GoRouter(
           pageBuilder: (context, state) {
             final plan = state.extra as PublicPlan?;
             return NoTransitionPage(
-              child: BlocProvider<PublicPlansCubit>(
-                create: (context) => PublicPlansCubit(),
+              child: BlocProvider<PublicPlansCubit>.value(
+                value: _publicPlansCubit,
                 child: PublicPlanEditorScreen(plan: plan),
               ),
             );

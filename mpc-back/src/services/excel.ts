@@ -401,16 +401,12 @@ export class TrainingPlanExcelService {
 
   /**
    * Format reps array into display string
+   * Reps are now strings (can be ranges like "8-12" or single numbers)
    */
-  private formatReps(reps: number[]): string {
+  private formatReps(reps: string[]): string {
     const unique = [...new Set(reps)];
     if (unique.length === 1) {
-      return String(unique[0]);
-    }
-    // Check if it's a range
-    const sorted = [...reps].sort((a, b) => a - b);
-    if (sorted[sorted.length - 1] - sorted[0] <= 4) {
-      return `${sorted[0]}-${sorted[sorted.length - 1]}`;
+      return unique[0];
     }
     return reps.join(' / ');
   }
@@ -519,19 +515,16 @@ export class TrainingPlanExcelService {
   }
 
   /**
-   * Parse reps string into array of numbers
+   * Parse reps string into array of strings
+   * Preserves ranges like "8-12" as-is for each set
    */
-  private parseReps(repsStr: string, setCount: number): number[] {
-    // Handle formats like "8-12", "10", "8 / 10 / 12"
+  private parseReps(repsStr: string, setCount: number): string[] {
+    // Handle formats like "8 / 10 / 12" - different reps per set
     if (repsStr.includes('/')) {
-      return repsStr.split('/').map((r) => parseInt(r.trim(), 10));
+      return repsStr.split('/').map((r) => r.trim());
     }
-    if (repsStr.includes('-')) {
-      const [min, max] = repsStr.split('-').map((r) => parseInt(r.trim(), 10));
-      return Array(setCount).fill(Math.round((min + max) / 2));
-    }
-    const singleValue = parseInt(repsStr, 10) || 10;
-    return Array(setCount).fill(singleValue);
+    // For ranges like "8-12" or single values like "10", use same value for all sets
+    return Array(setCount).fill(repsStr.trim());
   }
 }
 

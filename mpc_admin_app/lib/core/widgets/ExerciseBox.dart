@@ -307,13 +307,61 @@ class _ExerciseBoxState extends State<ExerciseBox> {
                                 ),
                               ),
                               const SizedBox(width: kSpacingMedium),
-                              NumberInput(
-                                value: widget.exercise.sets![i].reps,
-                                label: "Reps",
-                                initialValue: widget.exercise.sets![i].reps,
-                                onChanged: (value) {
-                                  widget.onRepsChange(value, i);
-                                },
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Reps",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontFamily: 'SF-Pro',
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: kSpacingXSmall),
+                                  Container(
+                                    width: 60,
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: kBorderRadiusMediumAll,
+                                    ),
+                                    child: TextField(
+                                      controller: TextEditingController(
+                                        text: widget.exercise.sets![i].reps,
+                                      ),
+                                      onChanged: (value) {
+                                        widget.onRepsChange(value, i);
+                                      },
+                                      textAlign: TextAlign.center,
+                                      decoration: InputDecoration(
+                                        isDense: true,
+                                        border: InputBorder.none,
+                                        contentPadding: EdgeInsets.symmetric(
+                                          vertical: 5,
+                                          horizontal: 0,
+                                        ),
+                                        hintText: "8-12",
+                                        hintStyle: TextStyle(
+                                          fontSize: 10,
+                                          fontFamily: 'SF-Pro',
+                                          color: Colors.grey[400],
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontFamily: 'SF-Pro',
+                                        color: Colors.grey[900],
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(width: kSpacingMedium),
                               NumberInput(

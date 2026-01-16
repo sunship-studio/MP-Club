@@ -30,7 +30,7 @@ export const PlanForSaleSchema = new Schema<IPlanForSale>(
             seconds: { type: Number, default: 0 },
             sets: [
               {
-                reps: { type: Number, required: true },
+                reps: { type: String, required: true },
                 rir: { type: Number, required: true },
                 weight: { type: Number, required: true },
               },

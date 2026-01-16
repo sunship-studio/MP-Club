@@ -26,7 +26,7 @@ export interface IUser extends Document {
             seconds: number;
             sets: [
               {
-                reps: number;
+                reps: string;
                 rir: number;
                 weight: number;
               },
@@ -109,7 +109,7 @@ const UserSchema = new Schema<IUser>({
               seconds: { type: Number, default: 0 },
               sets: [
                 {
-                  reps: { type: Number, required: true },
+                  reps: { type: String, required: true },
                   rir: { type: Number, required: true },
 
                   weight: { type: Number, required: true },
@@ -148,7 +148,7 @@ const UserSchema = new Schema<IUser>({
             seconds: { type: Number, default: 0 },
             sets: [
               {
-                reps: { type: Number, required: true },
+                reps: { type: String, required: true },
                 rir: { type: Number, required: true },
 
                 weight: { type: Number, required: true },
@@ -168,7 +168,7 @@ const UserSchema = new Schema<IUser>({
 });
 
 export interface TrainingSet {
-  reps: number;
+  reps: string;
   rir: number;
   weight: number;
 }

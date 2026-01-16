@@ -268,7 +268,23 @@ export default class AdminAppController {
       trainingPlan.price = updatedPlan.price;
       trainingPlan.days = updatedPlan.days;
 
+      const newExcelFile = await excelService.generateBufferFromTemplate(
+        trainingPlan,
+        {
+          templatePath: path.join(
+            __dirname,
+            '../../../templates/training_plan.xlsx'
+          ),
+        }
+      );
+      const uploadResponse = await uploadExcelToCloudinary(
+        newExcelFile,
+        `${trainingPlan._id}_training_plan.xlsx`,
+        'training_plans'
+      );
+      trainingPlan.excelFileUrl = uploadResponse.url;
       await trainingPlan.save();
+
       res.status(200).json({ message: 'Training plan updated' });
     } catch (error) {
       console.error('Error editing training plan:', error);
@@ -324,10 +340,6 @@ export default class AdminAppController {
           __dirname,
           '../../../templates/training_plan.xlsx'
         ),
-
-        clientName: '',
-        startDate: new Date(),
-        weekOnProgramme: 23,
       });
 
       const uploadResponse = await uploadExcelToCloudinary(

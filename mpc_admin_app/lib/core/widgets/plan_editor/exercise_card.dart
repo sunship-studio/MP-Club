@@ -274,7 +274,7 @@ class _ModernExerciseCardState extends State<ModernExerciseCard>
                                   reps: set.reps,
                                   rir: set.rir,
                                   weight: set.weight,
-                                  onRepsChanged: (value) {
+                                  onRepsChanged: (String value) {
                                     widget.cubit.updateSetReps(
                                       widget.exercise.id!,
                                       value,
@@ -521,10 +521,10 @@ class _AdjusterButton extends StatelessWidget {
 // Set row widget
 class _SetRow extends StatelessWidget {
   final int setNumber;
-  final int reps;
+  final String reps;
   final int rir;
   final int weight;
-  final Function(int) onRepsChanged;
+  final Function(String) onRepsChanged;
   final Function(int) onRirChanged;
   final Function(int) onWeightChanged;
 
@@ -591,8 +591,7 @@ class _SetRow extends StatelessWidget {
 
           // Reps
           Expanded(
-            child: _SetInput(
-              label: 'Reps',
+            child: _RepsInput(
               value: reps,
               onChanged: onRepsChanged,
             ),
@@ -689,6 +688,89 @@ class _SetInputState extends State<_SetInput> {
             isDense: true,
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Reps input widget (supports ranges like "8-12")
+class _RepsInput extends StatefulWidget {
+  final String value;
+  final Function(String) onChanged;
+
+  const _RepsInput({required this.value, required this.onChanged});
+
+  @override
+  State<_RepsInput> createState() => _RepsInputState();
+}
+
+class _RepsInputState extends State<_RepsInput> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void didUpdateWidget(_RepsInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value && _controller.text != widget.value) {
+      _controller.text = widget.value;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Reps',
+          style: TextStyle(
+            fontSize: 10,
+            fontFamily: 'SF-Pro',
+            color: Theme.of(context).textTheme.bodySmall?.color,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        TextField(
+          controller: _controller,
+          onChanged: (val) {
+            widget.onChanged(val);
+          },
+          keyboardType: TextInputType.text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 14,
+            fontFamily: 'SF-Pro',
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+          ),
+          decoration: InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 8,
+            ),
+            hintText: '8-12',
+            hintStyle: TextStyle(
+              fontSize: 11,
+              fontFamily: 'SF-Pro',
+              color: Theme.of(context).textTheme.bodySmall?.color,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],

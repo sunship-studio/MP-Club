@@ -1,5 +1,5 @@
 class ExerciseSet {
-  int reps;
+  String reps;
   int rir;
   int weight;
 
@@ -7,7 +7,7 @@ class ExerciseSet {
 
   factory ExerciseSet.fromJson(Map<String, dynamic> json) {
     return ExerciseSet(
-      reps: json['reps'] as int,
+      reps: json['reps'].toString(),
       rir: json['rir'] as int,
       weight: json['weight'] as int,
     );
@@ -19,7 +19,7 @@ class ExerciseSet {
 
   @override
   // copyWith method to create a copy of the instance with modified values
-  ExerciseSet copyWith({int? reps, int? rir, int? weight}) {
+  ExerciseSet copyWith({String? reps, int? rir, int? weight}) {
     return ExerciseSet(
       reps: reps ?? this.reps,
       rir: rir ?? this.rir,

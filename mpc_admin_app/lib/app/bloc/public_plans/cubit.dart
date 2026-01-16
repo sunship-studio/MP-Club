@@ -23,7 +23,12 @@ class PublicPlansCubit extends Cubit<PublicPlansState> {
     print('Response data: ${response.data}');
     if (response.statusCode == 200) {
       final List<dynamic> data = response.data as List<dynamic>;
-      final plans = data.map((json) => PublicPlan.fromJson(json)).toList().reversed.toList();
+      final plans =
+          data
+              .map((json) => PublicPlan.fromJson(json))
+              .toList()
+              .reversed
+              .toList();
 
       emit(PublicPlansLoaded(plans: plans));
     } else {
@@ -245,9 +250,9 @@ class PublicPlansCubit extends Cubit<PublicPlansState> {
         id: newExercise.id,
         bodyParts: newExercise.bodyParts,
         sets: [
-          ExerciseSet(reps: 8, rir: 2, weight: 0),
-          ExerciseSet(reps: 8, rir: 2, weight: 0),
-          ExerciseSet(reps: 8, rir: 2, weight: 0),
+          ExerciseSet(reps: '8-12', rir: 2, weight: 0),
+          ExerciseSet(reps: '8-12', rir: 2, weight: 0),
+          ExerciseSet(reps: '8-12', rir: 2, weight: 0),
         ],
       );
       publicPlan.days[dayIndex].exercises.add(exercise);
@@ -304,7 +309,9 @@ class PublicPlansCubit extends Cubit<PublicPlansState> {
           'Checking exercise with id: ${day.exercises[i].id} with target id: $id',
         );
         if (day.exercises[i].id == id) {
-          day.exercises[i].sets?.add(ExerciseSet(reps: 8, rir: 2, weight: 0));
+          day.exercises[i].sets?.add(
+            ExerciseSet(reps: '8-12', rir: 2, weight: 0),
+          );
           emit(
             PublicPlanEditing(
               publicPlan: publicPlan,
@@ -338,7 +345,7 @@ class PublicPlansCubit extends Cubit<PublicPlansState> {
     }
   }
 
-  void updateSetReps(String id, int reps, int index) {
+  void updateSetReps(String id, String reps, int index) {
     for (var day in publicPlan.days) {
       for (var i = 0; i < day.exercises.length; i++) {
         if (day.exercises[i].id == id) {
@@ -438,6 +445,7 @@ class PublicPlansCubit extends Cubit<PublicPlansState> {
   Future<void> savePublicPlan() async {
     try {
       emit(PublicPlanUploading());
+      print('Saving plan: ${publicPlan.toJson()}');
       final isEditing = publicPlan.id != null;
       final response = await apiService.post(
         isEditing ? '/edit-training-plan' : '/add-training-plan',
@@ -449,8 +457,12 @@ class PublicPlansCubit extends Cubit<PublicPlansState> {
       print(publicPlan.toJson());
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        print(
+          isEditing ? 'Plan updated successfully' : 'Plan created successfully',
+        );
+        print('Response data: ${response.data}');
         // Small delay to ensure backend has committed changes
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 1000));
         await loadPlans();
       } else {
         emit(

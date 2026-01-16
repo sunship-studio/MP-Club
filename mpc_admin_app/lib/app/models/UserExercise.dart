@@ -4,9 +4,9 @@ class UserExercise {
   String name;
   String? id;
   List<ExerciseSet>? sets = [
-    ExerciseSet(reps: 10, rir: 2, weight: 0),
-    ExerciseSet(reps: 10, rir: 2, weight: 0),
-    ExerciseSet(reps: 10, rir: 2, weight: 0),
+    ExerciseSet(reps: '8-12', rir: 2, weight: 0),
+    ExerciseSet(reps: '8-12', rir: 2, weight: 0),
+    ExerciseSet(reps: '8-12', rir: 2, weight: 0),
   ];
   int? minutes;
   int? seconds;

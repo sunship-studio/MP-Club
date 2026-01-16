@@ -33,7 +33,7 @@ class TrainingPlanCubit extends Cubit<TrainingPlanState> {
     }
   }
 
-  void updateSetReps(String id, int reps, int index) {
+  void updateSetReps(String id, String reps, int index) {
     for (var day in trainingPlan.days) {
       for (var i = 0; i < day.exercises.length; i++) {
         if (day.exercises[i].id == id) {
@@ -122,7 +122,7 @@ class TrainingPlanCubit extends Cubit<TrainingPlanState> {
     for (var day in trainingPlan.days) {
       for (var i = 0; i < day.exercises.length; i++) {
         if (day.exercises[i].id == id) {
-          day.exercises[i].sets?.add(ExerciseSet(reps: 8, rir: 2, weight: 0));
+          day.exercises[i].sets?.add(ExerciseSet(reps: '8-12', rir: 2, weight: 0));
           emit(
             TrainingPlanEditing(
               trainingPlan: trainingPlan,
@@ -223,9 +223,9 @@ class TrainingPlanCubit extends Cubit<TrainingPlanState> {
         id: newExercise.id,
         bodyParts: newExercise.bodyParts,
         sets: [
-          ExerciseSet(reps: 8, rir: 2, weight: 0),
-          ExerciseSet(reps: 8, rir: 2, weight: 0),
-          ExerciseSet(reps: 8, rir: 2, weight: 0),
+          ExerciseSet(reps: '8-12', rir: 2, weight: 0),
+          ExerciseSet(reps: '8-12', rir: 2, weight: 0),
+          ExerciseSet(reps: '8-12', rir: 2, weight: 0),
         ],
       );
       trainingPlan.days[dayIndex].exercises.add(exercise);

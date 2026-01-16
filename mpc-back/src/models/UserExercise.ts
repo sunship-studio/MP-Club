@@ -5,7 +5,7 @@ export interface IUserExercise extends Document {
 
   thumbnailUrl: string;
   sets: number;
-  reps: number;
+  reps: string;
   rir: number;
   videoUrl?: string;
   weight: number;
@@ -15,7 +15,7 @@ const UserExerciseSchema = new Schema<IUserExercise>({
   videoUrl: { type: String, required: false },
   thumbnailUrl: { type: String, required: true },
   sets: { type: Number, required: true },
-  reps: { type: Number, required: true },
+  reps: { type: String, required: true },
   rir: { type: Number, required: true },
   weight: { type: Number, required: true },
 });

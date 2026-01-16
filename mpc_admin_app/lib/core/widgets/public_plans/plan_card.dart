@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/models/PublicPlan.dart';
 import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/theme/app_colors.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PlanCard extends StatelessWidget {
   final PublicPlan plan;
@@ -60,6 +61,14 @@ class PlanCard extends StatelessWidget {
     context.push(RouteNames.publicPlanEditor, extra: plan);
   }
 
+  Future<void> _openExcelFile() async {
+    if (plan.excelFileUrl == null || plan.excelFileUrl!.isEmpty) return;
+    final uri = Uri.parse(plan.excelFileUrl!);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -92,6 +101,16 @@ class PlanCard extends StatelessWidget {
               ),
               Row(
                 children: [
+                  if (plan.excelFileUrl != null && plan.excelFileUrl!.isNotEmpty)
+                    IconButton(
+                      onPressed: _openExcelFile,
+                      icon: Icon(
+                        Icons.table_chart,
+                        color: Colors.green,
+                        size: 20.w,
+                      ),
+                      tooltip: 'Open Excel file',
+                    ),
                   IconButton(
                     onPressed: () => _navigateToEditor(context),
                     icon: Icon(
