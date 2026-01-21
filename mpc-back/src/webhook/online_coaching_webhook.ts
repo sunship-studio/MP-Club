@@ -13,7 +13,7 @@ const handleWebhook = async (req: Request, res: Response) => {
   const endpointSecret =
     process.env.NODE_ENV == 'development'
       ? 'whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47'
-      : process.env.STRIPE_WEBHOOK_SECRET;
+      : 'whsec_yIFQOy0GjJtbZSPfz1eO3IrO3qPBuozh';
   let event;
 
   try {
