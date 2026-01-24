@@ -141,17 +141,6 @@ export default function GroupClassesPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-8 md:px-16 py-12 relative overflow-hidden">
-      {/* Disabled Overlay */}
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center group cursor-not-allowed">
-        <div className="bg-white/10 backdrop-blur-md border-2 border-white/20 rounded-2xl px-8 md:px-12 py-6 md:py-8 transform transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 duration-300 mx-4">
-          <p className="text-white text-2xl md:text-3xl font-bold text-center">
-            Available This Week 📅
-          </p>
-          <p className="text-gray-200 text-base md:text-lg text-center mt-2">
-            Group classes coming soon!
-          </p>
-        </div>
-      </div>
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
           Group Classes

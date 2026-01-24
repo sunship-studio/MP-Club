@@ -85,47 +85,14 @@ class PlanCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  plan.name,
-                  style: TextStyle(
-                    fontSize: 24.sp,
-                    fontFamily: 'SF-Pro',
-                    color: Theme.of(context).textTheme.bodyLarge!.color,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  if (plan.excelFileUrl != null && plan.excelFileUrl!.isNotEmpty)
-                    IconButton(
-                      onPressed: _openExcelFile,
-                      icon: Icon(
-                        Icons.table_chart,
-                        color: Colors.green,
-                        size: 20.w,
-                      ),
-                      tooltip: 'Open Excel file',
-                    ),
-                  IconButton(
-                    onPressed: () => _navigateToEditor(context),
-                    icon: Icon(
-                      Icons.edit,
-                      color: AppColors.blueColor,
-                      size: 20.w,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => _showDeleteConfirmation(context),
-                    icon: Icon(Icons.delete, color: Colors.red, size: 20.w),
-                  ),
-                ],
-              ),
-            ],
+          Text(
+            plan.name,
+            style: TextStyle(
+              fontSize: 24.sp,
+              fontFamily: 'SF-Pro',
+              color: Theme.of(context).textTheme.bodyLarge!.color,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           Gap(12.h),
           Row(
@@ -203,6 +170,34 @@ class PlanCard extends StatelessWidget {
               ),
             ],
           ],
+          Gap(12.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (plan.excelFileUrl != null && plan.excelFileUrl!.isNotEmpty)
+                IconButton(
+                  onPressed: _openExcelFile,
+                  icon: Icon(
+                    Icons.table_chart,
+                    color: Colors.green,
+                    size: 20.w,
+                  ),
+                  tooltip: 'Open Excel file',
+                ),
+              IconButton(
+                onPressed: () => _navigateToEditor(context),
+                icon: Icon(
+                  Icons.edit,
+                  color: AppColors.blueColor,
+                  size: 20.w,
+                ),
+              ),
+              IconButton(
+                onPressed: () => _showDeleteConfirmation(context),
+                icon: Icon(Icons.delete, color: Colors.red, size: 20.w),
+              ),
+            ],
+          ),
         ],
       ),
     );
