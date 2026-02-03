@@ -5,6 +5,7 @@ class Exercise {
   List<String> bodyParts;
   String? imageUrl;
   String? videoUrl;
+  int? videoLengthSeconds;
 
   Exercise({
     required this.id,
@@ -12,6 +13,7 @@ class Exercise {
     this.imageUrl,
     this.description,
     this.videoUrl,
+    this.videoLengthSeconds,
     required this.bodyParts,
   });
 
@@ -22,10 +24,24 @@ class Exercise {
       description: json['description'] as String?,
       imageUrl: json['imageUrl'] as String?,
       videoUrl: json['videoUrl'] as String?,
-      bodyParts: (json['bodyParts'] as List<dynamic>?)
+      videoLengthSeconds: json['videoLengthSeconds'] as int?,
+      bodyParts:
+          (json['bodyParts'] as List<dynamic>?)
               ?.map((part) => part as String)
               .toList() ??
           [],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'name': name,
+      'description': description,
+      'imageUrl': imageUrl,
+      'videoUrl': videoUrl,
+      'videoLengthSeconds': videoLengthSeconds,
+      'bodyParts': bodyParts,
+    };
   }
 }

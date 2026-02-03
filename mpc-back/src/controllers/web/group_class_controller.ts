@@ -3,7 +3,11 @@ import fs from 'fs';
 import path from 'path';
 
 import resend from '../../config/resend';
+import stripe from '../../config/stripe';
 import GroupClass from '../../models/GroupClass';
+
+// Price for group class booking in cents (€10 = 1000 cents)
+const GROUP_CLASS_PRICE_CENTS = 1000;
 
 export default class GroupClassController {
   public async getGroupClasses(req: Request, res: Response): Promise<void> {
@@ -132,5 +136,155 @@ export default class GroupClassController {
     }
 
     console.log('Email sent successfully:', data);
+  }
+
+  // Create Stripe checkout session for group class booking
+  public async createCheckoutSession(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const { classId, timeSlot, firstName, lastName, email, date } = req.body;
+
+      if (!classId || !timeSlot || !firstName || !email || !date) {
+        res.status(400).json({ error: 'Missing required fields' });
+        return;
+      }
+
+      const groupClass = await GroupClass.findById(classId);
+      if (!groupClass) {
+        res.status(404).json({ error: 'Group class not found' });
+        return;
+      }
+
+      // Check if slot is available
+      const timeSlotObj = groupClass.timeSlots.find(
+        (slot) => slot.time === timeSlot
+      );
+      if (!timeSlotObj) {
+        res.status(400).json({ error: 'Time slot not found' });
+        return;
+      }
+
+      if (timeSlotObj.spots.length >= groupClass.spotsAvailable) {
+        res.status(400).json({ error: 'This time slot is fully booked' });
+        return;
+      }
+
+      // Check if email already booked
+      const bookingExists = timeSlotObj.spots.some(
+        (booking) => booking.email === email
+      );
+      if (bookingExists) {
+        res.status(400).json({ error: 'You have already booked this class' });
+        return;
+      }
+
+      // Format the date for display
+      const formattedDate = new Date(date).toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+      });
+
+      // Create Stripe checkout session
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: 'payment',
+        line_items: [
+          {
+            price_data: {
+              currency: 'eur',
+              product_data: {
+                name: `${groupClass.title} - Group Class`,
+                description: `${formattedDate} at ${timeSlot} (${groupClass.durationMinutes} min)`,
+              },
+              unit_amount: GROUP_CLASS_PRICE_CENTS,
+            },
+            quantity: 1,
+          },
+        ],
+        customer_email: email,
+        metadata: {
+          classId,
+          timeSlot,
+          firstName,
+          lastName,
+          email,
+          date,
+          className: groupClass.title,
+          durationMinutes: groupClass.durationMinutes.toString(),
+        },
+        success_url:
+          process.env.NODE_ENV === 'development'
+            ? `http://localhost:3000/group-classes/success?session_id={CHECKOUT_SESSION_ID}`
+            : `https://midlandsperformanceclub.ie/group-classes/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url:
+          process.env.NODE_ENV === 'development'
+            ? `http://localhost:3000/group-classes`
+            : `https://midlandsperformanceclub.ie/group-classes`,
+      });
+
+      console.log('Checkout session created:', session.id);
+      res.status(200).json({ url: session.url, sessionId: session.id });
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      res.status(500).json({ error: 'Failed to create checkout session' });
+    }
+  }
+
+  // Handle successful payment - called by webhook
+  public async confirmBookingAfterPayment(
+    classId: string,
+    timeSlot: string,
+    firstName: string,
+    lastName: string,
+    email: string,
+    date: string,
+    className: string,
+    durationMinutes: number
+  ): Promise<void> {
+    const groupClass = await GroupClass.findById(classId);
+    if (!groupClass) {
+      throw new Error('Group class not found');
+    }
+
+    const timeSlotObj = groupClass.timeSlots.find(
+      (slot) => slot.time === timeSlot
+    );
+    if (!timeSlotObj) {
+      throw new Error('Time slot not found');
+    }
+
+    // Double-check booking doesn't already exist
+    const bookingExists = timeSlotObj.spots.some(
+      (booking) => booking.email === email
+    );
+    if (bookingExists) {
+      console.log('Booking already exists for:', email);
+      return;
+    }
+
+    // Add the booking
+    timeSlotObj.spots.push({
+      email,
+      firstName,
+      lastName,
+      bookedAt: new Date(date),
+    });
+    await groupClass.save();
+
+    console.log('✅ Booking confirmed after payment:', email);
+
+    // Send confirmation email
+    await this.sendBookingConfirmationEmail(
+      email,
+      firstName,
+      lastName,
+      className,
+      date,
+      timeSlot,
+      durationMinutes
+    );
   }
 }

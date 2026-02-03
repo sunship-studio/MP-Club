@@ -2,7 +2,11 @@ import console from 'console';
 import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { uploadExcelToCloudinary } from '../../config/cloudinary';
+import {
+  uploadExcelToCloudinary,
+  uploadToCloudinary,
+  uploadVideoToCloudinary,
+} from '../../config/cloudinary';
 import resend from '../../config/resend';
 import stripe from '../../config/stripe';
 import AdminSettings from '../../models/AdminSettings';
@@ -517,6 +521,160 @@ export default class AdminAppController {
       return res.status(200).json({ message: 'Group class deleted' });
     } catch (error) {
       console.error('Error deleting group class:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  // ============ EXERCISE CRUD METHODS ============
+
+  public async createExercise(req: Request, res: Response): Promise<Response> {
+    try {
+      const { name, description, bodyParts } = req.body;
+      const files = req.files as {
+        video?: Express.Multer.File[];
+        image?: Express.Multer.File[];
+      };
+
+      if (!name || !bodyParts) {
+        return res
+          .status(400)
+          .json({ message: 'Name and body parts are required' });
+      }
+
+      let videoUrl: string | undefined;
+      let imageUrl: string | undefined;
+      let videoLengthSeconds: number | undefined;
+
+      // Upload video if provided
+      if (files?.video && files.video[0]) {
+        const videoFile = files.video[0];
+        const videoResult = await uploadVideoToCloudinary(
+          videoFile.buffer,
+          videoFile.originalname,
+          'exercises'
+        );
+        videoUrl = videoResult.url;
+        videoLengthSeconds = videoResult.duration
+          ? Math.round(videoResult.duration)
+          : undefined;
+        console.log('Video uploaded:', videoUrl);
+      }
+
+      // Upload image if provided
+      if (files?.image && files.image[0]) {
+        const imageFile = files.image[0];
+        const imageResult = await uploadToCloudinary(
+          imageFile.buffer,
+          imageFile.originalname,
+          'exercise-images'
+        );
+        imageUrl = imageResult.url;
+        console.log('Image uploaded:', imageUrl);
+      }
+
+      const parsedBodyParts =
+        typeof bodyParts === 'string' ? JSON.parse(bodyParts) : bodyParts;
+
+      const exercise = new Exercise({
+        name,
+        description,
+        bodyParts: parsedBodyParts,
+        videoUrl,
+        imageUrl,
+        videoLengthSeconds,
+      });
+
+      await exercise.save();
+      console.log('Exercise created:', exercise);
+      return res.status(201).json({ message: 'Exercise created', exercise });
+    } catch (error) {
+      console.error('Error creating exercise:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  public async updateExercise(req: Request, res: Response): Promise<Response> {
+    try {
+      const {
+        id,
+        name,
+        description,
+        bodyParts,
+        existingVideoUrl,
+        existingImageUrl,
+      } = req.body;
+      const files = req.files as {
+        video?: Express.Multer.File[];
+        image?: Express.Multer.File[];
+      };
+
+      const exercise = await Exercise.findById(id);
+      if (!exercise) {
+        return res.status(404).json({ message: 'Exercise not found' });
+      }
+
+      // Update basic fields
+      if (name) exercise.name = name;
+      if (description !== undefined) exercise.description = description;
+      if (bodyParts) {
+        exercise.bodyParts =
+          typeof bodyParts === 'string' ? JSON.parse(bodyParts) : bodyParts;
+      }
+
+      // Upload new video if provided
+      if (files?.video && files.video[0]) {
+        const videoFile = files.video[0];
+        const videoResult = await uploadVideoToCloudinary(
+          videoFile.buffer,
+          videoFile.originalname,
+          'exercises'
+        );
+        exercise.videoUrl = videoResult.url;
+        exercise.videoLengthSeconds = videoResult.duration
+          ? Math.round(videoResult.duration)
+          : undefined;
+        console.log('Video updated:', exercise.videoUrl);
+      } else if (existingVideoUrl) {
+        exercise.videoUrl = existingVideoUrl;
+      }
+
+      // Upload new image if provided
+      if (files?.image && files.image[0]) {
+        const imageFile = files.image[0];
+        const imageResult = await uploadToCloudinary(
+          imageFile.buffer,
+          imageFile.originalname,
+          'exercise-images'
+        );
+        exercise.imageUrl = imageResult.url;
+        console.log('Image updated:', exercise.imageUrl);
+      } else if (existingImageUrl) {
+        exercise.imageUrl = existingImageUrl;
+      }
+
+      await exercise.save();
+      console.log('Exercise updated:', exercise);
+      return res.status(200).json({ message: 'Exercise updated', exercise });
+    } catch (error) {
+      console.error('Error updating exercise:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  public async deleteExercise(req: Request, res: Response): Promise<Response> {
+    try {
+      const { id } = req.body;
+
+      const exercise = await Exercise.findById(id);
+      if (!exercise) {
+        return res.status(404).json({ message: 'Exercise not found' });
+      }
+
+      await Exercise.findByIdAndDelete(id);
+      console.log('Exercise deleted:', id);
+      return res.status(200).json({ message: 'Exercise deleted' });
+    } catch (error) {
+      console.error('Error deleting exercise:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   }

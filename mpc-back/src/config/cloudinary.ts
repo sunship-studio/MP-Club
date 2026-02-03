@@ -182,6 +182,110 @@ export async function deleteFromCloudinary(publicId: string): Promise<void> {
   }
 }
 
+// File filter for video files
+const videoFileFilter = (
+  req: Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  const allowedMimeTypes = [
+    'video/mp4',
+    'video/quicktime',
+    'video/x-msvideo',
+    'video/x-ms-wmv',
+    'video/webm',
+    'video/mpeg',
+  ];
+
+  const allowedExtensions = ['.mp4', '.mov', '.avi', '.wmv', '.webm', '.mpeg'];
+  const fileExtension = file.originalname
+    .toLowerCase()
+    .substring(file.originalname.lastIndexOf('.'));
+
+  console.log(
+    'Uploading video file - mimetype:',
+    file.mimetype,
+    'extension:',
+    fileExtension,
+    'filename:',
+    file.originalname
+  );
+
+  if (
+    allowedMimeTypes.includes(file.mimetype) ||
+    allowedExtensions.includes(fileExtension)
+  ) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        `Only video files are allowed! Received: ${file.mimetype} with extension ${fileExtension}`
+      )
+    );
+  }
+};
+
+// Multer upload middleware for videos
+export const uploadVideo = multer({
+  storage: storage,
+  fileFilter: videoFileFilter,
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB max for video files
+  },
+});
+
+// Upload video buffer to Cloudinary
+export async function uploadVideoToCloudinary(
+  fileBuffer: Buffer,
+  fileName: string,
+  folder: string = 'exercises'
+): Promise<CloudinaryUploadResult> {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+        public_id: `${Date.now()}-${fileName.split('.')[0]}`,
+        resource_type: 'video',
+        eager: [
+          { width: 720, height: 1280, crop: 'limit' }, // Max dimensions for mobile
+        ],
+        eager_async: true,
+      },
+      (error, result) => {
+        if (error) {
+          console.error('Video Cloudinary upload error:', error);
+          reject(error);
+        } else {
+          resolve({
+            url: result!.secure_url,
+            publicId: result!.public_id,
+            format: result!.format,
+            width: result!.width || 0,
+            height: result!.height || 0,
+            bytes: result!.bytes,
+            duration: result!.duration,
+          });
+        }
+      }
+    );
+
+    uploadStream.end(fileBuffer);
+  });
+}
+
+// Delete video from Cloudinary
+export async function deleteVideoFromCloudinary(
+  publicId: string
+): Promise<void> {
+  try {
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
+    console.log(`Deleted video: ${publicId}`);
+  } catch (error) {
+    console.error('Cloudinary video delete error:', error);
+    throw error;
+  }
+}
+
 // TypeScript interface for upload result
 interface CloudinaryUploadResult {
   url: string;
@@ -190,6 +294,7 @@ interface CloudinaryUploadResult {
   width: number;
   height: number;
   bytes: number;
+  duration?: number;
 }
 
 export { cloudinary };

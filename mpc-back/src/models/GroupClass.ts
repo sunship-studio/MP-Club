@@ -35,7 +35,7 @@ const GroupClassSchema: Schema = new Schema<IGroupClass>({
             email: { type: String, required: true },
             bookedAt: { type: Date, default: Date.now },
             firstName: { type: String, required: true },
-            lastName: { type: String, required: true },
+            lastName: { type: String, required: false },
           },
         ],
       },

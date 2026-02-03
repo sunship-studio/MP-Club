@@ -61,6 +61,17 @@ class HomeScreen extends StatelessWidget {
                   label: 'GROUP CLASSES',
                 ),
               ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ModernButton(
+                  icon: Icons.library_books_outlined,
+                  onPressed: () {
+                    context.push(RouteNames.exerciseManagement);
+                  },
+                  label: 'EXERCISES LIBRARY',
+                ),
+              ),
             ],
           ),
         ),

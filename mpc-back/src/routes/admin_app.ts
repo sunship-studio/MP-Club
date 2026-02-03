@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import multer from 'multer';
 
 import AdminAppController from '../controllers/admin/admin_app';
 import { adminAppAuth } from '../middleware/auth';
@@ -6,6 +7,16 @@ import { adminAppAuth } from '../middleware/auth';
 // Mobile App Router
 const adminAppRouter = express.Router();
 const adminAppController = new AdminAppController();
+
+// Multer memory storage for file uploads
+const storage = multer.memoryStorage();
+const uploadFields = multer({
+  storage: storage,
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB max
+}).fields([
+  { name: 'video', maxCount: 1 },
+  { name: 'image', maxCount: 1 },
+]);
 
 // Route to get the waiting list
 adminAppRouter.get(
@@ -153,6 +164,34 @@ adminAppRouter.post(
   adminAppAuth,
   async (req: Request, res: Response) => {
     await adminAppController.deleteGroupClass(req, res);
+  }
+);
+
+// ============ EXERCISE CRUD ROUTES ============
+
+adminAppRouter.post(
+  '/create-exercise',
+  adminAppAuth,
+  uploadFields,
+  async (req: Request, res: Response) => {
+    await adminAppController.createExercise(req, res);
+  }
+);
+
+adminAppRouter.post(
+  '/update-exercise',
+  adminAppAuth,
+  uploadFields,
+  async (req: Request, res: Response) => {
+    await adminAppController.updateExercise(req, res);
+  }
+);
+
+adminAppRouter.post(
+  '/delete-exercise',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    await adminAppController.deleteExercise(req, res);
   }
 );
 

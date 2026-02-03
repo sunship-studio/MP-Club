@@ -72,6 +72,7 @@ import fs from 'fs';
 
 import path from 'path';
 
+import { handleGroupClassWebhook } from './webhook/group_class_webhook';
 import { handlePlanWebhook } from './webhook/plan_webhook';
 
 const readHTMLFile = (filePath: string) => {
@@ -84,6 +85,14 @@ app.post(
 
   async (req, res) => {
     handlePlanWebhook(req, res);
+  }
+);
+
+app.post(
+  '/group_class_webhook',
+  bodyParser.raw({ type: 'application/json' }),
+  async (req, res) => {
+    handleGroupClassWebhook(req, res);
   }
 );
 

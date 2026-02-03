@@ -4,7 +4,12 @@ import { useEffect, useState } from 'react';
 
 interface TimeSlot {
   time: string;
-  spots: [];
+  spots: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    bookedAt: string;
+  }[];
 }
 
 interface GroupClass {
@@ -16,6 +21,10 @@ interface GroupClass {
   recurring?: boolean;
   dayOfWeek?: string;
   spotsAvailable: number;
+}
+
+interface ClassWithAvailability extends GroupClass {
+  timesWithSpots: { time: string; spotsTaken: number; spotsLeft: number }[];
 }
 
 export default function GroupClassesPage() {
@@ -32,6 +41,7 @@ export default function GroupClassesPage() {
       try {
         setIsLoadingClasses(true);
         const response = await apiService.get<GroupClass[]>('/group-classes');
+        console.log('Fetched classes:', response);
         setClasses(response);
       } catch (error) {
         console.error('Error fetching group classes:', error);
@@ -43,7 +53,6 @@ export default function GroupClassesPage() {
     fetchGroupClasses();
   }, []);
 
-  // Generate calendar days for current month
   const generateCalendarDays = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -52,15 +61,12 @@ export default function GroupClassesPage() {
     const lastDay = new Date(year, month + 1, 0);
     const days: (Date | null)[] = [];
 
-    // Get the day of the week the month starts on (0 = Sunday, 6 = Saturday)
     const startingDayOfWeek = firstDay.getDay();
 
-    // Add empty cells for days before the month starts
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
 
-    // Add all days of the month
     for (let i = 1; i <= lastDay.getDate(); i++) {
       days.push(new Date(year, month, i));
     }
@@ -70,22 +76,54 @@ export default function GroupClassesPage() {
 
   const calendarDays = generateCalendarDays();
 
-  // Filter classes for the selected date
-  const getClassesForDate = (date: Date | null) => {
+  const getClassesForDate = (date: Date | null): ClassWithAvailability[] => {
     if (!date) return [];
 
     const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
+    const dateString = date.toISOString().split('T')[0];
 
-    return classes.filter((cls) => {
-      if (cls.recurring && cls.dayOfWeek) {
-        return cls.dayOfWeek === dayOfWeek;
-      }
-      if (cls.date) {
-        const classDate = new Date(cls.date);
-        return classDate.toDateString() === date.toDateString();
-      }
-      return false;
-    });
+    console.log('Getting classes for:', dayOfWeek, dateString);
+
+    return classes
+      .map((cls) => {
+        console.log('Checking class:', cls.title, 'timeSlots:', cls.timeSlots);
+
+        // Filter by recurring classes that match this day OR specific date classes
+        const isRecurringMatch =
+          cls.recurring &&
+          cls.dayOfWeek?.toLowerCase() === dayOfWeek.toLowerCase();
+        const isDateMatch =
+          cls.date &&
+          new Date(cls.date).toISOString().split('T')[0] === dateString;
+
+        if (!isRecurringMatch && !isDateMatch) {
+          console.log(`Class ${cls.title} doesn't match this date`);
+          return null;
+        }
+
+        if (!cls.timeSlots || cls.timeSlots.length === 0) {
+          console.log('No timeSlots found for class:', cls.title);
+          return null;
+        }
+
+        // Calculate availability for each time slot
+        const timesWithSpots = cls.timeSlots.map((slot) => {
+          const spotsTaken = slot.spots?.length || 0;
+          return {
+            time: slot.time,
+            spotsTaken,
+            spotsLeft: cls.spotsAvailable - spotsTaken,
+          };
+        });
+
+        console.log('Times with spots for', cls.title, ':', timesWithSpots);
+
+        return {
+          ...cls,
+          timesWithSpots,
+        };
+      })
+      .filter((cls): cls is ClassWithAvailability => cls !== null);
   };
 
   const availableClasses = getClassesForDate(selectedDate);
@@ -100,17 +138,12 @@ export default function GroupClassesPage() {
     const lastName = lastNameParts.join(' ') || '';
 
     setIsSubmitting(true);
-    console.log('Booking data:', {
-      classId: selectedClass.split('-')[0],
-      timeSlot: selectedClass.split('-')[1],
-      firstName,
-      lastName,
-      email,
-      date: selectedDate.toISOString(),
-    });
 
     try {
-      await apiService.post('/group-classes/book', {
+      const response = await apiService.post<{
+        url: string;
+        sessionId: string;
+      }>('/group-classes/create-checkout-session', {
         classId: selectedClass.split('-')[0],
         timeSlot: selectedClass.split('-')[1],
         firstName,
@@ -119,22 +152,18 @@ export default function GroupClassesPage() {
         date: selectedDate.toISOString(),
       });
 
-      alert('Booking confirmed! Check your email for details.');
-      setName('');
-      setEmail('');
-      setSelectedDate(null);
-      setSelectedClass(null);
-
-      // Refresh classes to update available spots
-      const response = await apiService.get<GroupClass[]>('/group-classes');
-      setClasses(response);
+      if (response.url) {
+        window.location.href = response.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
     } catch (error: any) {
-      console.error('Booking error:', error);
+      console.error('Checkout error:', error);
       alert(
-        error.response?.data?.message ||
-          'Failed to complete booking. Please try again.'
+        error.response?.data?.error ||
+          error.message ||
+          'Failed to create checkout session. Please try again.'
       );
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -151,7 +180,6 @@ export default function GroupClassesPage() {
         </p>
       </div>
       <div className="grid md:grid-cols-2 gap-8">
-        {/* Calendar Section */}
         <div className="bg-white rounded-lg p-6 shadow-xl">
           <h2 className="text-2xl font-semibold mb-4 text-black">
             Select a Date
@@ -167,7 +195,6 @@ export default function GroupClassesPage() {
             ))}
             {calendarDays.map((date, index) => {
               if (!date) {
-                // Empty cell for days before the month starts
                 return <div key={`empty-${index}`} className="py-3" />;
               }
 
@@ -198,7 +225,6 @@ export default function GroupClassesPage() {
           </div>
         </div>
 
-        {/* Class Selection Section */}
         <div className="bg-white rounded-lg p-6 shadow-xl">
           <h2 className="text-2xl font-semibold mb-4 text-black">
             Available Classes
@@ -230,32 +256,47 @@ export default function GroupClassesPage() {
                     spots per session
                   </p>
                   <div className="grid grid-cols-3 gap-2">
-                    {classItem.timeSlots.map((slot) => (
-                      <button
-                        key={slot.time}
-                        onClick={() =>
-                          setSelectedClass(`${classItem._id}-${slot.time}`)
-                        }
-                        disabled={slot.spots.length >= classItem.spotsAvailable}
-                        className={`
-                          py-2 px-3 rounded text-sm font-medium transition-all
-                          ${
-                            selectedClass === `${classItem._id}-${slot.time}`
-                              ? 'bg-[#0B79AB] text-white'
-                              : slot.spots.length >= classItem.spotsAvailable
-                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                : 'bg-gray-100 text-black hover:bg-gray-200'
-                          }
-                        `}
-                      >
-                        <div>{slot.time}</div>
-                        <div className="text-xs">
-                          {slot.spots.length >= classItem.spotsAvailable
-                            ? 'Full'
-                            : `${classItem.spotsAvailable - slot.spots.length} spots left`}
-                        </div>
-                      </button>
-                    ))}
+                    {classItem.timesWithSpots &&
+                    classItem.timesWithSpots.length > 0 ? (
+                      classItem.timesWithSpots.map((slot) => {
+                        const isFull = slot.spotsLeft <= 0;
+                        const isSelected =
+                          selectedClass === `${classItem._id}-${slot.time}`;
+
+                        return (
+                          <button
+                            key={slot.time}
+                            onClick={() => {
+                              console.log(
+                                'Clicked:',
+                                `${classItem._id}-${slot.time}`
+                              );
+                              setSelectedClass(`${classItem._id}-${slot.time}`);
+                            }}
+                            disabled={isFull}
+                            className={`
+                              py-2 px-3 rounded text-sm font-medium transition-all
+                              ${
+                                isSelected
+                                  ? 'bg-[#0B79AB] text-white'
+                                  : isFull
+                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'bg-gray-100 text-black hover:bg-gray-200 cursor-pointer'
+                              }
+                            `}
+                          >
+                            <div>{slot.time}</div>
+                            <div className="text-xs">
+                              {isFull ? 'Full' : `${slot.spotsLeft} spots left`}
+                            </div>
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <p className="text-gray-500 text-sm col-span-3">
+                        No time slots available
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -263,14 +304,13 @@ export default function GroupClassesPage() {
           )}
         </div>
       </div>
-      {/* Booking Summary & Sign Up Form */}
+
       {selectedDate && selectedClass && (
         <div className="mt-8 bg-white rounded-lg p-8 shadow-xl">
           <h2 className="text-2xl font-semibold mb-6 text-black">
             Complete Your Booking
           </h2>
 
-          {/* Booking Details */}
           <div className="bg-[#0B79AB]/5 rounded-lg p-6 mb-6">
             <h3 className="text-lg font-semibold mb-3 text-gray-900">
               Booking Details
@@ -302,7 +342,6 @@ export default function GroupClassesPage() {
             </div>
           </div>
 
-          {/* Sign Up Form */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-4 text-gray-900">
               Your Information
@@ -345,7 +384,6 @@ export default function GroupClassesPage() {
             </div>
           </div>
 
-          {/* Submit Button */}
           <button
             onClick={handleBooking}
             disabled={isSubmitting || !name || !email}
@@ -354,15 +392,18 @@ export default function GroupClassesPage() {
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                Processing...
+                Redirecting to payment...
               </span>
             ) : (
-              'Confirm Booking →'
+              'Pay €10 & Confirm Booking →'
             )}
           </button>
+          <p className="text-center text-sm text-gray-500 mt-2">
+            You will be redirected to our secure payment page
+          </p>
         </div>
       )}
-      {/* Info Section */}
+
       <div className="mt-12 grid md:grid-cols-3 gap-6 text-center">
         <div className="bg-white/10 backdrop-blur rounded-lg p-6">
           <div className="text-4xl mb-2">🏋️</div>

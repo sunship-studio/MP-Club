@@ -10,6 +10,10 @@ const Stripe = new stripe.Stripe(
     ? process.env.STRIPE_TEST_SECRET_KEY!
     : process.env.STRIPE_SECRET_KEY!
 );
+const endpointSecret =
+    process.env.NODE_ENV == 'development'
+      ? 'whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47'
+      : 'whsec_ywVFk7OncJcAJsh98SvaaJe8hWJn6BQs'
 
 // Test Stripe Products
 
@@ -34,10 +38,7 @@ const testTrainingPlans = [
 
 export const handlePlanWebhook = async (req: Request, res: Response) => {
   const sig = req.headers['stripe-signature'];
-  const endpointSecret =
-    process.env.NODE_ENV == 'development'
-      ? 'whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47'
-      : 'whsec_ywVFk7OncJcAJsh98SvaaJe8hWJn6BQs'
+
   let event;
 
   try {
