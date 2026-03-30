@@ -5,33 +5,55 @@ class CheckInCubit extends Cubit<CheckInState> {
   final CheckInRepository checkInRepository;
   CheckInCubit(this.checkInRepository) : super(CheckInInitial());
 
+  final List<String> _imagePaths = [];
+  List<String> get imagePaths => List.unmodifiable(_imagePaths);
+
   void pickImage(String imagePath) {
-    emit(CheckInImagePicked(imagePath));
+    _imagePaths.add(imagePath);
+    emit(CheckInImagesPicked(List.from(_imagePaths)));
+  }
+
+  void removeImage(int index) {
+    _imagePaths.removeAt(index);
+    emit(CheckInImagesPicked(List.from(_imagePaths)));
   }
 
   Future<void> submitCheckIn({
     required String userId,
     required String weight,
     String? note,
-    String? imagePath,
+    String? wellbeing,
+    String? biggestWin,
+    String? struggles,
+    String? questions,
   }) async {
     emit(CheckInLoading());
-    String? imageUrl;
     try {
       if (weight.isEmpty) {
         throw ("Weight cannot be empty");
       } else if (double.tryParse(weight) == null) {
         throw ("Weight must be a valid number");
       }
-      if (imagePath != null) {
-        imageUrl = await checkInRepository.uploadImage(imagePath);
+
+      // Upload all images
+      final List<String> photoUrls = [];
+      for (final path in _imagePaths) {
+        final url = await checkInRepository.uploadImage(path);
+        photoUrls.add(url);
       }
+
       await checkInRepository.checkIn(
         userId: userId,
         weight: double.parse(weight),
         note: note,
-        imageUrl: imageUrl,
+        imageUrl: photoUrls.isNotEmpty ? photoUrls.first : null,
+        wellbeing: wellbeing,
+        photos: photoUrls,
+        biggestWin: biggestWin,
+        struggles: struggles,
+        questions: questions,
       );
+      _imagePaths.clear();
       emit(CheckInSuccess());
     } catch (e) {
       emit(CheckInError("$e"));
@@ -79,7 +101,7 @@ class CheckInError extends CheckInState {
   CheckInError(this.message);
 }
 
-class CheckInImagePicked extends CheckInState {
-  final String imagePath;
-  CheckInImagePicked(this.imagePath);
+class CheckInImagesPicked extends CheckInState {
+  final List<String> imagePaths;
+  CheckInImagesPicked(this.imagePaths);
 }

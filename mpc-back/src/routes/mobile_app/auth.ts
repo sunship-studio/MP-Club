@@ -164,8 +164,8 @@ async function sendPasswordResetEmail(
   const resend = require('../../../src/config/resend').default;
 
   const templatePath = path.join(
-    __dirname,
-    '../../../templates/forgot_password.html'
+    process.cwd(),
+    'templates/forgot_password.html'
   );
   let template = fs.readFileSync(templatePath, 'utf-8');
   template = template.replace('{{resetLink}}', link);
@@ -487,6 +487,8 @@ authRouter.post(
   }
 );
 
-authRouter.get('/user', verifyToken, (req, res) => AuthController.getUser(req, res));
+authRouter.get('/user', verifyToken, (req, res) =>
+  AuthController.getUser(req, res)
+);
 
 export default authRouter;

@@ -80,17 +80,23 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> login(String email, String password) async {
-    final result = await authRepository.login(email, password);
-    if (result.success) {
-      final user = await authRepository.getUser();
-      emit(Authenticated(user: user));
+    try {
+      final result = await authRepository.login(email, password);
+      if (result.success) {
+        final user = await authRepository.getUser();
+        emit(Authenticated(user: user));
 
-      // Register FCM token after successful login
-      _registerFCMToken();
-      return;
-    } else {
-      emit(Error(result.message ?? 'Error logging in'));
-      return;
+        // Register FCM token after successful login
+        _registerFCMToken();
+        return;
+      } else {
+        emit(Error(result.message ?? 'Error logging in'));
+        return;
+      }
+    } catch (e) {
+      emit(
+        Error('Login failed: ${e.toString().replaceAll('Exception: ', '')}'),
+      );
     }
   }
 

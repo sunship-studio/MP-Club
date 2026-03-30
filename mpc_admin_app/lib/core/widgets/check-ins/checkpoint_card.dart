@@ -58,17 +58,41 @@ class _MyCheckpointCardState extends State<CheckpointCard> {
 
         child: Row(
           children: [
-            if (widget.checkIn.imageUrl != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8.r),
-                child: Image.network(
-                  widget.checkIn.imageUrl!,
-                  width: 50.w,
-                  height: 50.w,
-                  fit: BoxFit.cover,
-                ),
+            if (widget.checkIn.allPhotos.isNotEmpty)
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8.r),
+                    child: Image.network(
+                      widget.checkIn.allPhotos.first,
+                      width: 50.w,
+                      height: 50.w,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  if (widget.checkIn.allPhotos.length > 1)
+                    Positioned(
+                      bottom: 2,
+                      right: 2,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${widget.checkIn.allPhotos.length}',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-            if (widget.checkIn.imageUrl != null) Gap(10.w),
+            if (widget.checkIn.allPhotos.isNotEmpty) Gap(10.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,10 +110,12 @@ class _MyCheckpointCardState extends State<CheckpointCard> {
                   SizedBox(
                     width: double.infinity,
                     child: Text(
-                      widget.checkIn.note == null ||
+                      widget.checkIn.wellbeing != null && widget.checkIn.wellbeing!.isNotEmpty
+                          ? widget.checkIn.wellbeing!
+                          : (widget.checkIn.note == null ||
                               widget.checkIn.note!.isEmpty
                           ? "No notes added."
-                          : "${widget.checkIn.note}",
+                          : "${widget.checkIn.note}"),
                       style: TextStyle(
                         fontSize: 11.sp,
                         fontWeight: FontWeight.w400,

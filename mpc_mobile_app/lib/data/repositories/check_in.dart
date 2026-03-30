@@ -9,12 +9,22 @@ class CheckInRepository {
     required double weight,
     String? note,
     String? imageUrl,
+    String? wellbeing,
+    List<String>? photos,
+    String? biggestWin,
+    String? struggles,
+    String? questions,
   }) async {
     final response = await dioClient.post('/check-in', {
       'userId': userId,
       'weight': weight,
       'note': note,
       'imageUrl': imageUrl,
+      'wellbeing': wellbeing,
+      'photos': photos ?? [],
+      'biggestWin': biggestWin,
+      'struggles': struggles,
+      'questions': questions,
     });
     if (response.statusCode != 200) {
       throw Exception('Failed to check in');

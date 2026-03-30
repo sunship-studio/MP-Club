@@ -1,6 +1,4 @@
-
 import 'package:mpc_mobile_app/data/models/UserExercise.dart';
-
 
 class TrainingDay {
   String name;
@@ -8,13 +6,26 @@ class TrainingDay {
 
   TrainingDay({this.name = "", required this.exercises});
 
+  static String _toStringOrEmpty(dynamic value) {
+    if (value == null) return '';
+    if (value is String) return value;
+    return value.toString();
+  }
+
   factory TrainingDay.fromJson(Map<String, dynamic> json) {
+    final exercisesJson = json['exercises'];
+
     return TrainingDay(
-      name: json['name'] as String,
+      name: _toStringOrEmpty(json['name']),
       exercises:
-          (json['exercises'] as List<dynamic>)
-              .map((e) => UserExercise.fromJson(e as Map<String, dynamic>))
-              .toList(),
+          (exercisesJson is List)
+              ? exercisesJson
+                  .whereType<Map>()
+                  .map(
+                    (e) => UserExercise.fromJson(Map<String, dynamic>.from(e)),
+                  )
+                  .toList()
+              : [],
     );
   }
 
@@ -23,5 +34,12 @@ class TrainingDay {
       'name': name,
       'exercises': exercises.map((e) => e.toJson()).toList(),
     };
+  }
+
+  TrainingDay deepCopy() {
+    return TrainingDay(
+      name: name,
+      exercises: exercises.map((e) => e.deepCopy()).toList(),
+    );
   }
 }

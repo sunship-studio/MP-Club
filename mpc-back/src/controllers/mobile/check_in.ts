@@ -8,22 +8,37 @@ export class CheckInController {
     weight,
     imageUrl,
     note,
+    wellbeing,
+    photos,
+    biggestWin,
+    struggles,
+    questions,
   }: {
     userId: string;
     weight: number;
     imageUrl?: string;
     note?: string;
+    wellbeing?: string;
+    photos?: string[];
+    biggestWin?: string;
+    struggles?: string;
+    questions?: string;
   }): Promise<boolean> {
     const user = await User.findById(userId);
     if (!user) {
       return false;
     }
-    console.log('data', { userId, weight, imageUrl, note });
+    console.log('data', { userId, weight, imageUrl, note, wellbeing, photos, biggestWin, struggles, questions });
     user.checkIns.push({
       date: new Date(),
       weight,
       imageUrl,
       note,
+      wellbeing,
+      photos: photos || [],
+      biggestWin,
+      struggles,
+      questions,
     });
 
     await user.save();

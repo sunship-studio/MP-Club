@@ -28,21 +28,39 @@ class TrainingPlan {
     return TrainingPlan(days: [], name: "");
   }
 
+  static String _toStringOrEmpty(dynamic value) {
+    if (value == null) return '';
+    if (value is String) return value;
+    return value.toString();
+  }
+
+  static DateTime? _toDateTimeOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value);
+    return null;
+  }
+
   factory TrainingPlan.fromJson(Map<String, dynamic> json) {
+    final daysJson = json['days'];
+    final bodyPartsJson = json['bodyParts'];
+
     return TrainingPlan(
-      lastUpdated:
-          json['lastUpdated'] != null
-              ? DateTime.parse(json['lastUpdated'] as String)
-              : null,
-      name: json['name'] as String,
+      lastUpdated: _toDateTimeOrNull(json['lastUpdated']),
+      name: _toStringOrEmpty(json['name']),
       days:
-          (json['days'] as List<dynamic>)
-              .map((e) => TrainingDay.fromJson(e as Map<String, dynamic>))
-              .toList(),
+          (daysJson is List)
+              ? daysJson
+                  .whereType<Map>()
+                  .map(
+                    (e) => TrainingDay.fromJson(Map<String, dynamic>.from(e)),
+                  )
+                  .toList()
+              : [],
       bodyParts:
-          (json['bodyParts'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList(),
+          (bodyPartsJson is List)
+              ? bodyPartsJson.map((e) => e.toString()).toList()
+              : null,
     );
   }
 
@@ -51,7 +69,6 @@ class TrainingPlan {
       'name': name,
       'days': days.map((e) => e.toJson()).toList(),
       'bodyParts': bodyParts,
-      
     };
   }
 }

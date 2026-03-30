@@ -524,7 +524,7 @@ class Checkpoints extends StatelessWidget {
                 final checkIn = user.checkIns.reversed.toList()[index];
                 return CheckpointCard(
                   onTap: () {
-                    // _showDetailsModal(context, checkIn, user);
+                    _showDetailsModal(context, checkIn, user);
                   },
                   checkIn: checkIn,
                 );

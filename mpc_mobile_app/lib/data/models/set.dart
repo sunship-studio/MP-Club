@@ -1,15 +1,29 @@
 class ExerciseSet {
-  int reps;
+  String reps;
   int rir;
   int weight;
 
   ExerciseSet({required this.reps, required this.rir, required this.weight});
 
+  static int _toInt(dynamic value, {int fallback = 0}) {
+    if (value is int) return value;
+    if (value is double) return value.round();
+    if (value is String) return int.tryParse(value) ?? fallback;
+    return fallback;
+  }
+
+  static String _toRepsString(dynamic value) {
+    if (value is String) return value;
+    if (value is int) return value.toString();
+    if (value is double) return value.round().toString();
+    return '0';
+  }
+
   factory ExerciseSet.fromJson(Map<String, dynamic> json) {
     return ExerciseSet(
-      reps: json['reps'] as int,
-      rir: json['rir'] as int,
-      weight: json['weight'] as int,
+      reps: _toRepsString(json['reps']),
+      rir: _toInt(json['rir']),
+      weight: _toInt(json['weight']),
     );
   }
 
@@ -17,8 +31,7 @@ class ExerciseSet {
     return {'reps': reps, 'rir': rir, 'weight': weight};
   }
 
-  // copyWith method to create a copy of the instance with modified values
-  ExerciseSet copyWith({int? reps, int? rir, int? weight}) {
+  ExerciseSet copyWith({String? reps, int? rir, int? weight}) {
     return ExerciseSet(
       reps: reps ?? this.reps,
       rir: rir ?? this.rir,

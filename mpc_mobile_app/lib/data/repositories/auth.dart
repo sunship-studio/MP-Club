@@ -21,17 +21,27 @@ class AuthRepository {
   }
 
   Future<AuthResult> login(String email, String password) async {
-    final response = await dio.post('/auth/login', {
-      'email': email,
-      'password': password,
-    });
-    if (response.statusCode != 200) {
+    try {
+      final response = await dio.post('/auth/login', {
+        'email': email,
+        'password': password,
+      });
+      if (response.statusCode != 200) {
+        return AuthResult(
+          success: false,
+          message: response.data['message'] ?? 'Error logging in',
+        );
+      }
+      return AuthResult(
+        success: response.statusCode == 200,
+        data: response.data,
+      );
+    } catch (e) {
       return AuthResult(
         success: false,
-        message: response.data['message'] ?? 'Error logging in',
+        message: e.toString().replaceAll('Exception: ', ''),
       );
     }
-    return AuthResult(success: response.statusCode == 200, data: response.data);
   }
 
   Future<AuthResult> forgotPassword(String email) async {
@@ -65,9 +75,7 @@ class AuthRepository {
 
   Future<User> getUser() async {
     final response = await dio.get(endpoint: '/auth/user');
-
     return User.fromJson(response.data);
-    throw Exception('Failed to load user data');
   }
 
   /// Create account with Apple subscription

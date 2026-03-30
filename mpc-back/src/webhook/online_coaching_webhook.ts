@@ -40,9 +40,22 @@ const handleWebhook = async (req: Request, res: Response) => {
 
 const completeTransaction = async (event: any) => {
   const session = event.data.object;
+
+  // Only process online coaching sessions
+  if (session.metadata?.type !== 'online_coaching') {
+    console.log('Skipping non-online-coaching session:', session.id);
+    return;
+  }
+
   const paymentSession = await PaymentSession.findOne({
     sessionId: session.id,
   });
+
+  if (!paymentSession) {
+    console.error('Payment session not found for:', session.id);
+    return;
+  }
+
   const subscription = event.data.object.subscription;
   const subStatus = (
     await stripe.subscriptions.retrieve(subscription! as string)
@@ -50,8 +63,8 @@ const completeTransaction = async (event: any) => {
 
   // Sending mail (Waiting for designers to create templates)
   const template_path = path.join(
-    __dirname,
-    '../templates',
+    process.cwd(),
+    'templates',
     'online_coaching_confirmation.html'
   );
   const templateSource = readHTMLFile(template_path);

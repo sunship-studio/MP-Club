@@ -34,9 +34,10 @@ class ActiveWorkoutScreen extends StatefulWidget {
 
 class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     with SingleTickerProviderStateMixin {
-  late VideoPlayerController _controller;
+  VideoPlayerController? _controller;
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
+  late TrainingDay _workoutData;
   int _seconds = 0;
   int _restSeconds = 0;
   int currentExercise = 0;
@@ -53,9 +54,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   @override
   void initState() {
     super.initState();
+    _workoutData = widget.trainingDay.deepCopy();
 
     _initializeVideo();
-    startTimer();
 
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -69,7 +70,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     _timer?.cancel();
     restTimer?.cancel();
 
-    _controller.pause();
+    _controller?.pause();
     setState(() {
       _isResting = true;
       _seconds = 0;
@@ -83,7 +84,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
 
       if (_restSeconds <= 0) {
         restTimer?.cancel();
-        _controller.play();
+        _controller?.play();
         setState(() {
           _isResting = false;
           currentSet++;
@@ -111,7 +112,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
-    if (videoUrl != null) {
+    if (videoUrl != null && videoUrl!.isNotEmpty) {
       await _showTutorialAnimation();
     }
 
@@ -165,54 +166,105 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   String? videoUrl;
 
   Future<void> _initializeVideo() async {
-    videoUrl = widget.trainingDay.exercises[currentExercise].videoUrl;
+    videoUrl = _workoutData.exercises[currentExercise].videoUrl;
 
-    if (videoUrl == null || videoUrl!.isEmpty) {
-      // Use local placeholder video
-      _controller = VideoPlayerController.asset('assets/videos/workout.mp4');
-    } else {
-      // Use network video if URL is provided
+    if (videoUrl != null && videoUrl!.isNotEmpty) {
       _controller = VideoPlayerController.networkUrl(Uri.parse(videoUrl!));
+      await _controller!.initialize();
+      await _controller!.play();
+      await _controller!.setLooping(true);
+      _toggleMute();
     }
-
-    await _controller.initialize();
 
     setState(() {
       _isInitialized = true;
     });
 
-    await _controller.play();
-    await _controller.setLooping(true);
-    _toggleMute();
+    startTimer();
     _setupAnimation();
   }
 
-  Future<void> _switchVideo(int exerciseIndex) async {
-    await _controller.pause();
-    await _controller.dispose();
+  Future<void> _switchVideo(
+    int exerciseIndex, {
+    bool showTutorialOverlay = true,
+  }) async {
+    await _controller?.pause();
+    await _controller?.dispose();
+    _controller = null;
 
-    videoUrl = widget.trainingDay.exercises[exerciseIndex].videoUrl;
+    videoUrl = _workoutData.exercises[exerciseIndex].videoUrl;
 
-    if (videoUrl == null || videoUrl!.isEmpty) {
-      return;
+    if (videoUrl != null && videoUrl!.isNotEmpty) {
+      _controller = VideoPlayerController.networkUrl(Uri.parse(videoUrl!));
+      await _controller!.initialize();
+      await _controller!.setLooping(true);
+      _controller!.setVolume(_isMuted ? 0.0 : 1.0);
+      if (!_isResting) {
+        await _controller!.play();
+      }
+      if (showTutorialOverlay) {
+        _showTutorialAnimation();
+      }
     }
 
-    _controller = VideoPlayerController.networkUrl(Uri.parse(videoUrl!));
-    await _controller.initialize();
-    await _controller.setLooping(true);
-    _controller.setVolume(_isMuted ? 0.0 : 1.0);
-    if (!_isResting) {
-      await _controller.play();
-    }
-
-    // Run tutorial animation in background without blocking
-    _showTutorialAnimation();
-    setState(() {});
+    setState(() {
+      if (!showTutorialOverlay) {
+        _showTutorial = false;
+      }
+    });
   }
 
   void _toggleMute() {
     _isMuted = !_isMuted;
-    _controller.setVolume(_isMuted ? 0.0 : 1.0);
+    _controller?.setVolume(_isMuted ? 0.0 : 1.0);
+  }
+
+  Future<void> _showWeightEditDialog() async {
+    final currentWeight =
+        _workoutData.exercises[currentExercise].sets![currentSet - 1].weight;
+    final controller = TextEditingController(text: currentWeight.toString());
+
+    await showCupertinoDialog(
+      context: context,
+      builder: (dialogContext) {
+        return CupertinoAlertDialog(
+          title: Text('Edit Weight'),
+          content: Container(
+            margin: EdgeInsets.only(top: 12.h),
+            child: CupertinoTextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              placeholder: 'Weight (kg)',
+            ),
+          ),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text('Cancel'),
+            ),
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              onPressed: () {
+                final parsed = int.tryParse(controller.text);
+                if (parsed != null && parsed >= 0) {
+                  setState(() {
+                    _workoutData.exercises[currentExercise].sets![currentSet -
+                        1] = _workoutData
+                        .exercises[currentExercise]
+                        .sets![currentSet - 1]
+                        .copyWith(weight: parsed);
+                  });
+                }
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
   }
 
   @override
@@ -222,7 +274,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     });
     _timer?.cancel();
     restTimer?.cancel();
-    _controller.dispose();
+    _controller?.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -235,8 +287,25 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
           BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) {
           if (!_isInitialized) {
-            return Center(
-              child: CircularProgressIndicator(color: Colors.white),
+            return Container(
+              color: AppColors.darkScaffoldColor,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(color: Colors.white),
+                    Gap(16.h),
+                    Text(
+                      "Loading workout...",
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
           state as Authenticated;
@@ -259,15 +328,27 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                       ),
                     ),
                   )
-                  : SizedBox.expand(
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        width: _controller.value.size.width,
-                        height: _controller.value.size.height,
-                        child: VideoPlayer(_controller),
+                  : Stack(
+                    children: [
+                      SizedBox.expand(
+                        child: FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: _controller!.value.size.width,
+                            height: _controller!.value.size.height,
+                            child: VideoPlayer(_controller!),
+                          ),
+                        ),
                       ),
-                    ),
+                      if (_controller!.value.isBuffering ||
+                          !_controller!.value.isInitialized)
+                        Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        ),
+                    ],
                   ),
 
               Column(
@@ -349,14 +430,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                     ),
                     child: Row(
                       children: [
-                        ...widget.trainingDay.exercises.map(
+                        ..._workoutData.exercises.map(
                           (e) => Expanded(
                             child: GestureDetector(
                               onTap: () async {
                                 _timer?.cancel();
-                                final newExerciseIndex = widget
-                                    .trainingDay
-                                    .exercises
+                                final newExerciseIndex = _workoutData.exercises
                                     .indexOf(e);
                                 if (newExerciseIndex != currentExercise) {
                                   setState(() {
@@ -364,7 +443,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                     currentSet = 1;
                                     _seconds = 0;
                                   });
-                                  await _switchVideo(newExerciseIndex);
+                                  await _switchVideo(
+                                    newExerciseIndex,
+                                    showTutorialOverlay: false,
+                                  );
                                   startTimer();
                                 }
                               },
@@ -376,7 +458,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                 height: 12.h,
                                 decoration: BoxDecoration(
                                   color:
-                                      widget.trainingDay.exercises.indexOf(e) ==
+                                      _workoutData.exercises.indexOf(e) ==
                                               currentExercise
                                           ? Colors.white
                                           : Colors.white.withValues(alpha: 0.3),
@@ -421,10 +503,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  widget
-                                      .trainingDay
-                                      .exercises[currentExercise]
-                                      .name,
+                                  _workoutData.exercises[currentExercise].name,
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 18.sp,
@@ -438,13 +517,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                   fontSize: 12,
                                   label: "REPS",
                                   value:
-                                      widget
-                                          .trainingDay
+                                      _workoutData
                                           .exercises[currentExercise]
-                                          .sets
-                                          ?.first
-                                          .reps
-                                          .toString() ??
+                                          .sets?[currentSet - 1]
+                                          .reps ??
                                       "0",
                                 ),
                               ],
@@ -458,7 +534,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                 ExerciseInfoBox(
                                   label: "SETS",
                                   value:
-                                      "$currentSet/${widget.trainingDay.exercises[currentExercise].sets?.length}",
+                                      "$currentSet/${_workoutData.exercises[currentExercise].sets?.length}",
                                 ),
                                 Container(
                                   margin: EdgeInsets.symmetric(horizontal: 8.w),
@@ -468,10 +544,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                     color: Colors.white.withValues(alpha: 0.3),
                                   ),
                                 ),
-                                ExerciseInfoBox(
-                                  label: "WEIGHT",
-                                  value:
-                                      "${widget.trainingDay.exercises[currentExercise].sets![currentSet - 1].weight}kg",
+                                GestureDetector(
+                                  onTap: _showWeightEditDialog,
+                                  child: ExerciseInfoBox(
+                                    label: "WEIGHT",
+                                    value:
+                                        "${_workoutData.exercises[currentExercise].sets![currentSet - 1].weight}kg",
+                                  ),
                                 ),
                                 Container(
                                   margin: EdgeInsets.symmetric(horizontal: 8.w),
@@ -484,7 +563,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                 ExerciseInfoBox(
                                   label: "REST",
                                   value:
-                                      "${widget.trainingDay.exercises[currentExercise].minutes}min ${widget.trainingDay.exercises[currentExercise].seconds! < 10 ? "0${widget.trainingDay.exercises[currentExercise].seconds}" : widget.trainingDay.exercises[currentExercise].seconds}s",
+                                      "${_workoutData.exercises[currentExercise].minutes}min ${_workoutData.exercises[currentExercise].seconds! < 10 ? "0${_workoutData.exercises[currentExercise].seconds}" : _workoutData.exercises[currentExercise].seconds}s",
                                 ),
                               ],
                             ),
@@ -517,12 +596,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                             currentSet > 1) {
                                           _timer?.cancel();
                                           restTimer?.cancel();
-                                          await _controller.play();
+                                          await _controller?.play();
 
                                           setState(() {
                                             _isResting = false;
                                             restTimer?.cancel();
-                                            _controller.play();
+                                            _controller?.play();
                                             currentSet--;
                                           });
                                           startTimer();
@@ -531,8 +610,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                           setState(() {
                                             currentExercise--;
                                             currentSet =
-                                                widget
-                                                    .trainingDay
+                                                _workoutData
                                                     .exercises[currentExercise]
                                                     .sets!
                                                     .length;
@@ -550,14 +628,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                             _seconds = 0;
 
                                             currentSet =
-                                                widget
-                                                    .trainingDay
+                                                _workoutData
                                                     .exercises[currentExercise]
                                                     .sets!
                                                     .length;
                                           });
                                           await _switchVideo(currentExercise);
-                                          await _controller.play();
+                                          await _controller?.play();
                                           startTimer();
                                         }
                                       },
@@ -569,7 +646,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                     child: CircularButton(
                                       color: Colors.white,
                                       icon: Icon(
-                                        _controller.value.isPlaying
+                                        (_controller?.value.isPlaying ?? false)
                                             ? Icons.pause
                                             : Icons.play_arrow,
                                         color: AppColors.darkTextColor,
@@ -578,7 +655,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                       label:
                                           _isResting
                                               ? "Skip Rest"
-                                              : _controller.value.isPlaying
+                                              : (_controller?.value.isPlaying ??
+                                                  false)
                                               ? "Pause"
                                               : "Play",
                                       textColor: AppColors.darkTextColor,
@@ -588,22 +666,24 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                           setState(() {
                                             _isResting = false;
                                             restTimer?.cancel();
-                                            _controller.play();
+                                            _controller?.play();
                                             currentSet++;
                                             _seconds = 0;
                                           });
                                           startTimer();
                                           return;
                                         } else if (_controller
-                                            .value
-                                            .isPlaying) {
+                                                ?.value
+                                                .isPlaying ??
+                                            false) {
                                           _timer?.cancel();
-                                          await _controller.pause();
-                                        } else if (!_controller
-                                            .value
-                                            .isPlaying) {
+                                          await _controller?.pause();
+                                        } else if (!(_controller
+                                                ?.value
+                                                .isPlaying ??
+                                            false)) {
                                           startTimer();
-                                          await _controller.play();
+                                          await _controller?.play();
                                         }
                                         setState(() {});
                                       },
@@ -626,13 +706,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                           setState(() {
                                             _isResting = false;
                                             restTimer?.cancel();
-                                            _controller.play();
+                                            _controller?.play();
                                             currentSet++;
                                             _seconds = 0;
                                             startTimer();
                                           });
-                                        } else if (widget
-                                                .trainingDay
+                                        } else if (_workoutData
                                                 .exercises[currentExercise]
                                                 .sets!
                                                 .length >
@@ -679,19 +758,16 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                             );
                                             _timer?.cancel();
                                             startRestPeriod(
-                                              widget
-                                                      .trainingDay
+                                              _workoutData
                                                       .exercises[currentExercise]
                                                       .seconds! +
-                                                  widget
-                                                          .trainingDay
+                                                  _workoutData
                                                           .exercises[currentExercise]
                                                           .minutes! *
                                                       60,
                                             );
                                           });
-                                        } else if (widget
-                                                .trainingDay
+                                        } else if (_workoutData
                                                 .exercises
                                                 .length >
                                             currentExercise + 1) {
@@ -703,8 +779,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                           await _switchVideo(currentExercise);
                                         } else {
                                           _timer?.cancel();
-                                          await _controller.pause();
-                                          context.pop();
+                                          await _controller?.pause();
+                                          if (!context.mounted) {
+                                            return;
+                                          }
+                                          context.pop(_workoutData.deepCopy());
                                           navBarKey.currentState!
                                               .turnOnNavBar();
                                           ScaffoldMessenger.of(
@@ -740,7 +819,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
               if (_showTip)
                 TipBox(
                   slideAnimation: _slideAnimation,
-                  exercisesLength: widget.trainingDay.exercises.length,
+                  exercisesLength: _workoutData.exercises.length,
                 ),
             ],
           );
@@ -769,32 +848,28 @@ class TipBox extends StatelessWidget {
         position: _slideAnimation,
         child: Column(
           children: [
-            Container(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  for (var i = 0; i < exercisesLength; i++)
-                    i != 0
-                        ? Icon(
-                          Icons.arrow_upward_rounded,
-                          size: 28.w,
-                          color: Colors.white.withValues(alpha: 0.8),
-                        )
-                        : SizedBox(width: 28.w, height: 28.w),
-                ],
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                for (var i = 0; i < exercisesLength; i++)
+                  i != 0
+                      ? Icon(
+                        Icons.arrow_upward_rounded,
+                        size: 28.w,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      )
+                      : SizedBox(width: 28.w, height: 28.w),
+              ],
             ),
             Gap(4.h),
-            Container(
-              child: Text(
-                "Here you can switch/skip exercises",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.4,
-                  fontFamily: 'Inter',
-                ),
+            Text(
+              "Here you can switch/skip exercises",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.4,
+                fontFamily: 'Inter',
               ),
             ),
           ],
@@ -816,15 +891,13 @@ class TutorialSlide extends StatefulWidget {
   final Animation<Offset> _slideAnimation;
   final Timer timer;
   final String? videoUrl;
-  final VideoPlayerController controller;
+  final VideoPlayerController? controller;
 
   @override
   State<TutorialSlide> createState() => _TutorialSlideState();
 }
 
 class _TutorialSlideState extends State<TutorialSlide> {
-  bool _isPressed = false;
-
   @override
   Widget build(BuildContext context) {
     return Positioned(
@@ -835,18 +908,11 @@ class _TutorialSlideState extends State<TutorialSlide> {
       child: SlideTransition(
         position: widget._slideAnimation,
         child: GestureDetector(
-          onTapDown: (_) {
-            setState(() {
-              _isPressed = true;
-            });
-          },
+          onTapDown: (_) {},
           onTapUp: (_) {
-            setState(() {
-              _isPressed = false;
-            });
             if (widget.videoUrl != null && widget.videoUrl!.isNotEmpty) {
               context.push('/tutorial/', extra: widget.videoUrl);
-              widget.controller.pause();
+              widget.controller?.pause();
               widget.timer.cancel();
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -882,7 +948,7 @@ class _TutorialSlideState extends State<TutorialSlide> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       spreadRadius: 2,
                     ),

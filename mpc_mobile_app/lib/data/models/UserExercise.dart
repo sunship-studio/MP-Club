@@ -5,9 +5,9 @@ class UserExercise {
   String? id;
   String? videoUrl;
   List<ExerciseSet>? sets = [
-    ExerciseSet(reps: 10, rir: 2, weight: 0),
-    ExerciseSet(reps: 10, rir: 2, weight: 0),
-    ExerciseSet(reps: 10, rir: 2, weight: 0),
+    ExerciseSet(reps: '10', rir: 2, weight: 0),
+    ExerciseSet(reps: '10', rir: 2, weight: 0),
+    ExerciseSet(reps: '10', rir: 2, weight: 0),
   ];
   int? minutes;
   int? seconds;
@@ -24,24 +24,47 @@ class UserExercise {
     required this.bodyParts,
   });
 
+  static int _toInt(dynamic value, {int fallback = 0}) {
+    if (value is int) return value;
+    if (value is double) return value.round();
+    if (value is String) return int.tryParse(value) ?? fallback;
+    return fallback;
+  }
+
+  static String? _toStringOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    return value.toString();
+  }
+
   factory UserExercise.fromJson(Map<String, dynamic> json) {
+    final setsJson = json['sets'];
+    final bodyPartsJson = json['bodyParts'];
+
     return UserExercise(
-      id: json['exerciseId'] as String,
+      id:
+          _toStringOrNull(json['exerciseId']) ??
+          _toStringOrNull(json['id']) ??
+          _toStringOrNull(json['_id']),
 
-      name: json['name'] as String,
-      videoUrl: json['videoUrl'] as String?,
+      name: _toStringOrNull(json['name']) ?? '',
+      videoUrl: _toStringOrNull(json['videoUrl']),
       sets:
-          (json['sets'] as List<dynamic>?)
-              ?.map((e) => ExerciseSet.fromJson(e as Map<String, dynamic>))
-              .toList(),
+          (setsJson is List)
+              ? setsJson
+                  .whereType<Map>()
+                  .map(
+                    (e) => ExerciseSet.fromJson(Map<String, dynamic>.from(e)),
+                  )
+                  .toList()
+              : null,
 
-      minutes: json['minutes'] as int? ?? 0,
-      seconds: json['seconds'] as int? ?? 0,
+      minutes: _toInt(json['minutes']),
+      seconds: _toInt(json['seconds']),
       bodyParts:
-          (json['bodyParts'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          [],
+          (bodyPartsJson is List)
+              ? bodyPartsJson.map((e) => e.toString()).toList()
+              : [],
     );
   }
 
@@ -55,5 +78,17 @@ class UserExercise {
       'minutes': minutes,
       'seconds': seconds,
     };
+  }
+
+  UserExercise deepCopy() {
+    return UserExercise(
+      id: id,
+      name: name,
+      videoUrl: videoUrl,
+      sets: sets?.map((set) => set.copyWith()).toList(),
+      minutes: minutes,
+      seconds: seconds,
+      bodyParts: List<String>.from(bodyParts),
+    );
   }
 }

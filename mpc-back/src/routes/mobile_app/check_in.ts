@@ -7,8 +7,8 @@ const checkInRouter = express.Router();
 checkInRouter.post("/", async (req, res) => {
   try {
     console.log("Check-in request body:", req.body);
-    const { userId, weight, imageUrl, note } = req.body;
-    const success = await CheckInController.checkIn({ userId, weight, imageUrl, note });
+    const { userId, weight, imageUrl, note, wellbeing, photos, biggestWin, struggles, questions } = req.body;
+    const success = await CheckInController.checkIn({ userId, weight, imageUrl, note, wellbeing, photos, biggestWin, struggles, questions });
     if (success) {
       res.json({ message: "Check-in successful" });
     }

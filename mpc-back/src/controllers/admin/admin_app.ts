@@ -201,8 +201,8 @@ export default class AdminAppController {
   public async addSubscriber(req: Request, res: Response): Promise<Response> {
     // Sending mail (Waiting for designers to create templates)
     const template_path = path.join(
-      __dirname,
-      '../../../templates',
+      process.cwd(),
+      'templates',
       'online_coaching_confirmation.html'
     );
     const templateSource = this.readHTMLFile(template_path);

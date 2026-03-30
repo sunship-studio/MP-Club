@@ -49,7 +49,7 @@ class DioClient {
 
       return response;
     } on DioException catch (e) {
-      if (e.response!.statusCode == 401) {
+      if (e.response != null && e.response!.statusCode == 401) {
         return e.response!;
       }
       throw Exception('Failed to post data: ${e.message}');
@@ -81,10 +81,10 @@ class DioClient {
 
       return response;
     } on DioException catch (e) {
-      if (e.response!.statusCode == 401) {
+      if (e.response != null && e.response!.statusCode == 401) {
         return e.response!;
       }
-      throw Exception('Failed to post data: ${e.message}');
+      throw Exception('Failed to post form data: ${e.message}');
     }
   }
 
@@ -105,7 +105,7 @@ class DioClient {
 
       return response;
     } on DioException catch (e) {
-      if (e.response!.statusCode == 401) {
+      if (e.response != null && e.response!.statusCode == 401) {
         return e.response!;
       }
       throw Exception('Failed to put data: ${e.message}');

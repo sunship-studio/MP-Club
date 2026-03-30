@@ -359,6 +359,10 @@ class _UserBoxState extends State<UserBox> {
                         const SizedBox(height: kSpacingMedium),
 
                         Row(children: [CheckInsButton(user: widget.user)]),
+                        const SizedBox(height: kSpacingMedium),
+                        Row(
+                          children: [WorkoutHistoryButton(user: widget.user)],
+                        ),
                         const SizedBox(height: kSpacingSmall),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,6 +476,60 @@ class CheckInsButton extends StatefulWidget {
 
   @override
   State<CheckInsButton> createState() => _CheckInsButtonState();
+}
+
+class WorkoutHistoryButton extends StatefulWidget {
+  const WorkoutHistoryButton({super.key, this.user});
+
+  final User? user;
+
+  @override
+  State<WorkoutHistoryButton> createState() => _WorkoutHistoryButtonState();
+}
+
+class _WorkoutHistoryButtonState extends State<WorkoutHistoryButton> {
+  Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        context.push(RouteNames.workoutHistory, extra: widget.user);
+      },
+      onTapDown: (details) {
+        setState(() {
+          color = AppColors.blueColor.withOpacity(0.8);
+        });
+      },
+      onTapUp: (details) {
+        setState(() {
+          color = null;
+        });
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: color ?? AppColors.blueColor,
+          borderRadius: kBorderRadiusMediumAll,
+          boxShadow: kShadowLight(context),
+        ),
+        padding: const EdgeInsets.symmetric(
+          vertical: kSpacingSmall,
+          horizontal: kSpacingMedium,
+        ),
+        child: Center(
+          child: Text(
+            "Workout history 📈",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+              fontFamily: 'SF-Pro',
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _CheckInsButtonState extends State<CheckInsButton> {

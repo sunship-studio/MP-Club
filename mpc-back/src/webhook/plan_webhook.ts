@@ -11,9 +11,9 @@ const Stripe = new stripe.Stripe(
     : process.env.STRIPE_SECRET_KEY!
 );
 const endpointSecret =
-    process.env.NODE_ENV == 'development'
-      ? 'whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47'
-      : 'whsec_ywVFk7OncJcAJsh98SvaaJe8hWJn6BQs'
+  process.env.NODE_ENV == 'development'
+    ? 'whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47'
+    : 'whsec_ywVFk7OncJcAJsh98SvaaJe8hWJn6BQs';
 
 // Test Stripe Products
 
@@ -72,6 +72,15 @@ export const handlePlanWebhook = async (req: Request, res: Response) => {
 async function completeTransaction(event: stripe.Event) {
   const session = event.data.object as stripe.Checkout.Session;
 
+  // Skip if this is a group class or online coaching session
+  if (
+    session.metadata?.type === 'online_coaching' ||
+    session.metadata?.classId
+  ) {
+    console.log('Skipping non-plan session:', session.id);
+    return;
+  }
+
   console.log('✅ Checkout Session Completed:', session.id);
   const lineItems = await Stripe.checkout.sessions.listLineItems(session.id, {
     limit: 1,
@@ -116,8 +125,7 @@ export async function sendTrainingPlanEmail(
   orderNumber: string
 ) {
   const template_path = path.join(
-    __dirname,
-    '../../',
+    process.cwd(),
     'templates',
     'training_plan.html'
   );

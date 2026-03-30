@@ -11,6 +11,7 @@ import 'package:mpc_mobile_app/data/repositories/check_in.dart';
 import 'package:mpc_mobile_app/data/repositories/exercise.dart';
 import 'package:mpc_mobile_app/data/repositories/profile.dart';
 import 'package:mpc_mobile_app/data/repositories/workout.dart';
+import 'package:mpc_mobile_app/data/repositories/workout_weight_prefs.dart';
 import 'package:mpc_mobile_app/main.dart';
 import 'package:mpc_mobile_app/routes/auth.dart';
 import 'package:mpc_mobile_app/routes/main.dart';
@@ -85,6 +86,12 @@ Future<void> setupDependencies() async {
 
   getIt.registerLazySingleton<WorkoutRepository>(
     () => WorkoutRepository(dio: getIt<DioClient>()),
+  );
+
+  getIt.registerLazySingleton<WorkoutWeightPrefsRepository>(
+    () => WorkoutWeightPrefsRepository(
+      sharedPreferences: getIt<SharedPreferences>(),
+    ),
   );
 
   getIt.registerLazySingleton<ProfileRepository>(

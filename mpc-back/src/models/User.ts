@@ -43,6 +43,11 @@ export interface IUser extends Document {
       weight: number;
       imageUrl?: string | null;
       note?: string | null;
+      wellbeing?: string | null;
+      photos?: string[];
+      biggestWin?: string | null;
+      struggles?: string | null;
+      questions?: string | null;
     },
   ];
   caloriesLogs: [
@@ -85,6 +90,11 @@ const UserSchema = new Schema<IUser>({
       weight: { type: Number, required: true },
       imageUrl: { type: String },
       note: { type: String },
+      wellbeing: { type: String },
+      photos: { type: [String], default: [] },
+      biggestWin: { type: String },
+      struggles: { type: String },
+      questions: { type: String },
     },
   ],
   caloriesLogs: [

@@ -13,6 +13,7 @@ class RouteNames {
   static const String addSubscriber = '/add-subscriber';
   static const String chat = '/chat';
   static const String checkIns = '/check-ins';
+  static const String workoutHistory = '/workout-history';
   static const String planEditor = '/plan-editor';
   static const String exerciseManagement = '/exercise-management';
 }

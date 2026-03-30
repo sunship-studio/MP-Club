@@ -22,6 +22,7 @@ import 'package:mpc_admin_app/core/screens/public_plan_editor.dart';
 import 'package:mpc_admin_app/core/screens/training_plans.dart';
 import 'package:mpc_admin_app/core/screens/user_plan_editor.dart';
 import 'package:mpc_admin_app/core/screens/waiting_list.dart';
+import 'package:mpc_admin_app/core/screens/workout_history.dart';
 import 'package:mpc_admin_app/core/widgets/app_shell.dart';
 import 'package:mpc_admin_app/main.dart';
 
@@ -90,6 +91,14 @@ final GoRouter appRouter = GoRouter(
             return NoTransitionPage(
               child: OnlineCoaching(checkIns: true, user: user),
             );
+          },
+        ),
+        GoRoute(
+          path: RouteNames.workoutHistory,
+          name: 'workoutHistory',
+          pageBuilder: (context, state) {
+            final user = state.extra as User?;
+            return NoTransitionPage(child: WorkoutHistoryScreen(user: user!));
           },
         ),
         GoRoute(

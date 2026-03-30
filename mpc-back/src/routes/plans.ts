@@ -63,7 +63,7 @@ plansRouter.get(
       const filename = TRAINING_PLANS[planType as keyof typeof TRAINING_PLANS];
 
       // Path to the template file
-      const filePath = path.join(__dirname, '../../templates/plans', filename);
+      const filePath = path.join(process.cwd(), 'templates/plans', filename);
       console.log('File path:', filePath);
 
       // Check if file exists

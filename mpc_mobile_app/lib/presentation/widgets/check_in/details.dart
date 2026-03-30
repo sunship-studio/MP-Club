@@ -21,13 +21,11 @@ class CheckInDetails extends StatefulWidget {
 }
 
 class _CheckInDetailsState extends State<CheckInDetails> {
-  late TextEditingController _notesController;
   late TextEditingController _weightController;
 
   @override
   void initState() {
     super.initState();
-    _notesController = TextEditingController(text: widget.checkIn.note ?? '');
     _weightController = TextEditingController(
       text: widget.checkIn.weight.toStringAsFixed(0),
     );
@@ -36,13 +34,14 @@ class _CheckInDetailsState extends State<CheckInDetails> {
   bool _isEditing = false;
   @override
   Widget build(BuildContext context) {
+    final hasQuestionnaire = widget.checkIn.wellbeing != null;
     return DraggableScrollableSheet(
-      initialChildSize: widget.checkIn.imageUrl == null ? 0.45 : 0.65,
+      initialChildSize: hasQuestionnaire ? 0.85 : (widget.checkIn.allPhotos.isEmpty ? 0.45 : 0.65),
       minChildSize: 0.3,
-      maxChildSize: 0.7,
+      maxChildSize: 0.95,
 
       snap: true,
-      snapSizes: [0.65, 0.7],
+      snapSizes: [0.65, 0.85, 0.95],
       builder: (context, controller) {
         return BlocListener<CheckInCubit, CheckInState>(
           listener: (context, state) {
@@ -56,7 +55,7 @@ class _CheckInDetailsState extends State<CheckInDetails> {
                     right: horizontalPadding.w,
                     bottom:
                         MediaQuery.of(context).size.height *
-                        (widget.checkIn.imageUrl == null ? 0.45 : 0.65),
+                        (widget.checkIn.allPhotos.isEmpty ? 0.45 : 0.65),
                   ),
                   content: Text(
                     state.message,
@@ -94,7 +93,6 @@ class _CheckInDetailsState extends State<CheckInDetails> {
                   borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                 ),
                 child: ListView(
-                  physics: NeverScrollableScrollPhysics(),
                   controller: controller,
                   padding: EdgeInsets.zero,
                   shrinkWrap: true,
@@ -173,71 +171,45 @@ class _CheckInDetailsState extends State<CheckInDetails> {
                             ],
                           ),
                           Gap(16.h),
-                          if (widget.checkIn.imageUrl != null)
-                            Container(
-                              width: double.infinity,
-
-                              height: 176.h,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10.r),
-                                image: DecorationImage(
-                                  fit: BoxFit.cover,
-                                  image: NetworkImage(widget.checkIn.imageUrl!),
-                                ),
-                              ),
-                            ),
-                          if (widget.checkIn.imageUrl != null) Gap(12.h),
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.all(12.w),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(10.r),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.03),
-                                  blurRadius: 10,
-                                  offset: Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-
-                              children: [
-                                Text(
-                                  "Notes / Mood",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    height: 1.3,
-                                    color: AppColors.greyTextColor,
+                          if (widget.checkIn.allPhotos.isNotEmpty)
+                            widget.checkIn.allPhotos.length == 1
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(10.r),
+                                    child: Image.network(
+                                      widget.checkIn.allPhotos.first,
+                                      height: 176.h,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : SizedBox(
+                                    height: 176.h,
+                                    child: ListView.separated(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: widget.checkIn.allPhotos.length,
+                                      separatorBuilder: (_, __) => Gap(8.w),
+                                      itemBuilder: (context, index) {
+                                        return ClipRRect(
+                                          borderRadius: BorderRadius.circular(10.r),
+                                          child: Image.network(
+                                            widget.checkIn.allPhotos[index],
+                                            height: 176.h,
+                                            width: 200.w,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
-                                ),
-                                Gap(6.h),
-                                TextField(
-                                  controller: _notesController,
-                                  keyboardType: TextInputType.multiline,
-                                  maxLines: null,
-                                  decoration: InputDecoration(
-                                    border: InputBorder.none,
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  enabled: _isEditing,
-                                  style: TextStyle(
-                                    fontSize: 16.sp,
-                                    height: 1.4,
-
-                                    color:
-                                        _isEditing
-                                            ? AppColors.darkTextColor
-                                            : AppColors.darkTextColor
-                                                .withValues(alpha: 0.7),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          if (widget.checkIn.allPhotos.isNotEmpty) Gap(12.h),
+                          if (widget.checkIn.wellbeing != null && widget.checkIn.wellbeing!.isNotEmpty)
+                            _buildDetailSection("How do you feel/overall well being?", widget.checkIn.wellbeing!),
+                          if (widget.checkIn.biggestWin != null && widget.checkIn.biggestWin!.isNotEmpty)
+                            _buildDetailSection("Biggest win from this week", widget.checkIn.biggestWin!),
+                          if (widget.checkIn.struggles != null && widget.checkIn.struggles!.isNotEmpty)
+                            _buildDetailSection("What did you struggle with most this week?", widget.checkIn.struggles!),
+                          if (widget.checkIn.questions != null && widget.checkIn.questions!.isNotEmpty)
+                            _buildDetailSection("Questions", widget.checkIn.questions!),
                           Gap(16.h),
                           CircularButton(
                             label:
@@ -254,7 +226,6 @@ class _CheckInDetailsState extends State<CheckInDetails> {
                                 context.read<CheckInCubit>().editCheckIn(
                                   weight: _weightController.text,
                                   userId: widget.user.id,
-                                  note: _notesController.text,
                                   checkInId: widget.checkIn.id,
                                 );
                               }
@@ -270,6 +241,49 @@ class _CheckInDetailsState extends State<CheckInDetails> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildDetailSection(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.3,
+                color: AppColors.greyTextColor,
+              ),
+            ),
+            Gap(6.h),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16.sp,
+                height: 1.4,
+                color: AppColors.darkTextColor.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
