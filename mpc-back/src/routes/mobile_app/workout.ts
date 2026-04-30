@@ -1,9 +1,11 @@
 import express from "express";
-const workoutController = require("../../controllers/mobile/workout");
+import workoutController from "../../controllers/mobile/workout";
 
 const workoutRouter = express.Router();
 
-workoutRouter.post("/log-workout", workoutController.logWorkout);
-
+workoutRouter.post(
+  "/log-workout",
+  workoutController.logWorkout.bind(workoutController),
+);
 
 export default workoutRouter;

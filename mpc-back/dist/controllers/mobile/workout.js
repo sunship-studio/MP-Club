@@ -13,26 +13,104 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const User_1 = __importDefault(require("../../models/User"));
+function toNumberOrNull(v) {
+    if (v === null || v === undefined || v === "")
+        return null;
+    const n = typeof v === "number" ? v : Number(v);
+    if (!Number.isFinite(n))
+        return null;
+    if (n < 0)
+        return null;
+    return n;
+}
+function toIntOrZero(v) {
+    const n = toNumberOrNull(v);
+    return n === null ? 0 : Math.round(n);
+}
+function sanitizeSet(raw) {
+    return {
+        reps: raw.reps == null ? "0" : String(raw.reps),
+        rir: toIntOrZero(raw.rir),
+        weight: toIntOrZero(raw.weight),
+        actualReps: toNumberOrNull(raw.actualReps),
+    };
+}
+function sanitizeExercise(raw) {
+    const sets = Array.isArray(raw.sets)
+        ? raw.sets.map((s) => sanitizeSet(s))
+        : [];
+    const bodyParts = Array.isArray(raw.bodyParts)
+        ? raw.bodyParts.map((b) => String(b))
+        : [];
+    return {
+        exerciseId: raw.exerciseId ? String(raw.exerciseId) : "",
+        name: raw.name ? String(raw.name) : "",
+        videoUrl: raw.videoUrl ? String(raw.videoUrl) : undefined,
+        bodyParts,
+        minutes: toIntOrZero(raw.minutes),
+        seconds: toIntOrZero(raw.seconds),
+        sets,
+    };
+}
+function sanitizeWorkoutEntry(raw) {
+    var _a;
+    let date;
+    if (raw.date) {
+        const parsed = new Date(raw.date);
+        date = isNaN(parsed.getTime()) ? new Date() : parsed;
+    }
+    else {
+        date = new Date();
+    }
+    const inner = (_a = raw.workout) !== null && _a !== void 0 ? _a : {};
+    const exercises = Array.isArray(inner.exercises)
+        ? inner.exercises.map((e) => sanitizeExercise(e))
+        : [];
+    return {
+        date,
+        workout: {
+            name: inner.name ? String(inner.name) : "",
+            exercises,
+        },
+    };
+}
 class WorkoutController {
     logWorkout(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { userId, workout } = req.body;
+            var _a;
+            const { userId, workout } = (_a = req.body) !== null && _a !== void 0 ? _a : {};
+            if (!userId || typeof userId !== "string") {
+                res.status(400).json({ success: false, error: "userId is required" });
+                return;
+            }
+            if (!workout || typeof workout !== "object") {
+                res.status(400).json({ success: false, error: "workout is required" });
+                return;
+            }
             try {
                 const user = yield User_1.default.findById(userId);
                 if (!user) {
-                    console.error("User not found");
-                    return false;
+                    res.status(404).json({ success: false, error: "User not found" });
+                    return;
                 }
-                console.log("Workout to be logged:", workout);
-                user.doneWorkouts.push(workout);
+                const entry = sanitizeWorkoutEntry(workout);
+                if (!entry.workout.name || entry.workout.exercises.length === 0) {
+                    res.status(400).json({
+                        success: false,
+                        error: "workout must have a name and at least one exercise",
+                    });
+                    return;
+                }
+                user.doneWorkouts.push(entry);
                 yield user.save();
-                res.status(200).json({ success: true });
+                const saved = user.doneWorkouts[user.doneWorkouts.length - 1];
+                res.status(200).json({ success: true, entry: saved });
             }
             catch (error) {
                 console.error("Error logging workout:", error);
-                res.status(500).json({ success: false });
+                res.status(500).json({ success: false, error: "Server error" });
             }
         });
     }
 }
-module.exports = new WorkoutController();
+exports.default = new WorkoutController();

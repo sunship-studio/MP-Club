@@ -14,6 +14,7 @@ import 'package:mpc_mobile_app/data/models/UserExercise.dart';
 import 'package:mpc_mobile_app/data/models/user.dart';
 import 'package:mpc_mobile_app/data/models/workout.dart';
 import 'package:mpc_mobile_app/data/repositories/workout_weight_prefs.dart';
+import 'package:mpc_mobile_app/presentation/screens/log_workout.dart';
 import 'package:mpc_mobile_app/presentation/widgets/circular_button.dart';
 import 'package:mpc_mobile_app/presentation/widgets/header.dart';
 import 'package:mpc_mobile_app/presentation/widgets/profile_avatar.dart';
@@ -261,19 +262,29 @@ class _TrainingPlanScreenState extends State<TrainingPlanScreen> {
                         );
                       }
                     },
-                    onLogWorkout: () {
-                      _persistDayWeights(
+                    onLogWorkout: () async {
+                      final workoutCubit = context.read<WorkoutCubit>();
+                      await _persistDayWeights(
                         user: user,
                         dayIndex: selectedDayIndex,
                         day: _editableDays[selectedDayIndex],
                       );
-                      context.read<WorkoutCubit>().logWorkout(
-                        Workout(
-                          workout: _editableDays[selectedDayIndex].deepCopy(),
-                          date: DateTime.now(),
-                        ),
-                        user.id,
+
+                      if (!mounted) return;
+
+                      final result = await context.push(
+                        '/training_plan/log',
+                        extra: _editableDays[selectedDayIndex].deepCopy(),
                       );
+
+                      if (!mounted) return;
+
+                      if (result is LogWorkoutResult) {
+                        workoutCubit.logWorkout(
+                          Workout(workout: result.day, date: result.date),
+                          user.id,
+                        );
+                      }
                     },
                   );
                 },
@@ -445,7 +456,7 @@ void showWorkoutDialog({
     builder: (BuildContext context) {
       return CupertinoAlertDialog(
         title: Text('$trainingPlanName- $dayName'),
-        content: Text('Do you want to start workout or just log it?'),
+        content: Text('Start a guided session or log a completed workout?'),
         actions: [
           CupertinoDialogAction(
             child: Text(

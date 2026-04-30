@@ -38,8 +38,9 @@ const ExerciseSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
     imageUrl: { type: String },
     videoUrl: { type: String },
+    videoLengthSeconds: { type: Number },
     description: { type: String },
     bodyParts: { type: [String], required: true },
 });
-const Exercise = mongoose_1.default.model("Exercise", ExerciseSchema);
+const Exercise = mongoose_1.default.model('Exercise', ExerciseSchema);
 exports.default = Exercise;

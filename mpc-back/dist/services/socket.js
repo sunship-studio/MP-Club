@@ -21,6 +21,8 @@ const redis_1 = require("redis");
 const socket_io_1 = require("socket.io");
 const chat_1 = require("../controllers/mobile/chat");
 const auth_1 = require("../middleware/auth");
+const User_1 = __importDefault(require("../models/User"));
+const notification_1 = require("./notification");
 class SocketService {
     constructor(httpServer) {
         this.connectedUsers = new Map();
@@ -32,13 +34,13 @@ class SocketService {
         });
         this.io = new socket_io_1.Server(httpServer, {
             cors: {
-                origin: process.env.FRONTEND_URL || "*",
-                methods: ["GET", "POST"],
+                origin: process.env.FRONTEND_URL || '*',
+                methods: ['GET', 'POST'],
                 credentials: true,
             },
             pingTimeout: 60000,
             pingInterval: 25000,
-            transports: ["websocket", "polling"],
+            transports: ['websocket', 'polling'],
             // Enable compression for better performance
             perMessageDeflate: {
                 threshold: 1024,
@@ -57,16 +59,16 @@ class SocketService {
     setupRedisAdapter() {
         return __awaiter(this, void 0, void 0, function* () {
             // Only setup Redis if in production for horizontal scaling
-            if (process.env.NODE_ENV === "production" && process.env.REDIS_URL) {
+            if (process.env.NODE_ENV === 'production' && process.env.REDIS_URL) {
                 try {
                     const pubClient = (0, redis_1.createClient)({ url: process.env.REDIS_URL });
                     const subClient = pubClient.duplicate();
                     yield Promise.all([pubClient.connect(), subClient.connect()]);
                     this.io.adapter((0, redis_adapter_1.createAdapter)(pubClient, subClient));
-                    console_1.default.log("✅ Redis adapter connected for Socket.IO");
+                    console_1.default.log('✅ Redis adapter connected for Socket.IO');
                 }
                 catch (error) {
-                    console_1.default.error("❌ Redis adapter failed, using memory adapter:", error);
+                    console_1.default.error('❌ Redis adapter failed, using memory adapter:', error);
                 }
             }
         });
@@ -78,32 +80,32 @@ class SocketService {
                 const token = socket.handshake.auth.token;
                 const refreshToken = socket.handshake.auth.refreshToken;
                 if (!token) {
-                    console_1.default.log("No token provided in handshake");
-                    return next(new Error("AUTH_REQUIRED"));
+                    console_1.default.log('No token provided in handshake');
+                    return next(new Error('AUTH_REQUIRED'));
                 }
-                if (token == "shanempc113@") {
+                if (token == 'shanempc113@') {
                     socket.data.userId = socket.handshake.query.userId;
-                    socket.data.userType = "shane";
+                    socket.data.userType = 'shane';
                     socket.data.connectedAt = new Date();
-                    console_1.default.log("Shane connected with ID:", socket.data.userId);
+                    console_1.default.log('Shane connected with ID:', socket.data.userId);
                     return next();
                 }
                 const decodedId = yield (0, auth_1.verifyTokenInternal)(token, refreshToken);
                 if (!decodedId) {
-                    console_1.default.log("Invalid token");
-                    return next(new Error("INVALID_TOKEN"));
+                    console_1.default.log('Invalid token');
+                    return next(new Error('INVALID_TOKEN'));
                 }
                 // Attach user data to socket
                 socket.data.userId = decodedId;
-                socket.data.userType = "client";
+                socket.data.userType = 'client';
                 socket.data.connectedAt = new Date();
                 next();
             }
             catch (error) {
-                console_1.default.error("Socket authentication error:", error);
-                next(new Error(error.name === "TokenExpiredError"
-                    ? "TOKEN_EXPIRED"
-                    : "INVALID_TOKEN"));
+                console_1.default.error('Socket authentication error:', error);
+                next(new Error(error.name === 'TokenExpiredError'
+                    ? 'TOKEN_EXPIRED'
+                    : 'INVALID_TOKEN'));
             }
         }));
         // Rate limiting middleware
@@ -113,12 +115,12 @@ class SocketService {
                 next();
             }
             catch (_a) {
-                next(new Error("RATE_LIMIT_EXCEEDED"));
+                next(new Error('RATE_LIMIT_EXCEEDED'));
             }
         }));
     }
     setupConnectionHandlers() {
-        this.io.on("connection", (socket) => {
+        this.io.on('connection', (socket) => {
             console_1.default.log(`✅ User connected: ${socket.data.userId} [${socket.id}]`);
             this.handleUserConnection(socket);
             this.handleChatEvents(socket);
@@ -131,8 +133,9 @@ class SocketService {
     }
     handleUserConnection(socket) {
         const { userId, userType } = socket.data;
-        if (userType === "shane") {
-            socket.join("shane");
+        console_1.default.log('Handling connection for user:', userId);
+        if (userType === 'shane') {
+            socket.join('shane');
             this.broadcastShaneStatus(true);
         }
         else {
@@ -144,13 +147,13 @@ class SocketService {
                 connectionTime: new Date(),
             });
             console_1.default.log(userId);
-            console_1.default.log("Joined user room:", `user:${userId}`);
+            console_1.default.log('Joined user room:', `user:${userId}`);
             // Join rooms
             socket.join(`user:${userId.id}`);
             // Notify Shane of client connection
-            this.io.to("shane").emit("client:presence", {
+            this.io.to('shane').emit('client:presence', {
                 clientId: userId,
-                status: "online",
+                status: 'online',
                 timestamp: new Date(),
             });
         }
@@ -162,14 +165,14 @@ class SocketService {
             try {
                 const { userId, userType } = socket.data;
                 const [unreadCount, isUserOnline] = yield Promise.all([
-                    userType === "shane"
+                    userType === 'shane'
                         ? chat_1.ChatController.getTotalUnreadForShane()
                         : chat_1.ChatController.getUnreadCount(userId, true),
-                    userType === "shane" ? this.isUserOnline(userId) : this.isShaneOnline(),
+                    userType === 'shane' ? this.isUserOnline(userId) : this.isShaneOnline(),
                 ]);
                 console_1.default.log(`📤 Sending initial data to ${userType} ${userId} - Unread: ${unreadCount}, online: ${isUserOnline}`);
                 // Send everything in one emit to reduce latency
-                socket.emit("initial:data", {
+                socket.emit('initial:data', {
                     unreadCount,
                     isUserOnline: isUserOnline,
                     serverTime: new Date(),
@@ -177,23 +180,24 @@ class SocketService {
                 });
             }
             catch (error) {
-                console_1.default.error("Failed to send initial data:", error);
+                console_1.default.error('Failed to send initial data:', error);
             }
         });
     }
     handleChatEvents(socket) {
         // Send message with idempotency
-        socket.on("message:send", (data, callback) => __awaiter(this, void 0, void 0, function* () {
+        socket.on('message:send', (data, callback) => __awaiter(this, void 0, void 0, function* () {
+            console_1.default.log('Sending message event data:', data);
             try {
                 const { content, clientId, message_type, attachment, idempotencyKey } = data;
-                const fromShane = socket.data.userType === "shane";
-                console_1.default.log("Message send request:", data);
+                const fromShane = socket.data.userType === 'shane';
+                console_1.default.log('Message send request:', data);
                 // Validate input
                 if (!(content === null || content === void 0 ? void 0 : content.trim()) && !attachment) {
-                    return callback === null || callback === void 0 ? void 0 : callback({ error: "EMPTY_MESSAGE" });
+                    return callback === null || callback === void 0 ? void 0 : callback({ error: 'EMPTY_MESSAGE' });
                 }
                 if (content && content.length > 5000) {
-                    return callback === null || callback === void 0 ? void 0 : callback({ error: "MESSAGE_TOO_LONG" });
+                    return callback === null || callback === void 0 ? void 0 : callback({ error: 'MESSAGE_TOO_LONG' });
                 }
                 // Check idempotency (prevent duplicates)
                 if (idempotencyKey) {
@@ -205,9 +209,9 @@ class SocketService {
                 // Save message
                 const message = yield chat_1.ChatController.sendMessage({
                     client_id: targetClientId,
-                    content: (content === null || content === void 0 ? void 0 : content.trim()) || "",
+                    content: (content === null || content === void 0 ? void 0 : content.trim()) || '',
                     fromShane,
-                    message_type: message_type || "text",
+                    message_type: message_type || 'text',
                     attachment,
                 });
                 const messageData = Object.assign({}, message.toObject());
@@ -216,8 +220,31 @@ class SocketService {
                     // await redisClient.setex(`idem:${idempotencyKey}`, 300, JSON.stringify(messageData));
                 }
                 // Emit to recipient
-                const recipientRoom = fromShane ? `user:${clientId}` : "shane";
-                this.io.to(recipientRoom).emit("message:new", messageData);
+                const recipientRoom = fromShane ? `user:${clientId}` : 'shane';
+                this.io.to(recipientRoom).emit('message:new', messageData);
+                // Send push notification if recipient is offline
+                if (fromShane) {
+                    // Shane sent to client
+                    const isClientOnline = this.isUserOnline(clientId);
+                    console_1.default.log('Emitting push notification to client:', clientId);
+                    if (!isClientOnline) {
+                        const messagePreview = (content === null || content === void 0 ? void 0 : content.trim().substring(0, 100)) || 'Sent an attachment';
+                        (0, notification_1.sendChatNotification)(clientId, 'Shane', messagePreview, targetClientId).catch((err) => console_1.default.error('Failed to send push notification to client:', err));
+                    }
+                }
+                else {
+                    // Client sent to Shane
+                    const isShaneOnline = yield this.isShaneOnline();
+                    if (!isShaneOnline) {
+                        // Get client name
+                        const client = yield User_1.default.findById(socket.data.userId).select('firstName lastName');
+                        const clientName = client
+                            ? `${client.firstName} ${client.lastName}`
+                            : 'Client';
+                        const messagePreview = (content === null || content === void 0 ? void 0 : content.trim().substring(0, 100)) || 'Sent an attachment';
+                        (0, notification_1.sendChatNotificationToAdmin)(clientName, messagePreview, socket.data.userId).catch((err) => console_1.default.error('Failed to send push notification to Shane:', err));
+                    }
+                }
                 // Clear typing
                 this.clearTyping(socket.data.userId);
                 // Success callback
@@ -226,25 +253,25 @@ class SocketService {
                 this.updateUnreadCounts(targetClientId).catch(console_1.default.error);
             }
             catch (error) {
-                console_1.default.error("Send message error:", error);
-                callback === null || callback === void 0 ? void 0 : callback({ error: error.message || "SEND_FAILED" });
+                console_1.default.error('Send message error:', error);
+                callback === null || callback === void 0 ? void 0 : callback({ error: error.message || 'SEND_FAILED' });
             }
         }));
         // Load messages with cursor pagination
-        socket.on("messages:load", (data, callback) => __awaiter(this, void 0, void 0, function* () {
+        socket.on('messages:load', (data, callback) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const { clientId, before, limit = 50 } = data;
-                console_1.default.log("Messages load request:", { clientId, before, limit });
-                console_1.default.log("User type:", socket.data.userType);
-                console_1.default.log("Socket user ID:", socket.data.userId);
+                console_1.default.log('Messages load request:', { clientId, before, limit });
+                console_1.default.log('User type:', socket.data.userType);
+                console_1.default.log('Socket user ID:', socket.data.userId);
                 // Determine target client ID
                 let targetClientId;
                 targetClientId = clientId;
-                console_1.default.log("Target client ID:", targetClientId);
-                console_1.default.log("Target ID length:", targetClientId === null || targetClientId === void 0 ? void 0 : targetClientId.length);
+                console_1.default.log('Target client ID:', targetClientId);
+                console_1.default.log('Target ID length:', targetClientId === null || targetClientId === void 0 ? void 0 : targetClientId.length);
                 // Validate ObjectId format
                 if (!mongoose_1.default.Types.ObjectId.isValid(targetClientId)) {
-                    console_1.default.error("Invalid ObjectId:", targetClientId);
+                    console_1.default.error('Invalid ObjectId:', targetClientId);
                     return callback === null || callback === void 0 ? void 0 : callback({
                         error: `Invalid clientId format: ${targetClientId}`,
                     });
@@ -259,15 +286,15 @@ class SocketService {
                 });
             }
             catch (error) {
-                console_1.default.error("Load messages error:", error);
-                callback === null || callback === void 0 ? void 0 : callback({ error: error.message || "LOAD_FAILED" });
+                console_1.default.error('Load messages error:', error);
+                callback === null || callback === void 0 ? void 0 : callback({ error: error.message || 'LOAD_FAILED' });
             }
         }));
     }
     handleTypingEvents(socket) {
-        socket.on("typing:start", (data) => {
+        socket.on('typing:start', (data) => {
             const { clientId } = data;
-            const fromShane = socket.data.userType === "shane";
+            const fromShane = socket.data.userType === 'shane';
             const key = `${clientId}`;
             // Clear existing timeout
             const existing = this.typingStates.get(key);
@@ -275,9 +302,9 @@ class SocketService {
                 clearTimeout(existing.timeout);
             }
             // Broadcast typing indicator
-            const recipientRoom = fromShane ? `user:${clientId}` : "shane";
-            console_1.default.log("Emitting typing status to room:", recipientRoom);
-            this.io.to(recipientRoom).emit("typing:status", {
+            const recipientRoom = fromShane ? `user:${clientId}` : 'shane';
+            console_1.default.log('Emitting typing status to room:', recipientRoom);
+            this.io.to(recipientRoom).emit('typing:status', {
                 clientId: clientId,
                 isTyping: true,
                 fromShane,
@@ -292,23 +319,23 @@ class SocketService {
                 timeout,
             });
         });
-        socket.on("typing:stop", (data) => {
+        socket.on('typing:stop', (data) => {
             const { clientId } = data;
-            const fromShane = socket.data.userType === "shane";
+            const fromShane = socket.data.userType === 'shane';
             const targetClientId = fromShane ? clientId : socket.data.userId;
             this.clearTyping(socket.data.userId);
         });
     }
     handleReadReceipts(socket) {
-        socket.on("messages:mark-read", (data, callback) => __awaiter(this, void 0, void 0, function* () {
+        socket.on('messages:mark-read', (data, callback) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const { clientId, messageIds } = data;
-                const fromShane = socket.data.userType === "shane";
+                const fromShane = socket.data.userType === 'shane';
                 const targetClientId = fromShane ? clientId : socket.data.userId;
                 yield chat_1.ChatController.markAsRead(targetClientId, !fromShane);
                 // Notify sender
-                const senderRoom = fromShane ? `user:${clientId}` : "shane";
-                this.io.to(senderRoom).emit("messages:read-receipt", {
+                const senderRoom = fromShane ? `user:${clientId}` : 'shane';
+                this.io.to(senderRoom).emit('messages:read-receipt', {
                     clientId: targetClientId.id,
                     readAt: new Date(),
                     byShane: fromShane,
@@ -320,23 +347,23 @@ class SocketService {
                 callback === null || callback === void 0 ? void 0 : callback({ success: true });
             }
             catch (error) {
-                console_1.default.error("Mark read error:", error);
+                console_1.default.error('Mark read error:', error);
                 callback === null || callback === void 0 ? void 0 : callback({ error: error.message });
             }
         }));
     }
     handlePresence(socket) {
         // Heartbeat for connection health
-        socket.on("ping", (callback) => {
+        socket.on('ping', (callback) => {
             callback === null || callback === void 0 ? void 0 : callback({ pong: true, serverTime: Date.now() });
         });
         // Activity tracking
-        socket.on("user:active", () => {
+        socket.on('user:active', () => {
             socket.data.lastActivity = new Date();
         });
     }
     handleDisconnection(socket) {
-        socket.on("disconnect", (reason) => {
+        socket.on('disconnect', (reason) => {
             console_1.default.log(`❌ User disconnected: ${socket.data.userId} [${reason}]`);
             const { userId, userType } = socket.data;
             // Remove from tracking
@@ -349,24 +376,24 @@ class SocketService {
                 }
             });
             // Notify about offline status
-            if (userType === "shane") {
+            if (userType === 'shane') {
                 this.broadcastShaneStatus(false);
             }
             else {
-                this.io.to("shane").emit("client:presence", {
+                this.io.to('shane').emit('client:presence', {
                     clientId: userId,
-                    status: "offline",
+                    status: 'offline',
                     timestamp: new Date(),
                 });
             }
         });
-        socket.on("disconnecting", () => {
+        socket.on('disconnecting', () => {
             // Cleanup before full disconnect
             socket.data.disconnecting = true;
         });
     }
     handleErrors(socket) {
-        socket.on("error", (error) => {
+        socket.on('error', (error) => {
             console_1.default.error(`Socket error for user ${socket.data.userId}:`, error);
         });
     }
@@ -379,9 +406,9 @@ class SocketService {
             return;
         clearTimeout(state.timeout);
         this.typingStates.delete(key);
-        const fromShane = ((_a = this.connectedUsers.get(userId)) === null || _a === void 0 ? void 0 : _a.userType) === "shane";
-        const recipientRoom = fromShane ? `user:${userId}` : "shane";
-        this.io.to(recipientRoom).emit("typing:status", {
+        const fromShane = ((_a = this.connectedUsers.get(userId)) === null || _a === void 0 ? void 0 : _a.userType) === 'shane';
+        const recipientRoom = fromShane ? `user:${userId}` : 'shane';
+        this.io.to(recipientRoom).emit('typing:status', {
             clientId: userId,
             isTyping: false,
             fromShane,
@@ -396,16 +423,16 @@ class SocketService {
                 ]);
                 this.io
                     .to(`user:${clientId}`)
-                    .emit("unread:update", { count: clientUnread });
-                this.io.to("shane").emit("unread:update", shaneUnread);
+                    .emit('unread:update', { count: clientUnread });
+                this.io.to('shane').emit('unread:update', shaneUnread);
             }
             catch (error) {
-                console_1.default.error("Update unread counts error:", error);
+                console_1.default.error('Update unread counts error:', error);
             }
         });
     }
     broadcastShaneStatus(isOnline) {
-        this.io.emit("shane:presence", {
+        this.io.emit('shane:presence', {
             online: isOnline,
             timestamp: new Date(),
         });
@@ -425,7 +452,7 @@ class SocketService {
     isShaneOnline() {
         return __awaiter(this, void 0, void 0, function* () {
             for (const user of this.connectedUsers.values()) {
-                if (user.userType === "shane")
+                if (user.userType === 'shane')
                     return true;
             }
             return false;
@@ -439,12 +466,12 @@ class SocketService {
                     client_id: clientId,
                     content,
                     fromShane: true,
-                    message_type: "text",
+                    message_type: 'text',
                 });
-                this.io.to(`user:${clientId}`).emit("message:new", Object.assign(Object.assign({}, message.toObject()), { isSystem: true }));
+                this.io.to(`user:${clientId}`).emit('message:new', Object.assign(Object.assign({}, message.toObject()), { isSystem: true }));
             }
             catch (error) {
-                console_1.default.error("Send system message error:", error);
+                console_1.default.error('Send system message error:', error);
             }
         });
     }

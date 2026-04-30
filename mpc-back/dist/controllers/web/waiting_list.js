@@ -39,14 +39,16 @@ class WaitingListController {
                 yield newEntry.save();
                 res
                     .status(201)
-                    .json({ message: "User added to waiting list", entry: newEntry });
-                (0, notification_1.sendNotificationToAdmin)(`New user added to waiting list: ${firstName} ${lastName}`, "New Waiting List Entry");
+                    .json({ message: 'User added to waiting list', entry: newEntry });
+                (0, notification_1.sendNotificationToAdmin)(`New user added to waiting list: ${firstName} ${lastName}`, 'New Waiting List Entry', {
+                    type: 'waiting-list',
+                });
             }
             catch (error) {
-                console.error("Error adding user to waiting list:", error);
+                console.error('Error adding user to waiting list:', error);
                 res
                     .status(500)
-                    .json({ message: "Error adding user to waiting list", error });
+                    .json({ message: 'Error adding user to waiting list', error });
             }
         });
     }

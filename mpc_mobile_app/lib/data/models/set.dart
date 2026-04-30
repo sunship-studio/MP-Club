@@ -2,8 +2,9 @@ class ExerciseSet {
   String reps;
   int rir;
   int weight;
+  int? actualReps;
 
-  ExerciseSet({required this.reps, required this.rir, required this.weight});
+  ExerciseSet({required this.reps, required this.rir, required this.weight, this.actualReps});
 
   static int _toInt(dynamic value, {int fallback = 0}) {
     if (value is int) return value;
@@ -24,18 +25,25 @@ class ExerciseSet {
       reps: _toRepsString(json['reps']),
       rir: _toInt(json['rir']),
       weight: _toInt(json['weight']),
+      actualReps: json['actualReps'] != null ? _toInt(json['actualReps']) : null,
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'reps': reps, 'rir': rir, 'weight': weight};
+    return {
+      'reps': reps,
+      'rir': rir,
+      'weight': weight,
+      if (actualReps != null) 'actualReps': actualReps,
+    };
   }
 
-  ExerciseSet copyWith({String? reps, int? rir, int? weight}) {
+  ExerciseSet copyWith({String? reps, int? rir, int? weight, int? actualReps}) {
     return ExerciseSet(
       reps: reps ?? this.reps,
       rir: rir ?? this.rir,
       weight: weight ?? this.weight,
+      actualReps: actualReps ?? this.actualReps,
     );
   }
 }

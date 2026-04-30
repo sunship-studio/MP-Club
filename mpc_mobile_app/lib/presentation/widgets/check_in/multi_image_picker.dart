@@ -33,8 +33,7 @@ class MultiImagePicker extends StatelessWidget {
                 top: 4,
                 right: 4,
                 child: GestureDetector(
-                  onTap: () =>
-                      context.read<CheckInCubit>().removeImage(index),
+                  onTap: () => context.read<CheckInCubit>().removeImage(index),
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.black54,
@@ -67,11 +66,7 @@ class MultiImagePicker extends StatelessWidget {
                 color: AppColors.greyTextColor.withValues(alpha: 0.4),
               ),
             ),
-            child: Icon(
-              Icons.add,
-              size: 32.w,
-              color: AppColors.greyTextColor,
-            ),
+            child: Icon(Icons.add, size: 32.w, color: AppColors.greyTextColor),
           ),
         ),
       ],

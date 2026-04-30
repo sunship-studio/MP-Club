@@ -12,6 +12,24 @@ class WorkoutHistoryScreen extends StatelessWidget {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
+  /// Parses the low end of a target reps range like "8-12" or "10".
+  int? _lowEnd(String reps) {
+    final trimmed = reps.trim();
+    if (trimmed.isEmpty) return null;
+    final dash = RegExp(r'[-–—]');
+    final parts = trimmed.split(dash);
+    return int.tryParse(parts.first.trim());
+  }
+
+  /// A set "met target" if actualReps is null (blank = met) or
+  /// actualReps >= low end of the target range.
+  bool _setMetTarget(int? actualReps, String targetReps) {
+    if (actualReps == null) return true;
+    final low = _lowEnd(targetReps);
+    if (low == null) return true;
+    return actualReps >= low;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -55,6 +73,16 @@ class WorkoutHistoryScreen extends StatelessWidget {
                   final workout =
                       user.doneWorkouts[user.doneWorkouts.length - 1 - index];
 
+                  // Per-workout summary: count met vs total across all sets.
+                  int totalSets = 0;
+                  int metSets = 0;
+                  for (final ex in workout.workout.exercises) {
+                    for (final s in ex.sets ?? []) {
+                      totalSets++;
+                      if (_setMetTarget(s.actualReps, s.reps)) metSets++;
+                    }
+                  }
+
                   return Container(
                     margin: EdgeInsets.only(bottom: 10.h),
                     decoration: BoxDecoration(
@@ -71,14 +99,44 @@ class WorkoutHistoryScreen extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      subtitle: Text(
-                        _formatDate(workout.date),
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          fontFamily: 'SF-Pro',
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      subtitle: Row(
+                        children: [
+                          Text(
+                            _formatDate(workout.date),
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontFamily: 'SF-Pro',
+                              color:
+                                  Theme.of(context).textTheme.bodyMedium?.color,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Gap(8.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6.w,
+                              vertical: 2.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: (metSets == totalSets
+                                      ? Colors.green
+                                      : Colors.orange)
+                                  .withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                            child: Text(
+                              '$metSets/$totalSets sets met target',
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                fontFamily: 'SF-Pro',
+                                color: metSets == totalSets
+                                    ? Colors.green[700]
+                                    : Colors.orange[800],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       children:
                           workout.workout.exercises.map((exercise) {
@@ -114,17 +172,33 @@ class WorkoutHistoryScreen extends StatelessWidget {
                                     setIndex,
                                   ) {
                                     final set = exercise.sets![setIndex];
+                                    final met = _setMetTarget(
+                                      set.actualReps,
+                                      set.reps,
+                                    );
+                                    final String repsDisplay;
+                                    final Color statusColor;
+                                    if (set.actualReps == null) {
+                                      repsDisplay =
+                                          'Met Target (target: ${set.reps})';
+                                      statusColor = Colors.green[700]!;
+                                    } else if (met) {
+                                      repsDisplay =
+                                          '${set.actualReps} reps ✓ (target: ${set.reps})';
+                                      statusColor = Colors.green[700]!;
+                                    } else {
+                                      repsDisplay =
+                                          '${set.actualReps} reps ✗ (target: ${set.reps})';
+                                      statusColor = Colors.red[700]!;
+                                    }
                                     return Padding(
                                       padding: EdgeInsets.only(bottom: 3.h),
                                       child: Text(
-                                        'Set ${setIndex + 1}: ${set.reps} reps • ${set.weight} kg • RIR ${set.rir}',
+                                        'Set ${setIndex + 1}: $repsDisplay • ${set.weight} kg • RIR ${set.rir}',
                                         style: TextStyle(
                                           fontSize: 12.sp,
                                           fontFamily: 'SF-Pro',
-                                          color:
-                                              Theme.of(
-                                                context,
-                                              ).textTheme.bodyMedium?.color,
+                                          color: statusColor,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),

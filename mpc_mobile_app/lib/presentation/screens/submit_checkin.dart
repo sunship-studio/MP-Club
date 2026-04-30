@@ -59,14 +59,15 @@ class _SubmitCheckInScreenState extends State<SubmitCheckInScreen> {
           fontWeight: FontWeight.w500,
           color: Colors.white,
         ),
-        children: required
-            ? [
-                TextSpan(
-                  text: ' *',
-                  style: TextStyle(color: AppColors.redColor),
-                ),
-              ]
-            : null,
+        children:
+            required
+                ? [
+                  TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: AppColors.redColor),
+                  ),
+                ]
+                : null,
       ),
     );
   }
@@ -136,9 +137,10 @@ class _SubmitCheckInScreenState extends State<SubmitCheckInScreen> {
               );
             }
 
-            final imagePaths = state is CheckInImagesPicked
-                ? state.imagePaths
-                : context.read<CheckInCubit>().imagePaths;
+            final imagePaths =
+                state is CheckInImagesPicked
+                    ? state.imagePaths
+                    : context.read<CheckInCubit>().imagePaths;
 
             return GestureDetector(
               onTap: () => FocusScope.of(context).unfocus(),
@@ -186,24 +188,25 @@ class _SubmitCheckInScreenState extends State<SubmitCheckInScreen> {
                                       lastDate: DateTime.now(),
                                     );
                                     if (date != null) {
-                                      setState(
-                                          () => _selectedDate = date);
+                                      setState(() => _selectedDate = date);
                                     }
                                   },
                                   child: Container(
                                     padding: EdgeInsets.symmetric(
-                                        vertical: 12.h, horizontal: 12.w),
+                                      vertical: 12.h,
+                                      horizontal: 12.w,
+                                    ),
                                     decoration: BoxDecoration(
-                                      borderRadius:
-                                          BorderRadius.circular(8.r),
+                                      borderRadius: BorderRadius.circular(8.r),
                                       border: Border.all(
                                         color: AppColors.greyTextColor
                                             .withValues(alpha: 0.4),
                                       ),
                                     ),
                                     child: Text(
-                                      DateFormat('d MMM, yyyy')
-                                          .format(_selectedDate),
+                                      DateFormat(
+                                        'd MMM, yyyy',
+                                      ).format(_selectedDate),
                                       style: TextStyle(
                                         fontSize: 14.sp,
                                         color: Colors.white,
@@ -221,16 +224,16 @@ class _SubmitCheckInScreenState extends State<SubmitCheckInScreen> {
                                       initialTime: _selectedTime,
                                     );
                                     if (time != null) {
-                                      setState(
-                                          () => _selectedTime = time);
+                                      setState(() => _selectedTime = time);
                                     }
                                   },
                                   child: Container(
                                     padding: EdgeInsets.symmetric(
-                                        vertical: 12.h, horizontal: 12.w),
+                                      vertical: 12.h,
+                                      horizontal: 12.w,
+                                    ),
                                     decoration: BoxDecoration(
-                                      borderRadius:
-                                          BorderRadius.circular(8.r),
+                                      borderRadius: BorderRadius.circular(8.r),
                                       border: Border.all(
                                         color: AppColors.greyTextColor
                                             .withValues(alpha: 0.4),
@@ -258,15 +261,16 @@ class _SubmitCheckInScreenState extends State<SubmitCheckInScreen> {
                               borderRadius: BorderRadius.circular(8.r),
                               border: Border.all(
                                 width: 1,
-                                color: AppColors.greyTextColor
-                                    .withValues(alpha: 0.4),
+                                color: AppColors.greyTextColor.withValues(
+                                  alpha: 0.4,
+                                ),
                               ),
                             ),
                             child: TextField(
                               keyboardType: TextInputType.number,
                               textInputAction: TextInputAction.done,
-                              onEditingComplete: () =>
-                                  FocusScope.of(context).unfocus(),
+                              onEditingComplete:
+                                  () => FocusScope.of(context).unfocus(),
                               controller: _weightController,
                               style: TextStyle(
                                 fontSize: 18.sp,
@@ -289,11 +293,11 @@ class _SubmitCheckInScreenState extends State<SubmitCheckInScreen> {
 
                           // Wellbeing
                           _buildLabel(
-                              "How do you feel/overall well being?",
-                              required: true),
+                            "How do you feel/overall well being?",
+                            required: true,
+                          ),
                           Gap(8.h),
-                          _buildTextField(
-                              controller: _wellbeingController),
+                          _buildTextField(controller: _wellbeingController),
                           Gap(20.h),
 
                           // Photos
@@ -310,28 +314,30 @@ class _SubmitCheckInScreenState extends State<SubmitCheckInScreen> {
                           Gap(20.h),
 
                           // Biggest win
-                          _buildLabel("Biggest win from this week",
-                              required: true),
+                          _buildLabel(
+                            "Biggest win from this week",
+                            required: true,
+                          ),
                           Gap(8.h),
-                          _buildTextField(
-                              controller: _biggestWinController),
+                          _buildTextField(controller: _biggestWinController),
                           Gap(20.h),
 
                           // Struggles
                           _buildLabel(
-                              "What did you struggle with most this week?",
-                              required: true),
+                            "What did you struggle with most this week?",
+                            required: true,
+                          ),
                           Gap(8.h),
-                          _buildTextField(
-                              controller: _strugglesController),
+                          _buildTextField(controller: _strugglesController),
                           Gap(20.h),
 
                           // Questions
-                          _buildLabel("Do you have any questions?",
-                              required: true),
+                          _buildLabel(
+                            "Do you have any questions?",
+                            required: true,
+                          ),
                           Gap(8.h),
-                          _buildTextField(
-                              controller: _questionsController),
+                          _buildTextField(controller: _questionsController),
                           Gap(24.h),
 
                           // Submit
@@ -343,18 +349,15 @@ class _SubmitCheckInScreenState extends State<SubmitCheckInScreen> {
                                 dark: false,
                                 onTap: () async {
                                   // Validate required fields
-                                  if (_wellbeingController
-                                      .text.isEmpty) {
+                                  if (_wellbeingController.text.isEmpty) {
                                     SnackBarService.show(
                                       context: context,
-                                      message:
-                                          "Please fill in wellbeing field",
+                                      message: "Please fill in wellbeing field",
                                       isError: true,
                                     );
                                     return;
                                   }
-                                  if (_biggestWinController
-                                      .text.isEmpty) {
+                                  if (_biggestWinController.text.isEmpty) {
                                     SnackBarService.show(
                                       context: context,
                                       message:
@@ -363,45 +366,31 @@ class _SubmitCheckInScreenState extends State<SubmitCheckInScreen> {
                                     );
                                     return;
                                   }
-                                  if (_strugglesController
-                                      .text.isEmpty) {
+                                  if (_strugglesController.text.isEmpty) {
                                     SnackBarService.show(
                                       context: context,
-                                      message:
-                                          "Please fill in struggles field",
+                                      message: "Please fill in struggles field",
                                       isError: true,
                                     );
                                     return;
                                   }
-                                  if (_questionsController
-                                      .text.isEmpty) {
+                                  if (_questionsController.text.isEmpty) {
                                     SnackBarService.show(
                                       context: context,
-                                      message:
-                                          "Please fill in questions field",
+                                      message: "Please fill in questions field",
                                       isError: true,
                                     );
                                     return;
                                   }
 
-                                  context
-                                      .read<CheckInCubit>()
-                                      .submitCheckIn(
-                                        userId: authState.user.id,
-                                        weight:
-                                            _weightController.text,
-                                        wellbeing:
-                                            _wellbeingController.text,
-                                        biggestWin:
-                                            _biggestWinController
-                                                .text,
-                                        struggles:
-                                            _strugglesController
-                                                .text,
-                                        questions:
-                                            _questionsController
-                                                .text,
-                                      );
+                                  context.read<CheckInCubit>().submitCheckIn(
+                                    userId: authState.user.id,
+                                    weight: _weightController.text,
+                                    wellbeing: _wellbeingController.text,
+                                    biggestWin: _biggestWinController.text,
+                                    struggles: _strugglesController.text,
+                                    questions: _questionsController.text,
+                                  );
                                 },
                               );
                             },

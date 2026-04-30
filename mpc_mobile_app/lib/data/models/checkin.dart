@@ -37,7 +37,11 @@ class CheckIn {
       note: json['note'] as String?,
       imageUrl: json['imageUrl'] as String?,
       wellbeing: json['wellbeing'] as String?,
-      photos: (json['photos'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      photos:
+          (json['photos'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
       biggestWin: json['biggestWin'] as String?,
       struggles: json['struggles'] as String?,
       questions: json['questions'] as String?,

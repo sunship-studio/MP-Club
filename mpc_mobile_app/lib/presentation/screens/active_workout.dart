@@ -219,6 +219,64 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     _controller?.setVolume(_isMuted ? 0.0 : 1.0);
   }
 
+  Future<int?> _showActualRepsDialog() async {
+    final repsText = _workoutData.exercises[currentExercise].sets![currentSet - 1].reps;
+    final controller = TextEditingController(text: repsText.contains('-') ? '' : repsText);
+    int? result;
+
+    await showCupertinoDialog(
+      context: context,
+      builder: (dialogContext) {
+        return CupertinoAlertDialog(
+          title: Text('Reps Completed'),
+          content: Container(
+            margin: EdgeInsets.only(top: 12.h),
+            child: Column(
+              children: [
+                Text(
+                  'Target: $repsText reps',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: CupertinoColors.systemGrey,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                CupertinoTextField(
+                  controller: controller,
+                  keyboardType: TextInputType.number,
+                  placeholder: 'How many reps did you do?',
+                  autofocus: true,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text('Skip'),
+            ),
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              onPressed: () {
+                final parsed = int.tryParse(controller.text);
+                if (parsed != null && parsed >= 0) {
+                  result = parsed;
+                }
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+    return result;
+  }
+
   Future<void> _showWeightEditDialog() async {
     final currentWeight =
         _workoutData.exercises[currentExercise].sets![currentSet - 1].weight;
@@ -716,6 +774,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                                 .sets!
                                                 .length >
                                             currentSet) {
+                                          // Ask for actual reps before moving to next set
+                                          final actualReps = await _showActualRepsDialog();
+                                          if (actualReps != null) {
+                                            _workoutData.exercises[currentExercise].sets![currentSet - 1] =
+                                                _workoutData.exercises[currentExercise].sets![currentSet - 1]
+                                                    .copyWith(actualReps: actualReps);
+                                          }
+                                          if (!mounted) return;
                                           // Move to next set
                                           ScaffoldMessenger.of(
                                             context,
@@ -771,6 +837,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                                 .exercises
                                                 .length >
                                             currentExercise + 1) {
+                                          // Ask for actual reps before moving to next exercise
+                                          final actualReps = await _showActualRepsDialog();
+                                          if (actualReps != null) {
+                                            _workoutData.exercises[currentExercise].sets![currentSet - 1] =
+                                                _workoutData.exercises[currentExercise].sets![currentSet - 1]
+                                                    .copyWith(actualReps: actualReps);
+                                          }
+                                          if (!mounted) return;
                                           setState(() {
                                             currentExercise++;
                                             _seconds = 0;
@@ -778,6 +852,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                                           });
                                           await _switchVideo(currentExercise);
                                         } else {
+                                          // Ask for actual reps before finishing workout
+                                          final actualReps = await _showActualRepsDialog();
+                                          if (actualReps != null) {
+                                            _workoutData.exercises[currentExercise].sets![currentSet - 1] =
+                                                _workoutData.exercises[currentExercise].sets![currentSet - 1]
+                                                    .copyWith(actualReps: actualReps);
+                                          }
+                                          if (!mounted) return;
                                           _timer?.cancel();
                                           await _controller?.pause();
                                           if (!context.mounted) {

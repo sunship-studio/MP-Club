@@ -13,40 +13,54 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const stripe_1 = __importDefault(require("../../config/stripe"));
+const PlanForSale_1 = require("../../models/PlanForSale");
 class PlansController {
     constructor() { }
+    getPlans(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Get all training plans from database
+                const trainingPlans = yield PlanForSale_1.PlanForSale.find();
+                res.status(200).json(trainingPlans);
+            }
+            catch (error) {
+                console.error('Error fetching training plans:', error);
+                res.status(500).json({ error: 'Failed to fetch training plans' });
+            }
+        });
+    }
     createCheckoutSession(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log("Creating checkout session...");
-            console.log("Request body:", req.body);
+            console.log('Creating checkout session...');
+            console.log('Request body:', req.body);
             const { priceId } = req.body;
-            console.log("Price ID:", priceId);
+            console.log('Price ID:', priceId);
             try {
                 const session = yield stripe_1.default.checkout.sessions.create({
-                    payment_method_types: ["card"],
-                    mode: "payment",
+                    payment_method_types: ['card'],
+                    mode: 'payment',
                     line_items: [
                         {
                             price: priceId,
                             quantity: 1,
                         },
                     ],
-                    success_url: process.env.NODE_ENV === "development"
+                    success_url: process.env.NODE_ENV === 'development'
                         ? `http://localhost:3000/plans/success`
-                        : `${req.protocol}://${req.get("host")}/plans/success`,
-                    cancel_url: process.env.NODE_ENV === "development"
+                        : `${req.protocol}://${req.get('host')}/plans/success`,
+                    cancel_url: process.env.NODE_ENV === 'development'
                         ? `http://localhost:3000/plans/`
-                        : `${req.protocol}://${req.get("host")}/plans/`,
+                        : `${req.protocol}://${req.get('host')}/plans/`,
                 });
-                console.log("Session created:", session);
+                console.log('Session created:', session);
                 // Store the session ID in your database or perform any other necessary actions
                 res.status(200).json({
                     url: session.url,
                 });
             }
             catch (error) {
-                console.error("Error creating subscription:", error);
-                res.status(500).json({ error: "Failed to create subscription" });
+                console.error('Error creating subscription:', error);
+                res.status(500).json({ error: 'Failed to create subscription' });
             }
         });
     }

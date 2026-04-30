@@ -13,35 +13,34 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleWebhook = void 0;
-const mail_1 = __importDefault(require("@sendgrid/mail"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const stripe_1 = __importDefault(require("stripe"));
+const resend_1 = __importDefault(require("../config/resend"));
 const PaymentSession_1 = __importDefault(require("../models/PaymentSession"));
 const User_1 = __importDefault(require("../models/User"));
 const notification_1 = require("../services/notification");
-mail_1.default.setApiKey(process.env.SENDGRID_API_KEY);
 const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY, {});
+const endpointSecret = process.env.NODE_ENV == 'development'
+    ? 'whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47'
+    : 'whsec_yIFQOy0GjJtbZSPfz1eO3IrO3qPBuozh';
 const handleWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const sig = req.headers["stripe-signature"];
-    const endpointSecret = process.env.NODE_ENV == "development"
-        ? "whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47"
-        : process.env.STRIPE_WEBHOOK_SECRET;
+    const sig = req.headers['stripe-signature'];
     let event;
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     }
     catch (err) {
-        console.error("Error verifying webhook signature:", err);
+        console.error('Error verifying webhook signature:', err);
         return res.status(400).send(`Webhook Error: ${err}`);
     }
     // Handle the event
     switch (event.type) {
-        case "checkout.session.completed":
+        case 'checkout.session.completed':
             completeTransaction(event);
             break;
-        case "checkout.session.async_payment_failed":
-            console.log("Payment failed:", event.data.object);
+        case 'checkout.session.async_payment_failed':
+            console.log('Payment failed:', event.data.object);
             break;
         default:
     }
@@ -49,23 +48,38 @@ const handleWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.handleWebhook = handleWebhook;
 const completeTransaction = (event) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const session = event.data.object;
+    // Only process online coaching sessions
+    if (((_a = session.metadata) === null || _a === void 0 ? void 0 : _a.type) !== 'online_coaching') {
+        console.log('Skipping non-online-coaching session:', session.id);
+        return;
+    }
     const paymentSession = yield PaymentSession_1.default.findOne({
         sessionId: session.id,
     });
+    if (!paymentSession) {
+        console.error('Payment session not found for:', session.id);
+        return;
+    }
     const subscription = event.data.object.subscription;
     const subStatus = (yield stripe.subscriptions.retrieve(subscription)).status;
     // Sending mail (Waiting for designers to create templates)
-    const template_path = path_1.default.join(__dirname, "../templates", "online_coaching_confirmation.html");
+    const template_path = path_1.default.join(process.cwd(), 'templates', 'online_coaching_confirmation.html');
     const templateSource = readHTMLFile(template_path);
-    const msg = {
-        from: "shanemahon@midlandsperformanceclub.ie",
-        to: paymentSession === null || paymentSession === void 0 ? void 0 : paymentSession.email,
-        subject: "Subscription Confirmation",
-        html: templateSource,
-    };
-    yield mail_1.default.send(msg);
-    console.log('✅ Email sent successfully');
+    const htmlContent = templateSource.replace('{{firstName}}', (paymentSession === null || paymentSession === void 0 ? void 0 : paymentSession.firstName) || '');
+    const { data, error } = yield resend_1.default.emails.send({
+        from: 'Midlands Performance Club <shanemahon@midlandsperformanceclub.ie>',
+        to: [(paymentSession === null || paymentSession === void 0 ? void 0 : paymentSession.email) || ''],
+        subject: 'Subscription Confirmation',
+        html: htmlContent,
+    });
+    if (error) {
+        console.error('Error sending email:', error);
+    }
+    else {
+        console.log('✅ Email sent successfully:', data);
+    }
     const subscriber = yield User_1.default.create({
         email: paymentSession === null || paymentSession === void 0 ? void 0 : paymentSession.email,
         firstName: paymentSession === null || paymentSession === void 0 ? void 0 : paymentSession.firstName,
@@ -75,11 +89,11 @@ const completeTransaction = (event) => __awaiter(void 0, void 0, void 0, functio
         subscriptionId: session.subscription,
         status: subStatus,
         startDate: new Date(),
-        type: "online_coaching",
+        type: 'online_coaching',
     });
-    (0, notification_1.sendNotificationToAdmin)("New Online Coaching Subscription", `New subscription from ${paymentSession === null || paymentSession === void 0 ? void 0 : paymentSession.firstName} ${paymentSession === null || paymentSession === void 0 ? void 0 : paymentSession.lastName}`);
-    console.log("Payment successful:", session);
+    (0, notification_1.sendNotificationToAdmin)('New Online Coaching Subscription', `New subscription from ${paymentSession === null || paymentSession === void 0 ? void 0 : paymentSession.firstName} ${paymentSession === null || paymentSession === void 0 ? void 0 : paymentSession.lastName}`);
+    console.log('Payment successful:', session);
 });
 const readHTMLFile = (filePath) => {
-    return fs_1.default.readFileSync(filePath, "utf8");
+    return fs_1.default.readFileSync(filePath, 'utf8');
 };

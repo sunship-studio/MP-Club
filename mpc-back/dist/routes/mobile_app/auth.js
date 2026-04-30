@@ -155,25 +155,21 @@ function createResetLink(token) {
 }
 function sendPasswordResetEmail(email, link) {
     return __awaiter(this, void 0, void 0, function* () {
-        const sgMail = require('@sendgrid/mail');
-        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-        const templatePath = path_1.default.join(__dirname, '../../../templates/forgot_password.html');
+        const resend = require('../../../src/config/resend').default;
+        const templatePath = path_1.default.join(process.cwd(), 'templates/forgot_password.html');
         let template = fs_1.default.readFileSync(templatePath, 'utf-8');
         template = template.replace('{{resetLink}}', link);
-        const msg = {
-            to: email,
-            from: 'forgot_password@midlandsperformanceclub.ie',
+        const { data, error } = yield resend.emails.send({
+            from: 'Midlands Performance Club <forgot_password@midlandsperformanceclub.ie>',
+            to: [email],
             subject: 'Password Reset Request',
             html: template,
-            tracking_settings: {
-                click_tracking: {
-                    enable: false,
-                    enable_text: false,
-                },
-            },
-        };
-        yield sgMail.send(msg);
-        console.log('Password reset email sent');
+        });
+        if (error) {
+            console.error('Error sending password reset email:', error);
+            throw error;
+        }
+        console.log('Password reset email sent:', data);
     });
 }
 authRouter.get('/reset-password', (req, res) => {
@@ -415,6 +411,17 @@ authRouter.get('/reset-password', (req, res) => {
 authRouter.post('/create-account-apple-subscription', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, firstName, lastName, age, targetWeight, appleReceiptData, subscriptionId, } = req.body;
+        // Validate required fields
+        if (!email ||
+            !firstName ||
+            !lastName ||
+            !age ||
+            !appleReceiptData ||
+            !subscriptionId) {
+            res.status(400).json({
+                message: 'Missing required fields: email, firstName, lastName, age, appleReceiptData, subscriptionId',
+            });
+        }
         const result = yield auth_1.AuthController.createAccountWithAppleSubscription({
             email,
             firstName,
@@ -424,6 +431,7 @@ authRouter.post('/create-account-apple-subscription', (req, res) => __awaiter(vo
             appleReceiptData,
             subscriptionId,
         });
+        console.log('Account creation result:', req.body, result);
         if (result.success) {
             res.setHeader('authorization', result.token || '');
             res.setHeader('x-refresh-token', result.refreshToken || '');

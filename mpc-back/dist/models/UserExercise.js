@@ -36,12 +36,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const UserExerciseSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
-    videoUrl: { type: String, required: true },
+    videoUrl: { type: String, required: false },
     thumbnailUrl: { type: String, required: true },
     sets: { type: Number, required: true },
-    reps: { type: Number, required: true },
+    reps: { type: String, required: true },
     rir: { type: Number, required: true },
     weight: { type: Number, required: true },
 });
-const UserExercise = mongoose_1.default.model("UserExercise", UserExerciseSchema);
+const UserExercise = mongoose_1.default.model('UserExercise', UserExerciseSchema);
 exports.default = UserExercise;

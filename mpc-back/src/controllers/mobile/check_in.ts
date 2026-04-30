@@ -28,7 +28,17 @@ export class CheckInController {
     if (!user) {
       return false;
     }
-    console.log('data', { userId, weight, imageUrl, note, wellbeing, photos, biggestWin, struggles, questions });
+    console.log('data', {
+      userId,
+      weight,
+      imageUrl,
+      note,
+      wellbeing,
+      photos,
+      biggestWin,
+      struggles,
+      questions,
+    });
     user.checkIns.push({
       date: new Date(),
       weight,

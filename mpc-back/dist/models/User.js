@@ -47,13 +47,19 @@ const UserSchema = new mongoose_1.Schema({
     token: { type: String },
     targetWeight: { type: Number },
     refreshToken: { type: String },
+    fcmToken: { type: String }, // Firebase Cloud Messaging token
     checkIns: [
         {
-            id: { type: mongoose_1.Schema.Types.ObjectId, },
+            id: { type: mongoose_1.Schema.Types.ObjectId },
             date: { type: Date, required: true },
             weight: { type: Number, required: true },
             imageUrl: { type: String },
             note: { type: String },
+            wellbeing: { type: String },
+            photos: { type: [String], default: [] },
+            biggestWin: { type: String },
+            struggles: { type: String },
+            questions: { type: String },
         },
     ],
     caloriesLogs: [
@@ -77,8 +83,9 @@ const UserSchema = new mongoose_1.Schema({
                             seconds: { type: Number, default: 0 },
                             sets: [
                                 {
-                                    reps: { type: Number, required: true },
+                                    reps: { type: String, required: true },
                                     rir: { type: Number, required: true },
+                                    actualReps: { type: Number, default: null },
                                     weight: { type: Number, required: true },
                                 },
                             ],
@@ -108,13 +115,14 @@ const UserSchema = new mongoose_1.Schema({
                 name: { type: String, required: true },
                 exercises: [
                     {
+                        videoUrl: { type: String, required: false },
                         bodyParts: { type: [String], default: [] },
                         exerciseId: { type: String, required: true },
                         minutes: { type: Number, default: 0 },
                         seconds: { type: Number, default: 0 },
                         sets: [
                             {
-                                reps: { type: Number, required: true },
+                                reps: { type: String, required: true },
                                 rir: { type: Number, required: true },
                                 weight: { type: Number, required: true },
                             },
@@ -130,7 +138,6 @@ const UserSchema = new mongoose_1.Schema({
     cancelToken: { type: String },
     // Optional field for storing the cancel token
 });
-// Export the model and return your IUser interface
 // @ts-ignore
-const User = mongoose_1.default.model("User", UserSchema);
+const User = mongoose_1.default.model('User', UserSchema);
 exports.default = User;

@@ -121,7 +121,7 @@ const UserSchema = new Schema<IUser>({
                 {
                   reps: { type: String, required: true },
                   rir: { type: Number, required: true },
-
+                  actualReps: { type: Number, default: null },
                   weight: { type: Number, required: true },
                 },
               ],

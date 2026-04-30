@@ -20,6 +20,7 @@ import 'package:mpc_mobile_app/data/repositories/exercise.dart';
 import 'package:mpc_mobile_app/data/repositories/profile.dart';
 import 'package:mpc_mobile_app/data/repositories/workout.dart';
 import 'package:mpc_mobile_app/presentation/screens/active_workout.dart';
+import 'package:mpc_mobile_app/presentation/screens/log_workout.dart';
 import 'package:mpc_mobile_app/presentation/screens/calorties.dart';
 import 'package:mpc_mobile_app/presentation/screens/chat.dart';
 import 'package:mpc_mobile_app/presentation/screens/check_in.dart';
@@ -106,6 +107,13 @@ class MainRouter {
                     path: '/workout',
                     builder:
                         (context, state) => ActiveWorkoutScreen(
+                          trainingDay: state.extra as TrainingDay,
+                        ),
+                  ),
+                  GoRoute(
+                    path: '/log',
+                    builder:
+                        (context, state) => LogWorkoutScreen(
                           trainingDay: state.extra as TrainingDay,
                         ),
                   ),
