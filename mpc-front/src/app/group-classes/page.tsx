@@ -79,8 +79,11 @@ export default function GroupClassesPage() {
   const getClassesForDate = (date: Date | null): ClassWithAvailability[] => {
     if (!date) return [];
 
+    const toLocalDateString = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
     const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = toLocalDateString(date);
 
     console.log('Getting classes for:', dayOfWeek, dateString);
 
@@ -93,8 +96,9 @@ export default function GroupClassesPage() {
           cls.recurring &&
           cls.dayOfWeek?.toLowerCase() === dayOfWeek.toLowerCase();
         const isDateMatch =
+          !cls.recurring &&
           cls.date &&
-          new Date(cls.date).toISOString().split('T')[0] === dateString;
+          toLocalDateString(new Date(cls.date)) === dateString;
 
         if (!isRecurringMatch && !isDateMatch) {
           console.log(`Class ${cls.title} doesn't match this date`);
