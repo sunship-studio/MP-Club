@@ -176,31 +176,88 @@ class WorkoutHistoryScreen extends StatelessWidget {
                                       set.actualReps,
                                       set.reps,
                                     );
-                                    final String repsDisplay;
+                                    final String statusLabel;
                                     final Color statusColor;
                                     if (set.actualReps == null) {
-                                      repsDisplay =
-                                          'Met Target (target: ${set.reps})';
+                                      statusLabel = 'Met Target';
                                       statusColor = Colors.green[700]!;
                                     } else if (met) {
-                                      repsDisplay =
-                                          '${set.actualReps} reps ✓ (target: ${set.reps})';
+                                      statusLabel = 'Met Target ✓';
                                       statusColor = Colors.green[700]!;
                                     } else {
-                                      repsDisplay =
-                                          '${set.actualReps} reps ✗ (target: ${set.reps})';
+                                      statusLabel = 'Under target ✗';
                                       statusColor = Colors.red[700]!;
                                     }
                                     return Padding(
-                                      padding: EdgeInsets.only(bottom: 3.h),
-                                      child: Text(
-                                        'Set ${setIndex + 1}: $repsDisplay • ${set.weight} kg • RIR ${set.rir}',
-                                        style: TextStyle(
-                                          fontSize: 12.sp,
-                                          fontFamily: 'SF-Pro',
-                                          color: statusColor,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                      padding: EdgeInsets.only(bottom: 4.h),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          SizedBox(
+                                            width: 50.w,
+                                            child: Text(
+                                              'Set ${setIndex + 1}',
+                                              style: TextStyle(
+                                                fontSize: 12.sp,
+                                                fontFamily: 'SF-Pro',
+                                                color: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyLarge
+                                                    ?.color,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: RichText(
+                                              text: TextSpan(
+                                                style: TextStyle(
+                                                  fontSize: 12.sp,
+                                                  fontFamily: 'SF-Pro',
+                                                  color: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.color,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                                children: [
+                                                  if (set.actualReps != null) ...[
+                                                    TextSpan(
+                                                      text: '${set.actualReps}',
+                                                      style: TextStyle(
+                                                        fontSize: 14.sp,
+                                                        fontWeight:
+                                                            FontWeight.w800,
+                                                        color: met
+                                                            ? Colors.green[700]
+                                                            : Colors.red[700],
+                                                      ),
+                                                    ),
+                                                    TextSpan(
+                                                        text:
+                                                            '/${set.reps} reps'),
+                                                  ] else
+                                                    TextSpan(
+                                                        text:
+                                                            '${set.reps} reps (target hit)'),
+                                                  TextSpan(
+                                                      text:
+                                                          '  •  ${set.weight} kg  •  RIR ${set.rir}'),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            statusLabel,
+                                            style: TextStyle(
+                                              fontSize: 11.sp,
+                                              fontFamily: 'SF-Pro',
+                                              color: statusColor,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     );
                                   }),

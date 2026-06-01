@@ -212,7 +212,10 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
           Navigator.of(context).pop();
         }
       },
-      child: Scaffold(
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: Scaffold(
         backgroundColor: AppColors.lightScaffoldColor,
         bottomNavigationBar: SafeArea(
           child: Container(
@@ -504,6 +507,7 @@ class _LogWorkoutScreenState extends State<LogWorkoutScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
