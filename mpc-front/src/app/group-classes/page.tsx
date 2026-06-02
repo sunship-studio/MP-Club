@@ -16,6 +16,8 @@ interface TimeSlot {
     email: string;
     bookedAt: string;
     occurrenceDate?: string;
+    status?: 'pending' | 'confirmed';
+    holdExpiresAt?: string;
   }[];
 }
 
@@ -115,11 +117,17 @@ export default function GroupClassesPage() {
         }
 
         // Calculate availability per time slot for THIS week's occurrence only —
-        // each week of a recurring class has its own ticket pool
+        // each week of a recurring class has its own ticket pool. Count confirmed
+        // bookings plus pending holds whose reservation window is still live.
+        const now = new Date();
         const timesWithSpots = cls.timeSlots.map((slot) => {
-          const spotsTaken = (slot.spots || []).filter(
-            (s) => s.occurrenceDate === dateString
-          ).length;
+          const spotsTaken = (slot.spots || []).filter((s) => {
+            if (s.occurrenceDate !== dateString) return false;
+            if (s.status === 'pending') {
+              return !!s.holdExpiresAt && new Date(s.holdExpiresAt) > now;
+            }
+            return true; // confirmed or legacy
+          }).length;
           return {
             time: slot.time,
             spotsTaken,

@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import Stripe from 'stripe';
+
+import GroupClass from '../models/GroupClass';
 import { groupClassController } from '../routes/group_classes';
+import { releaseHold } from '../services/group_class_booking';
 
 const stripe = new Stripe(
   process.env.NODE_ENV === 'development'
@@ -52,6 +55,7 @@ export const handleGroupClassWebhook = async (
       email,
       date,
       occurrenceDate,
+      holdId,
       className,
       durationMinutes,
     } = metadata;
@@ -67,13 +71,28 @@ export const handleGroupClassWebhook = async (
         date,
         className,
         parseInt(durationMinutes, 10),
-        occurrenceDate
+        occurrenceDate,
+        holdId
       );
 
       console.log('✅ Booking confirmed for:', email);
     } catch (error) {
       console.error('Error confirming booking:', error);
       // Don't return error - Stripe will retry
+    }
+  }
+
+  // Checkout abandoned/expired — release the pending hold so the spot frees up.
+  if (event.type === 'checkout.session.expired') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const metadata = session.metadata;
+    if (metadata?.classId && metadata?.holdId) {
+      try {
+        await releaseHold(GroupClass, metadata.classId, metadata.holdId);
+        console.log('🕓 Released expired hold:', metadata.holdId);
+      } catch (error) {
+        console.error('Error releasing expired hold:', error);
+      }
     }
   }
 

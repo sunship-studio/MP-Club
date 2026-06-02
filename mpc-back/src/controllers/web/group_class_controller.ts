@@ -5,6 +5,16 @@ import path from 'path';
 import resend from '../../config/resend';
 import stripe from '../../config/stripe';
 import GroupClass from '../../models/GroupClass';
+import {
+  confirmHold,
+  releaseHold,
+  reserveSpot,
+} from '../../services/group_class_booking';
+
+// Pending reservation lifetime. Must outlast the Stripe checkout window so a
+// session that is still payable always has a live hold backing it.
+const HOLD_TTL_MS = 35 * 60 * 1000; // 35 min (Stripe session expires at 30)
+const STRIPE_SESSION_TTL_S = 30 * 60; // Stripe minimum is 30 min
 
 // Price for group class booking in cents (€10 = 1000 cents)
 const GROUP_CLASS_PRICE_CENTS = 1000;
@@ -176,33 +186,35 @@ export default class GroupClassController {
         return;
       }
 
-      // Check if slot is available
-      const timeSlotObj = groupClass.timeSlots.find(
-        (slot) => slot.time === timeSlot
-      );
-      if (!timeSlotObj) {
-        res.status(400).json({ error: 'Time slot not found' });
+      // Reserve the spot atomically BEFORE taking payment. This is what prevents
+      // overbooking: two concurrent buyers can no longer both pass a capacity
+      // check and both pay — the pool is decremented here, under a CAS guard.
+      const reservation = await reserveSpot(GroupClass, {
+        classId,
+        timeSlot,
+        occurrenceDate,
+        email,
+        firstName,
+        lastName,
+        holdTtlMs: HOLD_TTL_MS,
+        now: new Date(),
+      });
+
+      if (!reservation.ok) {
+        const messages: Record<string, string> = {
+          notfound: 'Time slot not found',
+          full: 'This time slot is fully booked',
+          dup: 'You have already booked this class',
+          conflict: 'Booking is busy right now, please try again',
+        };
+        const status = reservation.reason === 'notfound' ? 404 : 400;
+        res
+          .status(status)
+          .json({ error: messages[reservation.reason] ?? 'Unable to book' });
         return;
       }
 
-      // Only count bookings for this week's occurrence — each week is its own pool
-      const spotsThisWeek = timeSlotObj.spots.filter(
-        (booking) => booking.occurrenceDate === occurrenceDate
-      );
-
-      if (spotsThisWeek.length >= groupClass.spotsAvailable) {
-        res.status(400).json({ error: 'This time slot is fully booked' });
-        return;
-      }
-
-      // Check if email already booked this same occurrence
-      const bookingExists = spotsThisWeek.some(
-        (booking) => booking.email === email
-      );
-      if (bookingExists) {
-        res.status(400).json({ error: 'You have already booked this class' });
-        return;
-      }
+      const { holdId } = reservation;
 
       // Format the date for display
       const formattedDate = new Date(date).toLocaleDateString('en-US', {
@@ -211,8 +223,11 @@ export default class GroupClassController {
         day: 'numeric',
       });
 
-      // Create Stripe checkout session
-      const session = await stripe.checkout.sessions.create({
+      let session;
+      try {
+        // Create Stripe checkout session
+        session = await stripe.checkout.sessions.create({
+          expires_at: Math.floor(Date.now() / 1000) + STRIPE_SESSION_TTL_S,
         payment_method_types: ['card'],
         mode: 'payment',
         line_items: [
@@ -237,6 +252,7 @@ export default class GroupClassController {
           email,
           date,
           occurrenceDate,
+          holdId,
           className: groupClass.title,
           durationMinutes: groupClass.durationMinutes.toString(),
         },
@@ -248,7 +264,12 @@ export default class GroupClassController {
           process.env.NODE_ENV === 'development'
             ? `http://localhost:3000/group-classes`
             : `https://midlandsperformanceclub.ie/group-classes`,
-      });
+        });
+      } catch (stripeError) {
+        // Stripe failed — release the hold so the spot isn't stuck pending.
+        await releaseHold(GroupClass, classId, holdId);
+        throw stripeError;
+      }
 
       console.log('Checkout session created:', session.id);
       res.status(200).json({ url: session.url, sessionId: session.id });
@@ -268,8 +289,32 @@ export default class GroupClassController {
     date: string,
     className: string,
     durationMinutes: number,
-    occurrenceDate?: string
+    occurrenceDate?: string,
+    holdId?: string
   ): Promise<void> {
+    const occurrence =
+      occurrenceDate || new Date(date).toISOString().split('T')[0];
+
+    // Normal path: the spot was already reserved as a pending hold at checkout.
+    // Promote it to confirmed. Idempotent under Stripe webhook redelivery.
+    if (holdId) {
+      const promoted = await confirmHold(GroupClass, classId, holdId);
+      if (promoted) {
+        console.log('✅ Booking confirmed after payment:', email);
+        await this.sendBookingConfirmationEmail(
+          email,
+          firstName,
+          lastName,
+          className,
+          date,
+          timeSlot,
+          durationMinutes
+        );
+        return;
+      }
+      // Hold not found (already confirmed, released, or legacy) — fall through.
+    }
+
     const groupClass = await GroupClass.findById(classId);
     if (!groupClass) {
       throw new Error('Group class not found');
@@ -281,9 +326,6 @@ export default class GroupClassController {
     if (!timeSlotObj) {
       throw new Error('Time slot not found');
     }
-
-    const occurrence =
-      occurrenceDate || new Date(date).toISOString().split('T')[0];
 
     // Bookings for this week's occurrence only — each week is its own pool
     const spotsThisWeek = timeSlotObj.spots.filter(
@@ -307,13 +349,14 @@ export default class GroupClassController {
       throw new Error('This time slot is fully booked');
     }
 
-    // Add the booking
+    // Add the booking (legacy fallback — no prior hold)
     timeSlotObj.spots.push({
       email,
       firstName,
       lastName,
       bookedAt: new Date(date),
       occurrenceDate: occurrence,
+      status: 'confirmed',
     });
     await groupClass.save();
 

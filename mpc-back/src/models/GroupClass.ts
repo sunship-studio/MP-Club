@@ -13,6 +13,9 @@ export interface IGroupClass extends Document {
           email: string;
           bookedAt: Date;
           occurrenceDate?: string; // "YYYY-MM-DD" of the booked week's occurrence
+          status?: 'pending' | 'confirmed';
+          holdId?: string; // ties a pending reservation to its Stripe session
+          holdExpiresAt?: Date; // pending holds stop counting after this
         },
       ];
     },
@@ -38,6 +41,13 @@ const GroupClassSchema: Schema = new Schema<IGroupClass>({
             firstName: { type: String, required: true },
             lastName: { type: String, required: false },
             occurrenceDate: { type: String, required: false },
+            status: {
+              type: String,
+              enum: ['pending', 'confirmed'],
+              default: 'confirmed',
+            },
+            holdId: { type: String, required: false },
+            holdExpiresAt: { type: Date, required: false },
           },
         ],
       },
