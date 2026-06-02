@@ -2,6 +2,12 @@
 import apiService from '@/services/api.service';
 import { useEffect, useState } from 'react';
 
+// Local "YYYY-MM-DD" — avoids the UTC off-by-one that toISOString causes
+const toLocalDateString = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+    d.getDate()
+  ).padStart(2, '0')}`;
+
 interface TimeSlot {
   time: string;
   spots: {
@@ -9,6 +15,7 @@ interface TimeSlot {
     lastName: string;
     email: string;
     bookedAt: string;
+    occurrenceDate?: string;
   }[];
 }
 
@@ -79,9 +86,6 @@ export default function GroupClassesPage() {
   const getClassesForDate = (date: Date | null): ClassWithAvailability[] => {
     if (!date) return [];
 
-    const toLocalDateString = (d: Date) =>
-      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
     const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
     const dateString = toLocalDateString(date);
 
@@ -110,9 +114,12 @@ export default function GroupClassesPage() {
           return null;
         }
 
-        // Calculate availability for each time slot
+        // Calculate availability per time slot for THIS week's occurrence only —
+        // each week of a recurring class has its own ticket pool
         const timesWithSpots = cls.timeSlots.map((slot) => {
-          const spotsTaken = slot.spots?.length || 0;
+          const spotsTaken = (slot.spots || []).filter(
+            (s) => s.occurrenceDate === dateString
+          ).length;
           return {
             time: slot.time,
             spotsTaken,
@@ -154,6 +161,7 @@ export default function GroupClassesPage() {
         lastName,
         email,
         date: selectedDate.toISOString(),
+        occurrenceDate: toLocalDateString(selectedDate),
       });
 
       if (response.url) {

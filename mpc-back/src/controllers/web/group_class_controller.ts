@@ -37,6 +37,8 @@ export default class GroupClassController {
       // timeSlot: "09:30 AM"
 
       const { classId, date, email, firstName, lastName, timeSlot } = req.body;
+      const occurrenceDate: string =
+        req.body.occurrenceDate || new Date(date).toISOString().split('T')[0];
 
       const groupClass = await GroupClass.findById(classId);
       if (!groupClass) {
@@ -44,15 +46,27 @@ export default class GroupClassController {
         return;
       }
 
-      // check by mail
       const timeSlotObj = groupClass.timeSlots.find(
         (slot) => slot.time === timeSlot
       );
-      const bookingExists = timeSlotObj?.spots.some(
+
+      // Bookings for this week's occurrence only — each week is its own pool
+      const spotsThisWeek =
+        timeSlotObj?.spots.filter(
+          (booking) => booking.occurrenceDate === occurrenceDate
+        ) ?? [];
+
+      // check by mail for this occurrence
+      const bookingExists = spotsThisWeek.some(
         (booking) => booking.email === email
       );
       if (bookingExists) {
         res.status(400).json({ error: 'You have already booked this class' });
+        return;
+      }
+
+      if (spotsThisWeek.length >= groupClass.spotsAvailable) {
+        res.status(400).json({ error: 'This time slot is fully booked' });
         return;
       }
 
@@ -62,6 +76,7 @@ export default class GroupClassController {
         firstName,
         lastName,
         bookedAt: new Date(date),
+        occurrenceDate,
       });
       await groupClass.save();
 
@@ -145,6 +160,10 @@ export default class GroupClassController {
   ): Promise<void> {
     try {
       const { classId, timeSlot, firstName, lastName, email, date } = req.body;
+      // occurrenceDate ("YYYY-MM-DD") identifies which week's pool this booking
+      // belongs to. Fall back to the date's day for older clients.
+      const occurrenceDate: string =
+        req.body.occurrenceDate || new Date(date).toISOString().split('T')[0];
 
       if (!classId || !timeSlot || !firstName || !email || !date) {
         res.status(400).json({ error: 'Missing required fields' });
@@ -166,13 +185,18 @@ export default class GroupClassController {
         return;
       }
 
-      if (timeSlotObj.spots.length >= groupClass.spotsAvailable) {
+      // Only count bookings for this week's occurrence — each week is its own pool
+      const spotsThisWeek = timeSlotObj.spots.filter(
+        (booking) => booking.occurrenceDate === occurrenceDate
+      );
+
+      if (spotsThisWeek.length >= groupClass.spotsAvailable) {
         res.status(400).json({ error: 'This time slot is fully booked' });
         return;
       }
 
-      // Check if email already booked
-      const bookingExists = timeSlotObj.spots.some(
+      // Check if email already booked this same occurrence
+      const bookingExists = spotsThisWeek.some(
         (booking) => booking.email === email
       );
       if (bookingExists) {
@@ -212,6 +236,7 @@ export default class GroupClassController {
           lastName,
           email,
           date,
+          occurrenceDate,
           className: groupClass.title,
           durationMinutes: groupClass.durationMinutes.toString(),
         },
@@ -242,7 +267,8 @@ export default class GroupClassController {
     email: string,
     date: string,
     className: string,
-    durationMinutes: number
+    durationMinutes: number,
+    occurrenceDate?: string
   ): Promise<void> {
     const groupClass = await GroupClass.findById(classId);
     if (!groupClass) {
@@ -256,13 +282,29 @@ export default class GroupClassController {
       throw new Error('Time slot not found');
     }
 
-    // Double-check booking doesn't already exist
-    const bookingExists = timeSlotObj.spots.some(
+    const occurrence =
+      occurrenceDate || new Date(date).toISOString().split('T')[0];
+
+    // Bookings for this week's occurrence only — each week is its own pool
+    const spotsThisWeek = timeSlotObj.spots.filter(
+      (booking) => booking.occurrenceDate === occurrence
+    );
+
+    // Double-check booking doesn't already exist for this occurrence
+    const bookingExists = spotsThisWeek.some(
       (booking) => booking.email === email
     );
     if (bookingExists) {
       console.log('Booking already exists for:', email);
       return;
+    }
+
+    // Guard against overbooking this week's pool
+    if (spotsThisWeek.length >= groupClass.spotsAvailable) {
+      console.error(
+        `Pool full for ${className} ${occurrence} ${timeSlot}; cannot confirm ${email}`
+      );
+      throw new Error('This time slot is fully booked');
     }
 
     // Add the booking
@@ -271,6 +313,7 @@ export default class GroupClassController {
       firstName,
       lastName,
       bookedAt: new Date(date),
+      occurrenceDate: occurrence,
     });
     await groupClass.save();
 

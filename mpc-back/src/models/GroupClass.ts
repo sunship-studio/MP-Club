@@ -12,6 +12,7 @@ export interface IGroupClass extends Document {
           lastName: string;
           email: string;
           bookedAt: Date;
+          occurrenceDate?: string; // "YYYY-MM-DD" of the booked week's occurrence
         },
       ];
     },
@@ -36,6 +37,7 @@ const GroupClassSchema: Schema = new Schema<IGroupClass>({
             bookedAt: { type: Date, default: Date.now },
             firstName: { type: String, required: true },
             lastName: { type: String, required: false },
+            occurrenceDate: { type: String, required: false },
           },
         ],
       },

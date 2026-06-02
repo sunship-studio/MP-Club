@@ -51,6 +51,7 @@ export const handleGroupClassWebhook = async (
       lastName,
       email,
       date,
+      occurrenceDate,
       className,
       durationMinutes,
     } = metadata;
@@ -65,7 +66,8 @@ export const handleGroupClassWebhook = async (
         email,
         date,
         className,
-        parseInt(durationMinutes, 10)
+        parseInt(durationMinutes, 10),
+        occurrenceDate
       );
 
       console.log('✅ Booking confirmed for:', email);
