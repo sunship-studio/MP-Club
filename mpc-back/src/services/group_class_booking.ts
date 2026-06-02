@@ -2,6 +2,14 @@ import mongoose from 'mongoose';
 
 import { IGroupClass } from '../models/GroupClass';
 
+/** Local "YYYY-MM-DD" key — must match the occurrenceDate the frontend sends. */
+export function toLocalDateString(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+    2,
+    '0'
+  )}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 type SpotLike = {
   email: string;
   occurrenceDate?: string;
