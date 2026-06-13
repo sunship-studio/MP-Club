@@ -1,6 +1,10 @@
 'use client';
 import apiService from '@/services/api.service';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Clock, Users, CalendarDays, CheckCircle2, Sparkles } from 'lucide-react';
+
+const BRAND = '#0B79AB';
+const PRICE_LABEL = '€10';
 
 // Local "YYYY-MM-DD" — avoids the UTC off-by-one that toISOString causes
 const toLocalDateString = (d: Date) =>
@@ -50,7 +54,6 @@ export default function GroupClassesPage() {
       try {
         setIsLoadingClasses(true);
         const response = await apiService.get<GroupClass[]>('/group-classes');
-        console.log('Fetched classes:', response);
         setClasses(response);
       } catch (error) {
         console.error('Error fetching group classes:', error);
@@ -62,42 +65,15 @@ export default function GroupClassesPage() {
     fetchGroupClasses();
   }, []);
 
-  const generateCalendarDays = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const days: (Date | null)[] = [];
-
-    const startingDayOfWeek = firstDay.getDay();
-
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-      days.push(new Date(year, month, i));
-    }
-
-    return days;
-  };
-
-  const calendarDays = generateCalendarDays();
-
   const getClassesForDate = (date: Date | null): ClassWithAvailability[] => {
     if (!date) return [];
 
     const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
     const dateString = toLocalDateString(date);
 
-    console.log('Getting classes for:', dayOfWeek, dateString);
-
     return classes
       .map((cls) => {
-        console.log('Checking class:', cls.title, 'timeSlots:', cls.timeSlots);
-
-        // Filter by recurring classes that match this day OR specific date classes
+        // Recurring classes matching this weekday OR one-off classes on this date
         const isRecurringMatch =
           cls.recurring &&
           cls.dayOfWeek?.toLowerCase() === dayOfWeek.toLowerCase();
@@ -106,19 +82,11 @@ export default function GroupClassesPage() {
           cls.date &&
           toLocalDateString(new Date(cls.date)) === dateString;
 
-        if (!isRecurringMatch && !isDateMatch) {
-          console.log(`Class ${cls.title} doesn't match this date`);
-          return null;
-        }
+        if (!isRecurringMatch && !isDateMatch) return null;
+        if (!cls.timeSlots || cls.timeSlots.length === 0) return null;
 
-        if (!cls.timeSlots || cls.timeSlots.length === 0) {
-          console.log('No timeSlots found for class:', cls.title);
-          return null;
-        }
-
-        // Calculate availability per time slot for THIS week's occurrence only —
-        // each week of a recurring class has its own ticket pool. Count confirmed
-        // bookings plus pending holds whose reservation window is still live.
+        // Availability for THIS occurrence only — each week has its own pool.
+        // Count confirmed bookings plus still-live pending holds.
         const now = new Date();
         const timesWithSpots = cls.timeSlots.map((slot) => {
           const spotsTaken = (slot.spots || []).filter((s) => {
@@ -135,17 +103,36 @@ export default function GroupClassesPage() {
           };
         });
 
-        console.log('Times with spots for', cls.title, ':', timesWithSpots);
-
-        return {
-          ...cls,
-          timesWithSpots,
-        };
+        return { ...cls, timesWithSpots };
       })
       .filter((cls): cls is ClassWithAvailability => cls !== null);
   };
 
+  // Rolling 14-day strip starting today — recurring classes shine here
+  const dayStrip = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Array.from({ length: 14 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      return { date: d, hasClasses: getClassesForDate(d).length > 0 };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classes]);
+
+  // Auto-select the next day that actually has a class — zero clicks to value
+  useEffect(() => {
+    if (selectedDate || classes.length === 0) return;
+    const firstOpen = dayStrip.find((d) => d.hasClasses);
+    if (firstOpen) setSelectedDate(firstOpen.date);
+  }, [dayStrip, classes, selectedDate]);
+
   const availableClasses = getClassesForDate(selectedDate);
+
+  const selectedClassTitle = useMemo(() => {
+    if (!selectedClass) return '';
+    return classes.find((c) => c._id === selectedClass.split('-')[0])?.title ?? '';
+  }, [selectedClass, classes]);
 
   const handleBooking = async () => {
     if (!name || !email || !selectedClass || !selectedDate) {
@@ -188,156 +175,251 @@ export default function GroupClassesPage() {
     }
   };
 
+  const scarcity = (left: number, total: number) => {
+    if (left <= 0)
+      return { label: 'Fully booked', tone: 'text-gray-400', bar: 'bg-gray-300' };
+    if (left <= 2)
+      return {
+        label: `Only ${left} left`,
+        tone: 'text-amber-600',
+        bar: 'bg-amber-500',
+      };
+    return {
+      label: `${left} of ${total} open`,
+      tone: 'text-emerald-600',
+      bar: 'bg-emerald-500',
+    };
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-8 md:px-16 py-12 relative overflow-hidden">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
-          Group Classes
+    <div className="max-w-6xl mx-auto px-6 md:px-12 py-12 overflow-x-clip">
+      {/* Hero */}
+      <div className="text-center mb-10">
+        <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm font-medium text-white backdrop-blur">
+          <Sparkles className="h-4 w-4" style={{ color: '#7CC7E8' }} />
+          Small-group coaching · {PRICE_LABEL} drop-in
+        </span>
+        <h1 className="mt-5 text-4xl md:text-6xl font-bold text-white tracking-tight">
+          Train together. <span style={{ color: '#7CC7E8' }}>Show up weekly.</span>
         </h1>
-        <p className="text-lg text-gray-200">
-          Join our energizing group workouts. Select a date and class below to
-          book your spot.
+        <p className="mt-4 text-lg text-gray-200 max-w-2xl mx-auto">
+          Our coached group classes run on a fixed weekly rhythm — pick your day,
+          grab your spot, and build a habit that sticks. Spots are capped, so they
+          go fast.
         </p>
-      </div>
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="bg-white rounded-lg p-6 shadow-xl">
-          <h2 className="text-2xl font-semibold mb-4 text-black">
-            Select a Date
-          </h2>
-          <div className="grid grid-cols-7 gap-2">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div
-                key={day}
-                className="text-center font-semibold text-gray-600 py-2"
-              >
-                {day}
-              </div>
-            ))}
-            {calendarDays.map((date, index) => {
-              if (!date) {
-                return <div key={`empty-${index}`} className="py-3" />;
-              }
-
-              const isSelected =
-                selectedDate?.toDateString() === date.toDateString();
-              const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
-
-              return (
-                <button
-                  key={date.toISOString()}
-                  onClick={() => !isPast && setSelectedDate(date)}
-                  disabled={isPast}
-                  className={`
-                    py-3 rounded-lg font-medium transition-all
-                    ${
-                      isSelected
-                        ? 'bg-[#0B79AB] text-white shadow-lg scale-105'
-                        : isPast
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-gray-50 text-black hover:bg-gray-200'
-                    }
-                  `}
-                >
-                  {date.getDate()}
-                </button>
-              );
-            })}
-          </div>
+        <div className="mt-6 flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm text-gray-300">
+          <span className="inline-flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Certified coach
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Capped group sizes
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400" /> Same time every week
+          </span>
         </div>
+      </div>
 
-        <div className="bg-white rounded-lg p-6 shadow-xl">
-          <h2 className="text-2xl font-semibold mb-4 text-black">
-            Available Classes
-          </h2>
-          {isLoadingClasses ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0B79AB]"></div>
-            </div>
-          ) : !selectedDate ? (
-            <p className="text-gray-600 text-center py-12">
-              Please select a date to view available classes
+      {/* Day strip */}
+      <div className="mb-8">
+        <div className="mb-3 flex items-center gap-2 text-white/90">
+          <CalendarDays className="h-5 w-5" />
+          <h2 className="text-lg font-semibold">Pick your day</h2>
+        </div>
+        <div className="flex gap-2.5 overflow-x-auto pb-2 pr-0 snap-x">
+          {dayStrip.map(({ date, hasClasses }) => {
+            const isSelected =
+              selectedDate?.toDateString() === date.toDateString();
+            const isToday = date.toDateString() === new Date().toDateString();
+            return (
+              <button
+                key={date.toISOString()}
+                onClick={() => {
+                  setSelectedDate(date);
+                  setSelectedClass(null);
+                }}
+                className={`snap-start shrink-0 w-[68px] rounded-2xl py-3 text-center transition-all border ${
+                  isSelected
+                    ? 'text-white border-transparent shadow-lg scale-105'
+                    : hasClasses
+                      ? 'bg-white/95 text-black border-transparent hover:bg-white hover:scale-105'
+                      : 'bg-white/5 text-white/35 border-white/10'
+                }`}
+                style={isSelected ? { backgroundColor: BRAND } : undefined}
+              >
+                <div className="text-[11px] font-medium uppercase tracking-wide opacity-80">
+                  {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                </div>
+                <div className="text-xl font-bold leading-tight">
+                  {date.getDate()}
+                </div>
+                <div className="mt-1 flex h-2 items-center justify-center">
+                  {hasClasses ? (
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        isSelected ? 'bg-white' : 'bg-emerald-500'
+                      }`}
+                    />
+                  ) : isToday ? (
+                    <span className="text-[9px] opacity-60">today</span>
+                  ) : null}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Classes */}
+      <div className="mb-10">
+        {isLoadingClasses ? (
+          <div className="flex justify-center items-center py-16">
+            <div
+              className="animate-spin rounded-full h-12 w-12 border-b-2"
+              style={{ borderColor: BRAND }}
+            />
+          </div>
+        ) : !selectedDate ? (
+          <p className="text-gray-300 text-center py-16">
+            Select a day above to see what&apos;s on.
+          </p>
+        ) : availableClasses.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-white/5 py-14 text-center">
+            <p className="text-gray-200 font-medium">
+              No classes on{' '}
+              {selectedDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'short',
+                day: 'numeric',
+              })}
+              .
             </p>
-          ) : availableClasses.length === 0 ? (
-            <p className="text-gray-600 text-center py-12">
-              No classes available for this date
+            <p className="text-gray-400 text-sm mt-1">
+              Try a day marked with a green dot above.
             </p>
-          ) : (
-            <div className="space-y-4">
-              {availableClasses.map((classItem) => (
-                <div
-                  key={classItem._id}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-[#0B79AB] transition-all"
-                >
-                  <h3 className="font-semibold text-lg text-black">
+          </div>
+        ) : (
+          <div className="grid gap-5 md:grid-cols-2">
+            {availableClasses.map((classItem) => (
+              <div
+                key={classItem._id}
+                className="rounded-2xl bg-white p-6 shadow-xl ring-1 ring-black/5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-xl font-bold text-black">
                     {classItem.title}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-3">
-                    {classItem.durationMinutes} min • {classItem.spotsAvailable}{' '}
-                    spots per session
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {classItem.timesWithSpots &&
-                    classItem.timesWithSpots.length > 0 ? (
-                      classItem.timesWithSpots.map((slot) => {
-                        const isFull = slot.spotsLeft <= 0;
-                        const isSelected =
-                          selectedClass === `${classItem._id}-${slot.time}`;
-
-                        return (
-                          <button
-                            key={slot.time}
-                            onClick={() => {
-                              console.log(
-                                'Clicked:',
-                                `${classItem._id}-${slot.time}`
-                              );
-                              setSelectedClass(`${classItem._id}-${slot.time}`);
-                            }}
-                            disabled={isFull}
-                            className={`
-                              py-2 px-3 rounded text-sm font-medium transition-all
-                              ${
-                                isSelected
-                                  ? 'bg-[#0B79AB] text-white'
-                                  : isFull
-                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                    : 'bg-gray-100 text-black hover:bg-gray-200 cursor-pointer'
-                              }
-                            `}
-                          >
-                            <div>{slot.time}</div>
-                            <div className="text-xs">
-                              {isFull ? 'Full' : `${slot.spotsLeft} spots left`}
-                            </div>
-                          </button>
-                        );
-                      })
-                    ) : (
-                      <p className="text-gray-500 text-sm col-span-3">
-                        No time slots available
-                      </p>
-                    )}
-                  </div>
+                  {classItem.recurring && classItem.dayOfWeek && (
+                    <span
+                      className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold"
+                      style={{ backgroundColor: `${BRAND}14`, color: BRAND }}
+                    >
+                      Every {classItem.dayOfWeek}
+                    </span>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock className="h-4 w-4" /> {classItem.durationMinutes} min
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Users className="h-4 w-4" /> Max {classItem.spotsAvailable}
+                  </span>
+                </div>
+
+                <div className="mt-5 space-y-2.5">
+                  {classItem.timesWithSpots.length > 0 ? (
+                    classItem.timesWithSpots.map((slot) => {
+                      const isFull = slot.spotsLeft <= 0;
+                      const isSelected =
+                        selectedClass === `${classItem._id}-${slot.time}`;
+                      const s = scarcity(slot.spotsLeft, classItem.spotsAvailable);
+                      const pct = Math.max(
+                        0,
+                        Math.min(100, (slot.spotsLeft / classItem.spotsAvailable) * 100)
+                      );
+
+                      return (
+                        <button
+                          key={slot.time}
+                          onClick={() =>
+                            setSelectedClass(`${classItem._id}-${slot.time}`)
+                          }
+                          disabled={isFull}
+                          className={`w-full rounded-xl border-2 px-4 py-3 text-left transition-all ${
+                            isSelected
+                              ? 'text-white shadow-md'
+                              : isFull
+                                ? 'border-gray-100 bg-gray-50 cursor-not-allowed'
+                                : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                          }`}
+                          style={
+                            isSelected
+                              ? { backgroundColor: BRAND, borderColor: BRAND }
+                              : undefined
+                          }
+                        >
+                          <div className="flex items-center justify-between">
+                            <span
+                              className={`text-base font-bold ${
+                                isSelected
+                                  ? 'text-white'
+                                  : isFull
+                                    ? 'text-gray-400'
+                                    : 'text-black'
+                              }`}
+                            >
+                              {slot.time}
+                            </span>
+                            <span
+                              className={`text-xs font-semibold ${
+                                isSelected ? 'text-white/90' : s.tone
+                              }`}
+                            >
+                              {s.label}
+                            </span>
+                          </div>
+                          <div
+                            className={`mt-2 h-1.5 w-full overflow-hidden rounded-full ${
+                              isSelected ? 'bg-white/30' : 'bg-gray-100'
+                            }`}
+                          >
+                            <div
+                              className={`h-full rounded-full ${
+                                isSelected ? 'bg-white' : s.bar
+                              }`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <p className="text-gray-500 text-sm">No time slots available</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* Booking */}
       {selectedDate && selectedClass && (
-        <div className="mt-8 bg-white rounded-lg p-8 shadow-xl">
-          <h2 className="text-2xl font-semibold mb-6 text-black">
-            Complete Your Booking
+        <div className="rounded-2xl bg-white p-6 md:p-8 shadow-2xl ring-1 ring-black/5">
+          <h2 className="text-2xl font-bold mb-6 text-black">
+            Lock in your spot
           </h2>
 
-          <div className="bg-[#0B79AB]/5 rounded-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold mb-3 text-gray-900">
-              Booking Details
-            </h3>
-            <div className="grid md:grid-cols-3 gap-4 text-black">
+          <div
+            className="rounded-xl p-5 mb-6"
+            style={{ backgroundColor: `${BRAND}0D` }}
+          >
+            <div className="grid gap-4 md:grid-cols-3 text-black">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Date</p>
+                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                  Date
+                </p>
                 <p className="font-semibold">
                   {selectedDate.toLocaleDateString('en-US', {
                     weekday: 'short',
@@ -347,111 +429,112 @@ export default function GroupClassesPage() {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Time</p>
+                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                  Time
+                </p>
                 <p className="font-semibold">{selectedClass.split('-')[1]}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Class</p>
-                <p className="font-semibold">
-                  {
-                    classes.find((c) => c._id === selectedClass.split('-')[0])
-                      ?.title
-                  }
+                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
+                  Class
                 </p>
+                <p className="font-semibold">{selectedClassTitle}</p>
               </div>
             </div>
           </div>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">
-              Your Information
-            </h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                  Full Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your full name"
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-[#0B79AB] focus:outline-none transition-colors text-black placeholder:text-gray-400"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@example.com"
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-[#0B79AB] focus:outline-none transition-colors text-black placeholder:text-gray-400"
-                  required
-                />
-              </div>
+          <div className="grid gap-4 md:grid-cols-2 mb-6">
+            <div>
+              <label
+                htmlFor="name"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Full Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your full name"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:outline-none transition-colors text-black placeholder:text-gray-400"
+                style={{ caretColor: BRAND }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = BRAND)}
+                onBlur={(e) => (e.currentTarget.style.borderColor = '')}
+                required
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Email Address
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your.email@example.com"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:outline-none transition-colors text-black placeholder:text-gray-400"
+                style={{ caretColor: BRAND }}
+                onFocus={(e) => (e.currentTarget.style.borderColor = BRAND)}
+                onBlur={(e) => (e.currentTarget.style.borderColor = '')}
+                required
+              />
             </div>
           </div>
 
           <button
             onClick={handleBooking}
             disabled={isSubmitting || !name || !email}
-            className="w-full bg-[#0B79AB] text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-[#0b78ab9e] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-100"
+            className="w-full text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-100"
+            style={{ backgroundColor: BRAND }}
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
                 Redirecting to payment...
               </span>
             ) : (
-              'Pay €10 & Confirm Booking →'
+              `Pay ${PRICE_LABEL} & confirm booking →`
             )}
           </button>
-          <p className="text-center text-sm text-gray-500 mt-2">
-            You will be redirected to our secure payment page
+          <p className="text-center text-sm text-gray-500 mt-3">
+            🔒 Secure checkout · spot held while you pay
           </p>
         </div>
       )}
 
-      <div className="mt-12 grid md:grid-cols-3 gap-6 text-center">
-        <div className="bg-white/10 backdrop-blur rounded-lg p-6">
-          <div className="text-4xl mb-2">🏋️</div>
-          <h3 className="font-semibold text-lg mb-2 text-white">
-            Expert Trainers
-          </h3>
-          <p className="text-gray-200 text-sm">
-            All classes led by certified fitness professionals
-          </p>
-        </div>
-        <div className="bg-white/10 backdrop-blur rounded-lg p-6">
-          <div className="text-4xl mb-2">👥</div>
-          <h3 className="font-semibold text-lg mb-2 text-white">
-            Small Groups
-          </h3>
-          <p className="text-gray-200 text-sm">
-            Limited spots ensure personalized attention
-          </p>
-        </div>
-        <div className="bg-white/10 backdrop-blur rounded-lg p-6">
-          <div className="text-4xl mb-2">📅</div>
-          <h3 className="font-semibold text-lg mb-2 text-white">
-            Flexible Schedule
-          </h3>
-          <p className="text-gray-200 text-sm">
-            Multiple time slots throughout the day
-          </p>
-        </div>
+      {/* Trust trio */}
+      <div className="mt-14 grid gap-5 md:grid-cols-3 text-center">
+        {[
+          {
+            icon: '🏋️',
+            title: 'Your coach',
+            body: 'Every class led by the same certified coach who knows your goals.',
+          },
+          {
+            icon: '👥',
+            title: 'Small groups',
+            body: 'Capped numbers mean real, personal attention.',
+          },
+          {
+            icon: '📅',
+            title: 'Weekly rhythm',
+            body: 'Same class, same time each week — easy to commit to.',
+          },
+        ].map((f) => (
+          <div
+            key={f.title}
+            className="rounded-2xl bg-white/10 backdrop-blur p-6 border border-white/10"
+          >
+            <div className="text-4xl mb-2">{f.icon}</div>
+            <h3 className="font-semibold text-lg mb-2 text-white">{f.title}</h3>
+            <p className="text-gray-300 text-sm">{f.body}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
