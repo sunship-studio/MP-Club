@@ -1,69 +1,33 @@
 /**
- * One-time migration: stamp legacy group-class bookings (no occurrenceDate)
- * onto the upcoming "first week" occurrence of their class, and mark them
- * confirmed, so they appear under the new per-week ticket pools.
+ * One-time / repeatable migration: stamp each group-class booking onto the
+ * occurrence it was actually made for (derived from `bookedAt`), and mark
+ * legacy bookings confirmed.
  *
- * Idempotent: only fills missing occurrenceDate/status; already-stamped spots
- * are left untouched. Run: npx ts-node src/scripts/migrate_occurrence_dates.ts
+ * This supersedes the original migration, which stamped every legacy booking
+ * onto the upcoming occurrence and so blocked re-booking. See
+ * `repairOccurrenceDates` for the safe, idempotent logic.
+ *
+ * Run once against production: npx ts-node src/scripts/migrate_occurrence_dates.ts
  */
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
 import GroupClass from '../models/GroupClass';
-import { toLocalDateString } from '../services/group_class_booking';
+import { repairOccurrenceDates } from '../services/occurrence_repair';
 dotenv.config();
 
-const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-
-function firstOccurrence(dayOfWeek: string): string {
-  const target = DAYS.indexOf(dayOfWeek);
-  const now = new Date();
-  let delta = target - now.getDay();
-  if (delta < 0) delta += 7; // today counts
-  const d = new Date(now);
-  d.setDate(now.getDate() + delta);
-  return toLocalDateString(d);
-}
+// Same connection the app uses (config/database.ts), with a MONGO_URI override.
+const mongoURI =
+  process.env.MONGO_URI ||
+  `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@midlands-perfomance-clu.vfwz0lh.mongodb.net/?retryWrites=true&w=majority&appName=midlands-perfomance-cluster`;
 
 async function main() {
-  await mongoose.connect(process.env.MONGO_URI!);
-  const classes = await GroupClass.find();
-  let changedSpots = 0;
-  for (const c of classes) {
-    const occ =
-      c.recurring && c.dayOfWeek
-        ? firstOccurrence(c.dayOfWeek)
-        : c.date
-          ? toLocalDateString(new Date(c.date))
-          : undefined;
-    if (!occ) continue;
-
-    let dirty = false;
-    for (const slot of c.timeSlots as any[]) {
-      for (const s of (slot.spots || []) as any[]) {
-        if (!s.occurrenceDate) { s.occurrenceDate = occ; dirty = true; changedSpots++; }
-      }
-    }
-    if (dirty) {
-      c.markModified('timeSlots');
-      await c.save();
-      console.log(`Updated ${(c.title||'').trim()} | ${c.dayOfWeek ?? c.date} -> occ ${occ}`);
-    }
-  }
-
-  // Persist confirmed status on every non-pending spot. Done as a raw update
-  // because the schema's `status` default is applied in memory on load and so
-  // is never seen as a change by save() — it would not otherwise persist.
-  const statusRes = await GroupClass.updateMany(
-    {},
-    { $set: { 'timeSlots.$[].spots.$[s].status': 'confirmed' } },
-    { arrayFilters: [{ 's.status': { $ne: 'pending' } }] }
-  );
-
-  console.log(
-    `\nDone. Stamped occurrenceDate on ${changedSpots} legacy spot(s); ` +
-      `confirmed status on ${statusRes.modifiedCount} class doc(s).`
-  );
+  await mongoose.connect(mongoURI);
+  const { stamped } = await repairOccurrenceDates(GroupClass);
+  console.log(`Done. Re-stamped occurrenceDate on ${stamped} legacy spot(s).`);
   await mongoose.disconnect();
 }
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
