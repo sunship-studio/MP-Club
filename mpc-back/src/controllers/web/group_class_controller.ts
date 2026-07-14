@@ -275,7 +275,9 @@ export default class GroupClassController {
       res.status(200).json({ url: session.url, sessionId: session.id });
     } catch (error) {
       console.error('Error creating checkout session:', error);
-      res.status(500).json({ error: 'Failed to create checkout session' });
+      const message =
+        error instanceof Error ? error.message : 'Failed to create checkout session';
+      res.status(500).json({ error: message });
     }
   }
 

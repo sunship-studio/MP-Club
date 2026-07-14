@@ -23,3 +23,6 @@ npm-debug.log*
 .env
 .env.local
 *.env
+
+# Raw secrets — never commit
+stripe.txt
