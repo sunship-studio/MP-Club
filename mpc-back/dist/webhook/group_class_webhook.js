@@ -14,7 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleGroupClassWebhook = void 0;
 const stripe_1 = __importDefault(require("stripe"));
+const GroupClass_1 = __importDefault(require("../models/GroupClass"));
 const group_classes_1 = require("../routes/group_classes");
+const group_class_booking_1 = require("../services/group_class_booking");
 const stripe = new stripe_1.default(process.env.NODE_ENV === 'development'
     ? process.env.STRIPE_TEST_SECRET_KEY
     : process.env.STRIPE_SECRET_KEY);
@@ -44,15 +46,29 @@ const handleGroupClassWebhook = (req, res) => __awaiter(void 0, void 0, void 0, 
             res.status(400).send('No metadata found');
             return;
         }
-        const { classId, timeSlot, firstName, lastName, email, date, className, durationMinutes, } = metadata;
+        const { classId, timeSlot, firstName, lastName, email, date, occurrenceDate, holdId, className, durationMinutes, } = metadata;
         try {
             // Confirm the booking
-            yield group_classes_1.groupClassController.confirmBookingAfterPayment(classId, timeSlot, firstName, lastName || '', email, date, className, parseInt(durationMinutes, 10));
+            yield group_classes_1.groupClassController.confirmBookingAfterPayment(classId, timeSlot, firstName, lastName || '', email, date, className, parseInt(durationMinutes, 10), occurrenceDate, holdId);
             console.log('✅ Booking confirmed for:', email);
         }
         catch (error) {
             console.error('Error confirming booking:', error);
             // Don't return error - Stripe will retry
+        }
+    }
+    // Checkout abandoned/expired — release the pending hold so the spot frees up.
+    if (event.type === 'checkout.session.expired') {
+        const session = event.data.object;
+        const metadata = session.metadata;
+        if ((metadata === null || metadata === void 0 ? void 0 : metadata.classId) && (metadata === null || metadata === void 0 ? void 0 : metadata.holdId)) {
+            try {
+                yield (0, group_class_booking_1.releaseHold)(GroupClass_1.default, metadata.classId, metadata.holdId);
+                console.log('🕓 Released expired hold:', metadata.holdId);
+            }
+            catch (error) {
+                console.error('Error releasing expired hold:', error);
+            }
         }
     }
     res.status(200).json({ received: true });

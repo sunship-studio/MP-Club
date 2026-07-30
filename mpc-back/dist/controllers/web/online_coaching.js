@@ -29,6 +29,11 @@ class OnlineCoachingController {
             try {
                 const session = yield stripe_1.default.checkout.sessions.create({
                     payment_method_types: ['card'],
+                    payment_method_options: {
+                        card: {
+                            request_three_d_secure: 'any',
+                        },
+                    },
                     mode: 'subscription',
                     line_items: [
                         {

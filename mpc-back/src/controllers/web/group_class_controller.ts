@@ -229,6 +229,11 @@ export default class GroupClassController {
         session = await stripe.checkout.sessions.create({
           expires_at: Math.floor(Date.now() / 1000) + STRIPE_SESSION_TTL_S,
         payment_method_types: ['card'],
+        payment_method_options: {
+          card: {
+            request_three_d_secure: 'any',
+          },
+        },
         mode: 'payment',
         line_items: [
           {

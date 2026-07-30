@@ -22,6 +22,7 @@ const AdminSettings_1 = __importDefault(require("../../models/AdminSettings"));
 const Exercise_1 = __importDefault(require("../../models/Exercise"));
 const GroupClass_1 = __importDefault(require("../../models/GroupClass"));
 const PlanForSale_1 = require("../../models/PlanForSale");
+const group_class_booking_1 = require("../../services/group_class_booking");
 const User_1 = __importDefault(require("../../models/User"));
 const WaitingListEntry_1 = require("../../models/WaitingListEntry");
 const excel_1 = __importDefault(require("../../services/excel"));
@@ -368,7 +369,15 @@ class AdminAppController {
                 const classDayStart = new Date(classDate);
                 classDayStart.setHours(0, 0, 0, 0);
                 const isToday = classDayStart.getTime() === today.getTime();
-                return Object.assign(Object.assign({}, groupClass.toObject()), { date: classDate, isToday });
+                const obj = groupClass.toObject();
+                // For recurring classes, only show attendees for the upcoming occurrence —
+                // each week is its own pool. Pending (unpaid) holds are excluded from the
+                // roster; confirmed and legacy bookings are kept.
+                if (groupClass.recurring && groupClass.dayOfWeek && classDate) {
+                    const occ = (0, group_class_booking_1.toLocalDateString)(new Date(classDate));
+                    obj.timeSlots = obj.timeSlots.map((slot) => (Object.assign(Object.assign({}, slot), { spots: (slot.spots || []).filter((s) => s.occurrenceDate === occ && s.status !== 'pending') })));
+                }
+                return Object.assign(Object.assign({}, obj), { date: classDate, isToday });
             });
             return res.json(updatedClasses);
         });
@@ -390,9 +399,10 @@ class AdminAppController {
         }
         const today = new Date();
         const currentDay = today.getDay();
-        // Calculate days until next occurrence
+        // Calculate days until next occurrence (today counts — a class on its own
+        // weekday is "today", matching the public calendar which keeps today bookable)
         let daysUntilTarget = targetDay - currentDay;
-        if (daysUntilTarget <= 0) {
+        if (daysUntilTarget < 0) {
             daysUntilTarget += 7; // Move to next week
         }
         // Create next date
@@ -435,7 +445,42 @@ class AdminAppController {
                 }
                 groupClass.title = title;
                 groupClass.durationMinutes = durationMinutes;
-                groupClass.timeSlots = timeSlots;
+                // The admin editor only ever sees one occurrence's attendees (the upcoming
+                // week for recurring classes) and its spots carry no occurrenceDate/status.
+                // Overwriting timeSlots wholesale would therefore destroy every other
+                // week's bookings and any in-flight pending holds. Instead, merge: keep the
+                // bookings the editor never saw, and treat the editor's list as
+                // authoritative only for the edited occurrence (so removals still work).
+                const editedOcc = recurring && dayOfWeek
+                    ? (0, group_class_booking_1.toLocalDateString)(this.getNextDayOfWeek(dayOfWeek))
+                    : date
+                        ? (0, group_class_booking_1.toLocalDateString)(new Date(date))
+                        : undefined;
+                if (editedOcc) {
+                    const existingByTime = new Map();
+                    for (const slot of groupClass.timeSlots) {
+                        existingByTime.set(slot.time, slot.spots || []);
+                    }
+                    groupClass.timeSlots = timeSlots.map((slot) => {
+                        const prior = existingByTime.get(slot.time) || [];
+                        // Bookings the editor didn't see: other weeks + live pending holds.
+                        const preserved = prior.filter((s) => s.occurrenceDate !== editedOcc || s.status === 'pending');
+                        // Editor's list for this occurrence (re-stamped, since the app strips
+                        // occurrenceDate/status off spots).
+                        const incoming = (slot.spots || []).map((s) => ({
+                            firstName: s.firstName,
+                            lastName: s.lastName,
+                            email: s.email,
+                            bookedAt: s.bookedAt || new Date(),
+                            occurrenceDate: editedOcc,
+                            status: 'confirmed',
+                        }));
+                        return { time: slot.time, spots: [...preserved, ...incoming] };
+                    });
+                }
+                else {
+                    groupClass.timeSlots = timeSlots;
+                }
                 groupClass.date = date;
                 groupClass.spotsAvailable = spotsAvailable;
                 if (recurring !== undefined)
