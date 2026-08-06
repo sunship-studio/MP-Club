@@ -15,20 +15,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleWebhook = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
-const stripe_1 = __importDefault(require("stripe"));
 const resend_1 = __importDefault(require("../config/resend"));
+const stripe_1 = __importDefault(require("../config/stripe"));
 const PaymentSession_1 = __importDefault(require("../models/PaymentSession"));
 const User_1 = __importDefault(require("../models/User"));
 const notification_1 = require("../services/notification");
-const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY, {});
+// Each Stripe webhook endpoint has its own signing secret; env vars allow
+// rotation without a deploy, hardcoded values are the current live/dev secrets.
 const endpointSecret = process.env.NODE_ENV == 'development'
-    ? 'whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47'
-    : 'whsec_yIFQOy0GjJtbZSPfz1eO3IrO3qPBuozh';
+    ? process.env.STRIPE_COACHING_WEBHOOK_SECRET_DEV ||
+        'whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47'
+    : process.env.STRIPE_COACHING_WEBHOOK_SECRET ||
+        'whsec_yIFQOy0GjJtbZSPfz1eO3IrO3qPBuozh';
 const handleWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
     const sig = req.headers['stripe-signature'];
     let event;
     try {
-        event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+        event = stripe_1.default.webhooks.constructEvent(req.body, sig, endpointSecret);
     }
     catch (err) {
         console.error('Error verifying webhook signature:', err);
@@ -42,6 +46,18 @@ const handleWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         case 'checkout.session.async_payment_failed':
             console.log('Payment failed:', event.data.object);
             break;
+        case 'checkout.session.expired': {
+            const expired = event.data.object;
+            console.log('Checkout session expired:', expired.id, 'customer:', expired.customer, 'email:', expired.customer_email || ((_a = expired.customer_details) === null || _a === void 0 ? void 0 : _a.email));
+            break;
+        }
+        case 'invoice.payment_failed': {
+            const invoice = event.data.object;
+            console.error('Invoice payment failed:', invoice.id, 'customer:', invoice.customer, 'subscription:', invoice.subscription, 'reason:', ((_b = invoice.last_finalization_error) === null || _b === void 0 ? void 0 : _b.message) ||
+                ((_c = invoice.last_payment_error) === null || _c === void 0 ? void 0 : _c.message) ||
+                'unknown');
+            break;
+        }
         default:
     }
     res.status(200).json({ received: true });
@@ -63,7 +79,7 @@ const completeTransaction = (event) => __awaiter(void 0, void 0, void 0, functio
         return;
     }
     const subscription = event.data.object.subscription;
-    const subStatus = (yield stripe.subscriptions.retrieve(subscription)).status;
+    const subStatus = (yield stripe_1.default.subscriptions.retrieve(subscription)).status;
     // Sending mail (Waiting for designers to create templates)
     const template_path = path_1.default.join(process.cwd(), 'templates', 'online_coaching_confirmation.html');
     const templateSource = readHTMLFile(template_path);

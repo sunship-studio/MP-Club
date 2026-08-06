@@ -5,6 +5,9 @@ import path from 'path';
 import stripe from '../../config/stripe';
 import PaymentSession from '../../models/PaymentSession';
 import OnlineSubscriber from '../../models/User';
+
+const STRIPE_SESSION_TTL_S = 30 * 60; // Stripe minimum is 30 min
+
 export default class OnlineCoachingController {
   constructor() {
     // Initialize any properties or dependencies here
@@ -16,7 +19,30 @@ export default class OnlineCoachingController {
     const { email, firstName, lastName, age } = req.body;
 
     try {
+      if (!email) {
+        res.status(400).json({ error: 'Email is required' });
+        return;
+      }
+
+      // Reuse one Stripe Customer per email. Anonymous sessions mint a fresh
+      // customer on every retry, which Radar scores as escalating fraud risk.
+      let customerId: string | undefined;
+      try {
+        const existing = await stripe.customers.list({ email, limit: 1 });
+        customerId =
+          existing.data[0]?.id ??
+          (
+            await stripe.customers.create({
+              email,
+              name: [firstName, lastName].filter(Boolean).join(' ') || undefined,
+            })
+          ).id;
+      } catch (customerError) {
+        console.error('Error resolving Stripe customer:', customerError);
+      }
+
       const session = await stripe.checkout.sessions.create({
+        expires_at: Math.floor(Date.now() / 1000) + STRIPE_SESSION_TTL_S,
         payment_method_types: ['card'],
         payment_method_options: {
           card: {
@@ -24,6 +50,8 @@ export default class OnlineCoachingController {
           },
         },
         mode: 'subscription',
+        ...(customerId ? { customer: customerId } : { customer_email: email }),
+        billing_address_collection: 'required',
         line_items: [
           {
             price:
@@ -53,6 +81,7 @@ export default class OnlineCoachingController {
         firstName,
         lastName,
         age,
+        customerId,
       })
         .then(() => {
           console.log('Payment session saved to database');
@@ -66,7 +95,9 @@ export default class OnlineCoachingController {
       });
     } catch (error) {
       console.error('Error creating subscription:', error);
-      res.status(500).json({ error: 'Failed to create subscription' });
+      const message =
+        error instanceof Error ? error.message : 'Failed to create subscription';
+      res.status(500).json({ error: message });
     }
   }
 

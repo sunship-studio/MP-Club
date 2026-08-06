@@ -17,42 +17,54 @@ const path_1 = __importDefault(require("path"));
 const stripe_1 = __importDefault(require("../../config/stripe"));
 const PaymentSession_1 = __importDefault(require("../../models/PaymentSession"));
 const User_1 = __importDefault(require("../../models/User"));
+const STRIPE_SESSION_TTL_S = 30 * 60; // Stripe minimum is 30 min
 class OnlineCoachingController {
     constructor() {
         // Initialize any properties or dependencies here
     }
     createCheckoutSession(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
             console.log('Creating checkout session...');
             console.log('Request body:', req.body);
             const { email, firstName, lastName, age } = req.body;
             try {
-                const session = yield stripe_1.default.checkout.sessions.create({
-                    payment_method_types: ['card'],
-                    payment_method_options: {
+                if (!email) {
+                    res.status(400).json({ error: 'Email is required' });
+                    return;
+                }
+                // Reuse one Stripe Customer per email. Anonymous sessions mint a fresh
+                // customer on every retry, which Radar scores as escalating fraud risk.
+                let customerId;
+                try {
+                    const existing = yield stripe_1.default.customers.list({ email, limit: 1 });
+                    customerId =
+                        (_b = (_a = existing.data[0]) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : (yield stripe_1.default.customers.create({
+                            email,
+                            name: [firstName, lastName].filter(Boolean).join(' ') || undefined,
+                        })).id;
+                }
+                catch (customerError) {
+                    console.error('Error resolving Stripe customer:', customerError);
+                }
+                const session = yield stripe_1.default.checkout.sessions.create(Object.assign(Object.assign({ expires_at: Math.floor(Date.now() / 1000) + STRIPE_SESSION_TTL_S, payment_method_types: ['card'], payment_method_options: {
                         card: {
                             request_three_d_secure: 'any',
                         },
-                    },
-                    mode: 'subscription',
-                    line_items: [
+                    }, mode: 'subscription' }, (customerId ? { customer: customerId } : { customer_email: email })), { billing_address_collection: 'required', line_items: [
                         {
                             price: process.env.NODE_ENV == 'production'
                                 ? process.env.STRIPE_PRICE_ID
                                 : process.env.STRIPE_TEST_PRICE_ID,
                             quantity: 1,
                         },
-                    ],
-                    metadata: {
+                    ], metadata: {
                         type: 'online_coaching',
-                    },
-                    success_url: process.env.NODE_ENV === 'development'
+                    }, success_url: process.env.NODE_ENV === 'development'
                         ? `http://localhost:3000/online-coaching/success`
-                        : `https://www.midlandsperformanceclub.ie/online-coaching/success`,
-                    cancel_url: process.env.NODE_ENV === 'development'
+                        : `https://www.midlandsperformanceclub.ie/online-coaching/success`, cancel_url: process.env.NODE_ENV === 'development'
                         ? `http://localhost:3000/online-coaching/`
-                        : `https://www.midlandsperformanceclub.ie/online-coaching/`,
-                });
+                        : `https://www.midlandsperformanceclub.ie/online-coaching/` }));
                 console.log('Session created:', session);
                 // Store the session ID in your database or perform any other necessary actions
                 yield PaymentSession_1.default.create({
@@ -61,6 +73,7 @@ class OnlineCoachingController {
                     firstName,
                     lastName,
                     age,
+                    customerId,
                 })
                     .then(() => {
                     console.log('Payment session saved to database');
@@ -74,7 +87,8 @@ class OnlineCoachingController {
             }
             catch (error) {
                 console.error('Error creating subscription:', error);
-                res.status(500).json({ error: 'Failed to create subscription' });
+                const message = error instanceof Error ? error.message : 'Failed to create subscription';
+                res.status(500).json({ error: message });
             }
         });
     }

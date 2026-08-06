@@ -40,6 +40,7 @@ const PaymentSessionSchema = new mongoose_1.Schema({
     age: { type: Number, required: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
+    customerId: { type: String },
 });
 const PaymentSession = mongoose_1.default.model("PaymentSession", PaymentSessionSchema);
 exports.default = PaymentSession;

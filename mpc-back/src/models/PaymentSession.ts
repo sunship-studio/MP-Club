@@ -6,6 +6,7 @@ interface IPaymentSession extends Document {
   age: number;
   firstName: string;
   lastName: string;
+  customerId?: string;
 }
 
 const PaymentSessionSchema = new Schema<IPaymentSession>({
@@ -14,6 +15,7 @@ const PaymentSessionSchema = new Schema<IPaymentSession>({
   age: { type: Number, required: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
+  customerId: { type: String },
 });
 
 const PaymentSession = mongoose.model<IPaymentSession>(

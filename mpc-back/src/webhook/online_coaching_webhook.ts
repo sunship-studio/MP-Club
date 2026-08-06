@@ -1,16 +1,20 @@
 import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import Stripe from 'stripe';
 import resend from '../config/resend';
+import stripe from '../config/stripe';
 import PaymentSession from '../models/PaymentSession';
 import User from '../models/User';
 import { sendNotificationToAdmin } from '../services/notification';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {});
+
+// Each Stripe webhook endpoint has its own signing secret; env vars allow
+// rotation without a deploy, hardcoded values are the current live/dev secrets.
 const endpointSecret =
   process.env.NODE_ENV == 'development'
-    ? 'whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47'
-    : 'whsec_yIFQOy0GjJtbZSPfz1eO3IrO3qPBuozh';
+    ? process.env.STRIPE_COACHING_WEBHOOK_SECRET_DEV ||
+      'whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47'
+    : process.env.STRIPE_COACHING_WEBHOOK_SECRET ||
+      'whsec_yIFQOy0GjJtbZSPfz1eO3IrO3qPBuozh';
 
 const handleWebhook = async (req: Request, res: Response) => {
   const sig = req.headers['stripe-signature'];
@@ -32,6 +36,34 @@ const handleWebhook = async (req: Request, res: Response) => {
     case 'checkout.session.async_payment_failed':
       console.log('Payment failed:', event.data.object);
       break;
+    case 'checkout.session.expired': {
+      const expired = event.data.object as any;
+      console.log(
+        'Checkout session expired:',
+        expired.id,
+        'customer:',
+        expired.customer,
+        'email:',
+        expired.customer_email || expired.customer_details?.email
+      );
+      break;
+    }
+    case 'invoice.payment_failed': {
+      const invoice = event.data.object as any;
+      console.error(
+        'Invoice payment failed:',
+        invoice.id,
+        'customer:',
+        invoice.customer,
+        'subscription:',
+        invoice.subscription,
+        'reason:',
+        invoice.last_finalization_error?.message ||
+          invoice.last_payment_error?.message ||
+          'unknown'
+      );
+      break;
+    }
     default:
   }
 
