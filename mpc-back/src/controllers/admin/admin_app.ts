@@ -200,33 +200,21 @@ export default class AdminAppController {
     return fs.readFileSync(filePath, 'utf8');
   };
   public async addSubscriber(req: Request, res: Response): Promise<Response> {
-    // Sending mail (Waiting for designers to create templates)
-    const template_path = path.join(
-      process.cwd(),
-      'templates',
-      'online_coaching_confirmation.html'
-    );
-    const templateSource = this.readHTMLFile(template_path);
-
-    const { data, error } = await resend.emails.send({
-      from: 'Midlands Performance Club <shanemahon@midlandsperformanceclub.ie>',
-      to: [req.body.email],
-      subject: 'Subscription Confirmation',
-      html: templateSource,
-    });
-
-    if (error) {
-      console.error('Error sending email:', error);
-    } else {
-      console.log('✅ Email sent successfully:', data);
-    }
     try {
-      const { email, firstName, lastName, age } = req.body;
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ message: 'User already exists' });
+      const { firstName, lastName, age } = req.body;
+      const email = String(req.body.email ?? '').trim().toLowerCase();
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
       }
-      const newUser = await User.create({
+      const existingUser = await User.findOne({
+        email: { $regex: `^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' },
+      });
+      if (existingUser) {
+        return res.status(400).json({
+          message: `User with email ${existingUser.email} already exists (status: ${existingUser.status}, type: ${existingUser.type})`,
+        });
+      }
+      await User.create({
         email,
         firstName,
         lastName,
@@ -237,6 +225,25 @@ export default class AdminAppController {
         status: 'active',
         startDate: new Date(),
       });
+
+      // Send confirmation only after the subscriber is actually created
+      const template_path = path.join(
+        process.cwd(),
+        'templates',
+        'online_coaching_confirmation.html'
+      );
+      const templateSource = this.readHTMLFile(template_path);
+      const { data, error } = await resend.emails.send({
+        from: 'Midlands Performance Club <shanemahon@midlandsperformanceclub.ie>',
+        to: [email],
+        subject: 'Subscription Confirmation',
+        html: templateSource,
+      });
+      if (error) {
+        console.error('Error sending email:', error);
+      } else {
+        console.log('✅ Email sent successfully:', data);
+      }
 
       return res.status(200).json({ message: 'Subscriber added' });
     } catch (error) {

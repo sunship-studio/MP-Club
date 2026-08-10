@@ -31,6 +31,13 @@ class ApiService {
       Response response = await dio.post(endpoint, data: data);
 
       return response;
+    } on DioException catch (e) {
+      final serverMessage = e.response?.data is Map
+          ? (e.response?.data as Map)['message']
+          : null;
+      throw Exception(
+        serverMessage ?? 'Failed to post data: ${e.message}',
+      );
     } catch (e) {
       throw Exception('Failed to post data: $e');
     }
