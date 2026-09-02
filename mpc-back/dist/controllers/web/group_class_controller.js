@@ -37,63 +37,6 @@ class GroupClassController {
             }
         });
     }
-    bookGroupClass(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var _a;
-            try {
-                //[Log] Booking data:
-                // classId: "6964d593e636d7b1bb25cfd6"
-                // date: "2026-01-11T23:00:00.000Z"
-                // email: "kamryydev@gmail.com"
-                // firstName: "IGor"
-                // lastName: "Kamrowski"
-                // timeSlot: "09:30 AM"
-                const { classId, date, email, firstName, lastName, timeSlot } = req.body;
-                const occurrenceDate = req.body.occurrenceDate || new Date(date).toISOString().split('T')[0];
-                const groupClass = yield GroupClass_1.default.findById(classId);
-                if (!groupClass) {
-                    res.status(404).json({ error: 'Group class not found' });
-                    return;
-                }
-                const timeSlotObj = groupClass.timeSlots.find((slot) => slot.time === timeSlot);
-                // Bookings for this week's occurrence only — each week is its own pool
-                const spotsThisWeek = (_a = timeSlotObj === null || timeSlotObj === void 0 ? void 0 : timeSlotObj.spots.filter((booking) => booking.occurrenceDate === occurrenceDate)) !== null && _a !== void 0 ? _a : [];
-                // check by mail for this occurrence
-                const bookingExists = spotsThisWeek.some((booking) => booking.email === email);
-                if (bookingExists) {
-                    res.status(400).json({ error: 'You have already booked this class' });
-                    return;
-                }
-                if (spotsThisWeek.length >= groupClass.spotsAvailable) {
-                    res.status(400).json({ error: 'This time slot is fully booked' });
-                    return;
-                }
-                // add booking
-                timeSlotObj === null || timeSlotObj === void 0 ? void 0 : timeSlotObj.spots.push({
-                    email,
-                    firstName,
-                    lastName,
-                    bookedAt: new Date(date),
-                    occurrenceDate,
-                });
-                yield groupClass.save();
-                // Send confirmation email
-                try {
-                    yield this.sendBookingConfirmationEmail(email, firstName, lastName, groupClass.title, date, timeSlot, groupClass.durationMinutes);
-                    console.log('✅ Booking confirmation email sent to:', email);
-                }
-                catch (emailError) {
-                    console.error('Error sending confirmation email:', emailError);
-                    // Don't fail the booking if email fails
-                }
-                res.status(200).json({ message: 'Group class booked successfully' });
-            }
-            catch (error) {
-                console.error('Error booking group class:', error);
-                res.status(500).json({ error: 'Failed to book group class' });
-            }
-        });
-    }
     sendBookingConfirmationEmail(email, firstName, lastName, className, classDate, classTime, duration) {
         return __awaiter(this, void 0, void 0, function* () {
             const template_path = path_1.default.join(__dirname, '../../../', 'templates', 'group_class_booking.html');

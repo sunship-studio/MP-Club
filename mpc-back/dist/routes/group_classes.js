@@ -21,9 +21,6 @@ exports.groupClassController = groupClassController;
 groupClassRouter.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield groupClassController.getGroupClasses(req, res);
 }));
-groupClassRouter.post('/book', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield groupClassController.bookGroupClass(req, res);
-}));
 groupClassRouter.post('/create-checkout-session', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield groupClassController.createCheckoutSession(req, res);
 }));
