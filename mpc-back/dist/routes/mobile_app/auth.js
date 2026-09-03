@@ -454,4 +454,5 @@ authRouter.post('/create-account-apple-subscription', (req, res) => __awaiter(vo
     }
 }));
 authRouter.get('/user', auth_2.verifyToken, (req, res) => auth_1.AuthController.getUser(req, res));
+authRouter.post('/delete-account', auth_2.verifyToken, (req, res) => auth_1.AuthController.deleteAccount(req, res));
 exports.default = authRouter;

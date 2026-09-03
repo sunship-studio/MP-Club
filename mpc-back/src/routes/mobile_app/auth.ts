@@ -491,4 +491,8 @@ authRouter.get('/user', verifyToken, (req, res) =>
   AuthController.getUser(req, res)
 );
 
+authRouter.post('/delete-account', verifyToken, (req, res) =>
+  AuthController.deleteAccount(req, res)
+);
+
 export default authRouter;
