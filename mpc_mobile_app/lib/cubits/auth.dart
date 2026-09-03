@@ -48,6 +48,20 @@ class AuthCubit extends Cubit<AuthState> {
     emit(Unauthenticated());
   }
 
+  /// Deletes the account server-side, then tears down the local session the
+  /// same way [logout] does.
+  Future<void> deleteAccount() async {
+    emit(AccountDeletionLoading());
+
+    final result = await authRepository.deleteAccount();
+    if (!result.success) {
+      emit(AccountDeletionError(result.message ?? 'Failed to delete account'));
+      return;
+    }
+
+    await logout();
+  }
+
   Future<void> checkEmail(String email) async {
     emit(EmailCheckLoading());
     final response = await authRepository.checkEmail(email);
@@ -268,6 +282,13 @@ class Authenticated extends AuthState {
 
 class Unauthenticated extends AuthState {
   const Unauthenticated();
+}
+
+class AccountDeletionLoading extends AuthState {}
+
+class AccountDeletionError extends AuthState {
+  final String message;
+  AccountDeletionError(this.message);
 }
 
 class AuthLoading extends AuthState {}

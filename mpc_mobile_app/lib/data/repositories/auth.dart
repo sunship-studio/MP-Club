@@ -73,6 +73,25 @@ class AuthRepository {
     return response.statusCode == 200 ? User.fromJson(response.data) : null;
   }
 
+  /// Permanently deletes the signed-in user's account on the server.
+  Future<AuthResult> deleteAccount() async {
+    try {
+      final response = await dio.post('/auth/delete-account', {});
+      if (response.statusCode != 200) {
+        return AuthResult(
+          success: false,
+          message: response.data['message'] ?? 'Error deleting account',
+        );
+      }
+      return AuthResult(success: true, data: response.data);
+    } catch (e) {
+      return AuthResult(
+        success: false,
+        message: e.toString().replaceAll('Exception: ', ''),
+      );
+    }
+  }
+
   Future<User> getUser() async {
     final response = await dio.get(endpoint: '/auth/user');
     return User.fromJson(response.data);

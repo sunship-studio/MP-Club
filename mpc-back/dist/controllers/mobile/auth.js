@@ -16,6 +16,9 @@ exports.AuthController = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const auth_1 = require("../../middleware/auth");
 const User_1 = __importDefault(require("../../models/User"));
+const ChatRoom_1 = __importDefault(require("../../models/ChatRoom"));
+const Message_1 = __importDefault(require("../../models/Message"));
+const GroupClass_1 = __importDefault(require("../../models/GroupClass"));
 class AuthController {
     static checkEmail(email) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -104,6 +107,43 @@ class AuthController {
                 return;
             }
             res.json(user);
+        });
+    }
+    /**
+     * Permanent account deletion (App Store Guideline 5.1.1(v)).
+     *
+     * Removes the user document (which embeds workouts, check-ins, calorie logs
+     * and the training plan), their chat room and messages, and any group-class
+     * spot still held under their email. Class pass purchase records are kept:
+     * they are financial records of a paid real-world service and are keyed by
+     * email, not by account.
+     */
+    static deleteAccount(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+            if (!userId) {
+                res.status(401).json({ error: 'Unauthorized' });
+                return;
+            }
+            try {
+                const user = yield User_1.default.findById(userId);
+                if (!user) {
+                    res.status(404).json({ error: 'User not found' });
+                    return;
+                }
+                const email = user.email;
+                yield Message_1.default.deleteMany({ client_id: user._id });
+                yield ChatRoom_1.default.deleteOne({ clientId: userId });
+                // Release any spot the user is still holding so it frees up for others.
+                yield GroupClass_1.default.updateMany({ 'timeSlots.spots.email': email }, { $pull: { 'timeSlots.$[].spots': { email } } });
+                yield User_1.default.deleteOne({ _id: user._id });
+                res.status(200).json({ message: 'Account deleted' });
+            }
+            catch (error) {
+                console.error('Error deleting account:', error);
+                res.status(500).json({ error: 'Failed to delete account' });
+            }
         });
     }
     static createAccountWithAppleSubscription(userData) {

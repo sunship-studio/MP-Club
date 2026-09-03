@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { refreshSecret, secret } from '../../middleware/auth';
 import User, { IUser } from '../../models/User';
+import ChatRoom from '../../models/ChatRoom';
+import Message from '../../models/Message';
+import GroupClass from '../../models/GroupClass';
 export class AuthController {
   static async checkEmail(
     email: string
@@ -107,6 +110,51 @@ export class AuthController {
       return;
     }
     res.json(user);
+  }
+
+
+  /**
+   * Permanent account deletion (App Store Guideline 5.1.1(v)).
+   *
+   * Removes the user document (which embeds workouts, check-ins, calorie logs
+   * and the training plan), their chat room and messages, and any group-class
+   * spot still held under their email. Class pass purchase records are kept:
+   * they are financial records of a paid real-world service and are keyed by
+   * email, not by account.
+   */
+  static async deleteAccount(req: Request, res: Response) {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+      }
+
+      const email = user.email;
+
+      await Message.deleteMany({ client_id: user._id });
+      await ChatRoom.deleteOne({ clientId: userId });
+
+      // Release any spot the user is still holding so it frees up for others.
+      await GroupClass.updateMany(
+        { 'timeSlots.spots.email': email },
+        { $pull: { 'timeSlots.$[].spots': { email } } }
+      );
+
+      await User.deleteOne({ _id: user._id });
+
+      res.status(200).json({ message: 'Account deleted' });
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      res.status(500).json({ error: 'Failed to delete account' });
+    }
   }
 
   static async createAccountWithAppleSubscription(userData: {

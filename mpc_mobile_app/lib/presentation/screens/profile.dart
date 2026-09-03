@@ -190,82 +190,127 @@ class CloseAccountButton extends StatefulWidget {
 
 class _CloseAccountButtonState extends State<CloseAccountButton> {
   bool _isPressed = false;
+  bool _isDeleting = false;
 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) {
-        setState(() {
-          _isPressed = true;
-        });
-      },
-      onTapUp: (_) {
-        setState(() {
-          _isPressed = false;
-        });
-      },
-      onTapCancel: () {
-        setState(() {
-          _isPressed = false;
-        });
-      },
-      onTap: () {},
-
-      child: AnimatedScale(
-        duration: Duration(milliseconds: 100),
-        scale: _isPressed ? 0.99 : 1.0,
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            vertical: 16.h,
-            horizontal: horizontalPadding.w,
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: EdgeInsets.symmetric(vertical: 16.w, horizontal: 16.w),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.close,
-                      size: 20.w,
-                      color: AppColors.textSubColor,
-                    ),
-                    Gap(12.w),
-                    Text(
-                      "Close account",
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: AppColors.darkTextColor,
-                        letterSpacing: -0.4,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Spacer(),
-                    Icon(
-                      Coolicons.chevron_right,
-                      color: AppColors.textSubColor,
-                      size: 16.w,
-                    ),
-                  ],
-                ),
+  Future<void> _confirmDeletion() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text('Close account?'),
+            content: const Text(
+              'This permanently deletes your account and your training, check-in '
+              'and message history. This cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancel'),
               ),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    'Coming Soon',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(
+                  'Delete account',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ),
             ],
+          ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final authCubit = context.read<AuthCubit>();
+    setState(() => _isDeleting = true);
+    await authCubit.deleteAccount();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<AuthCubit, AuthState>(
+      listenWhen: (_, state) => state is AccountDeletionError,
+      listener: (context, state) {
+        setState(() => _isDeleting = false);
+        SnackBarService.show(
+          context: context,
+          message: (state as AccountDeletionError).message,
+          isError: true,
+          isNavBar: true,
+        );
+      },
+      child: GestureDetector(
+        onTapDown: (_) {
+          setState(() {
+            _isPressed = true;
+          });
+        },
+        onTapUp: (_) {
+          setState(() {
+            _isPressed = false;
+          });
+        },
+        onTapCancel: () {
+          setState(() {
+            _isPressed = false;
+          });
+        },
+        onTap: _isDeleting ? null : () => _confirmDeletion(),
+
+        child: AnimatedScale(
+          duration: Duration(milliseconds: 100),
+          scale: _isPressed ? 0.99 : 1.0,
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              vertical: 16.h,
+              horizontal: horizontalPadding.w,
+            ),
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: EdgeInsets.symmetric(
+                    vertical: 16.w,
+                    horizontal: 16.w,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.close,
+                        size: 20.w,
+                        color: AppColors.textSubColor,
+                      ),
+                      Gap(12.w),
+                      Text(
+                        "Close account",
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: AppColors.darkTextColor,
+                          letterSpacing: -0.4,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Spacer(),
+                      if (_isDeleting)
+                        SizedBox(
+                          width: 16.w,
+                          height: 16.w,
+                          child: CircularProgressIndicator(strokeWidth: 2.w),
+                        )
+                      else
+                        Icon(
+                          Coolicons.chevron_right,
+                          color: AppColors.textSubColor,
+                          size: 16.w,
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
