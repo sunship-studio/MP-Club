@@ -24,15 +24,28 @@ const stripe = new Stripe(
     : process.env.STRIPE_SECRET_KEY!
 );
 
-// Webhook endpoint secret. STRIPE_WEBHOOK_SECRET wins where it is set, which
-// is what lets `stripe listen` (whose secret is generated per session) work
-// against a local server. The literals are the previously hardcoded values,
-// kept as a fallback so deployed environments are unaffected.
-const endpointSecret =
-  process.env.STRIPE_WEBHOOK_SECRET ||
-  (process.env.NODE_ENV === 'development'
-    ? 'whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47'
-    : 'whsec_M8tsimlpTL3EclroIrWp6NRmiYddUNtO');
+/**
+ * Webhook endpoint secret, from the environment only.
+ *
+ * There used to be hardcoded fallbacks here. They were wrong: the live
+ * destination's secret had been rotated and no longer matched the literal, so
+ * the fallback could only ever have failed signature verification on every
+ * event — customers paying and receiving nothing, with the cause invisible.
+ *
+ * Failing loudly at startup is the right trade. A server that cannot verify
+ * Stripe's signature cannot safely take money.
+ */
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+if (!endpointSecret) {
+  throw new Error(
+    'STRIPE_WEBHOOK_SECRET is not set, so the group class webhook cannot verify ' +
+      'Stripe signatures and would reject every payment event. Set it to the ' +
+      "signing secret of this environment's Stripe event destination " +
+      '(Stripe → Developers → Webhooks → the destination → Signing secret), ' +
+      'as a Railway service variable in production or in mpc-back/.env locally.'
+  );
+}
 
 export const handleGroupClassWebhook = async (
   req: Request,
