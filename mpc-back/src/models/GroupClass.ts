@@ -14,6 +14,12 @@ export interface IGroupClass extends Document {
           bookedAt: Date;
           occurrenceDate?: string; // "YYYY-MM-DD" of the booked week's occurrence
           status?: 'pending' | 'confirmed';
+          /**
+           * Whether a class pass paid for this spot (D22). Cancelling a pass
+           * booking is free and self-serve; cancelling a €10 one is a refund,
+           * so the two cannot be told apart after the fact without this.
+           */
+          bookedWithPass?: boolean;
           holdId?: string; // ties a pending reservation to its Stripe session
           holdExpiresAt?: Date; // pending holds stop counting after this
         },
@@ -46,6 +52,9 @@ const GroupClassSchema: Schema = new Schema<IGroupClass>({
               enum: ['pending', 'confirmed'],
               default: 'confirmed',
             },
+            // Defaults false so bookings made before this existed read as paid,
+            // which is the conservative answer: they are not self-cancellable.
+            bookedWithPass: { type: Boolean, default: false },
             holdId: { type: String, required: false },
             holdExpiresAt: { type: Date, required: false },
           },

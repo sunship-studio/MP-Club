@@ -65,6 +65,17 @@ class HomeScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ModernButton(
+                  icon: Icons.confirmation_number_outlined,
+                  onPressed: () {
+                    context.push(RouteNames.classPasses);
+                  },
+                  label: 'CLASS PASSES',
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ModernButton(
                   icon: Icons.library_books_outlined,
                   onPressed: () {
                     context.push(RouteNames.exerciseManagement);

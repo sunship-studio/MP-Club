@@ -27,6 +27,14 @@ Ten forks, settled in review on 2026-09-02. Each records what was chosen and why
 
 ### D1 — Entitlement is proved by an emailed token, not a typed email
 
+> **SUPERSEDED 2026-09-03 by D16.** The bearer-token design shipped and works, but
+> two requests exposed the same root problem: a token keyed to a *pass* dies with
+> that pass, so a lost email is unrecoverable and every renewal orphans the old
+> link. Identity moved to the customer. The rejection below still stands on its own
+> terms — what changed is that passwordless sign-in is not the "login system,
+> password reset and booking migration" that was priced here.
+
+
 Group-class booking has no login: identity today is a free-text email field on a public form. Email alone would mean a €300 product protected by a guessable string, with no payment step to make abuse self-limiting.
 
 On purchase the client receives a link — `/group-classes?pass=<token>` — stored in `localStorage`. The token is the bearer credential; email remains a display field.
@@ -95,6 +103,11 @@ Buying while a pass is active is blocked (HTTP 409). `validFromDate` is therefor
 
 ### D8 — A new token per pass
 
+> **SUPERSEDED 2026-09-03 by D16.** Every mitigation listed here exists because the
+> token was keyed to a pass. With sessions keyed to a customer, none of it applies:
+> there is no per-pass token to die, and a lost link is recovered by signing in.
+
+
 A returning customer's second purchase issues a fresh token; the previous one dies with its pass.
 
 *Accepted consequence:* a lapsed customer clicking a bookmarked old link is told they have no pass, on the day they paid €300 — indistinguishable from breakage.
@@ -149,7 +162,149 @@ Pass purchases arrive at `/group_class_webhook` with `metadata.kind === 'class_p
 
 The pass endpoints will **not** fall back to `new Date(date).toISOString().split('T')[0]`. Per D4 that fallback is wrong by a day in Irish summer time, and on the pass path a one-day error lands exactly on the expiry boundary.
 
+### D16 — Identity is a customer account, entered by magic link, held in a session cookie
+
+Supersedes D1, and with it the whole of D8.
+
+A pass token proves *a pass*. That is the wrong unit: it dies when the pass does,
+so a customer who loses the email has no route back (there was none but asking
+Shane), and a renewal silently orphans the bookmark they have been using for
+three months. Both failures are the same bug seen twice.
+
+So the credential becomes a **customer**, and a pass is something a customer holds:
+
+- A `Customer` record keyed by email, created on purchase or on first sign-in.
+- Sign-in is a **magic link**: enter an email, receive a single-use link valid for
+  20 minutes. No passwords, so no reset flow — which is what made real accounts
+  expensive when D1 was decided.
+- The link exchanges for a **session**, held in an `httpOnly` cookie. Not
+  localStorage: a session that JavaScript cannot read is not exfiltratable by XSS,
+  which matters more now the credential outlives a single pass.
+- Entitlement is then `passCovers(passOf(currentCustomer), occurrenceDate)` — the
+  term maths, the class-date gate (D4) and the identity-from-server rule (D2) are
+  untouched. Only what proves who is asking has changed.
+
+**The cookie must be first-party.** The site is `midlandsperformanceclub.ie` and the
+API is on `railway.app` — different registrable domains, so a session cookie set
+directly by the API is third-party and Safari drops it. The frontend therefore
+proxies API calls through its own origin (a Next route handler), making the cookie
+first-party with `SameSite=Lax`. A custom API subdomain would do the same job and
+is the better long-term shape; the proxy avoids waiting on DNS.
+
+*Consequences accepted:* one extra network hop on API calls; the frontend now has
+a server-side responsibility it did not have before.
+
+*Timing:* taken while **no real passes exist**, so there is no migration. Pass
+tokens are removed rather than supported alongside sessions.
+
+*What survives unchanged:* term maths (D3), class-date gating (D4), non-refundable
+(D5), cancellation (D6), one-pass-at-a-time (D7), revoke semantics (D9), coverage
+(D10), seeded products (D11), admin scope (D12), webhook reuse (D14), no date
+fallback (D15).
+
+*What D16 deletes:* D8 in full. There is no per-pass token to expire, no bookmarked
+dead link, and "resend link" becomes "sign in again" — self-service, no admin
+involvement. The admin *resend* action stays as a convenience but is no longer a
+required mitigation.
+
 ---
+
+### D17 — A monthly product, and products that record whether they may recur
+
+Shane, 2026-09-04: "Won't be doing 3 months I just want a monthly payment for €90", and
+"maybe option for recurring or manual".
+
+So the sellable thing becomes €90 / 1 month, and the 3-month product comes off sale — a data
+edit, which is the whole reason D11 put pricing in seeded data. Existing 3-month passes are
+untouched: they reference their product by id, and a product is never deleted.
+
+Recurring is a property of the *sale*, not of a second product. One product row carries
+`allowSubscription`, and the buyer picks one-off or recurring at checkout. Two rows at the same
+price differing only in billing mode would be two things to reprice, and one of them would
+eventually be forgotten.
+
+The recurring interval is derived, not configured: `interval: 'month'` with
+`interval_count: product.months`. A 1-month product bills monthly; the same code would bill a
+3-month product quarterly.
+
+### D18 — A renewal extends the pass; it does not create a second one
+
+The one-active-pass rule (D7) would otherwise have a subscriber's own renewal refuse them. So
+`invoice.paid` pushes `validUntilDate` out on the existing pass.
+
+Extension counts from the pass's current end date, not from the payment date: renewals fall due
+a little before the term ends, and counting from today would quietly cost the customer those
+days every month. The exception is a pass that has already lapsed, where the current end date is
+in the past and counting from it would produce a pass that is born expired — there, extension
+counts from today.
+
+This means our end date and Stripe's billing anniversary can drift by a day around month-ends.
+The drift is always in the customer's favour, and correcting it would mean treating Stripe's
+schedule as the source of truth for entitlement, which it is not.
+
+Replay safety is the same shape as D14's: the pass records the invoice ids it has consumed, and
+the extension is a compare-and-set on the old end date.
+
+### D19 — Turning renewal off is a Stripe flag, and the term already paid for is kept
+
+The member-facing switch sets `cancel_at_period_end`. It never voids the current term: they paid
+for the month they are in, and D5 says sales are final in both directions.
+
+It is reversible until Stripe actually ends the subscription, after which the answer is to buy
+again — restarting a dead subscription would need a card, and we do not hold one.
+
+Stripe stays the source of truth. We mirror `autoRenew` onto the pass for display, and
+`customer.subscription.updated`/`.deleted` keep the mirror honest when the change is made from
+the Stripe dashboard instead.
+
+A revoked pass has its subscription cancelled immediately (not at period end): a revoke that
+keeps charging is a bug with a bank statement attached.
+
+Failed payments get no dunning code. If the charge does not land, the pass simply reaches its
+existing end date and stops.
+
+### D20 — One thing on sale, and the choice moves after the sale
+
+Shane sells a monthly membership. Offering the same €90 as both a subscription and a one-off is
+two support conversations, two states on every screen, and two paths through checkout, for the
+same money. So the buying page offers one thing: €90 a month, renewing.
+
+The *capability* stays. `autoRenew` on the checkout call and `allowSubscription` on the product
+are already built and tested (D17), and keeping them costs nothing — a drop-in block sold once
+would then need no code, only a seeded product. What goes is the choice at the point of sale.
+
+The decision does not disappear, it moves: every member can stop renewing whenever they like,
+from a page they are already on. A cancellation the customer can do themselves is one that never
+becomes an email.
+
+### D21 — `/cancel` becomes `/profile`
+
+The existing `/cancel` page is a form whose button has an empty click handler, posting to a route
+the web API does not implement. It has been advertising membership cancellation in the site
+header and doing nothing at all.
+
+Replacing it with a form that works would answer the wrong question. What somebody arriving there
+actually wants is: what have I got, what have I booked, and how do I stop paying. That is a
+profile page, and the cancel URL redirects to it so the header link and any bookmark still land
+somewhere real.
+
+### D22 — Two different cancels, kept apart
+
+"Cancel" means two unrelated things here and merging them would be a mis-click with a bank
+statement attached:
+
+- **A class booking** — self-serve and immediate when a pass paid for it (D6). Nothing is
+  refunded because nothing was charged.
+- **The membership** — turns off renewal and keeps the term already paid for (D19). Never a
+  refund.
+
+A class paid for singly (€10) is shown on the profile but cannot be cancelled there. That is a
+refund of real money, D5's no-refund rule was written about passes rather than single classes,
+and guessing wrong costs a customer €10 they are owed. It stays a conversation with the club
+until somebody decides the rule.
+
+Past bookings are described as classes *booked*. The club records bookings, not attendance, and a
+page claiming to show what somebody attended would be wrong every time they missed one.
 
 ## Blocking Issue in Existing Code
 

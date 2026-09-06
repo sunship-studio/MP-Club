@@ -5,6 +5,7 @@ import express, { Express } from 'express';
 import http from 'http';
 import connectToDatabase from './config/database';
 import adminAppRouter from './routes/admin_app';
+import customerAuthRouter from './routes/customer_auth';
 import groupClassRouter from './routes/group_classes';
 import authRouter from './routes/mobile_app/auth';
 import caloriesRouter from './routes/mobile_app/calories';
@@ -46,6 +47,7 @@ app.use('/web', bodyParser.json());
 app.use('/web/online-coaching', onlineCoachingRouter);
 app.use('/web/waiting-list', waitingListRouter);
 app.use('/web/plans', plansRouter);
+app.use('/web/auth', customerAuthRouter);
 app.use('/web/group-classes', groupClassRouter);
 
 app.use('/mobile-app/auth', authRouter);
