@@ -30,7 +30,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.kamryy.client.mpc"
+        applicationId = "studio.sunship.mpc"
         minSdk = flutter.minSdkVersion
         targetSdk = 35
         versionCode = 1

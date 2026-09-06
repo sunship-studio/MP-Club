@@ -2,7 +2,7 @@ name: mpc_admin_app
 description: 'A new Flutter project.'
 publish_to: 'none'
 
-version: 2.0.8+9
+version: 2.0.9+10
 
 environment:
   sdk: ^3.7.2
@@ -66,3 +66,7 @@ flutter:
           weight: 600
         - asset: 'assets/fonts/SF_pro/SF-Pro-Display-Bold.otf'
           weight: 700
+
+dependency_overrides:
+  coolicons:
+    path: ../packages/coolicons
