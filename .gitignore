@@ -26,3 +26,11 @@ npm-debug.log*
 
 # Raw secrets — never commit
 stripe.txt
+
+# Local dev database (mongod data files, several MB)
+.local-mongo/
+**/.local-mongo/
+
+# Agent scratch space — tickets and working notes, not shipped code
+.scratch/
+

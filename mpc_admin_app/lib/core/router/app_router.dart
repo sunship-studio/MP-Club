@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mpc_admin_app/app/bloc/add_subscriber.dart';
+import 'package:mpc_admin_app/app/bloc/class%20passes/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/exercises/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/group%20classes/cubit.dart';
 import 'package:mpc_admin_app/app/bloc/public_plans/cubit.dart';
@@ -13,6 +14,7 @@ import 'package:mpc_admin_app/app/services/socket.dart';
 import 'package:mpc_admin_app/core/router/route_names.dart';
 import 'package:mpc_admin_app/core/screens/add_subscriber.dart';
 import 'package:mpc_admin_app/core/screens/chat.dart';
+import 'package:mpc_admin_app/core/screens/class_passes.dart';
 import 'package:mpc_admin_app/core/screens/exercise_management.dart';
 import 'package:mpc_admin_app/core/screens/group_class_editor.dart';
 import 'package:mpc_admin_app/core/screens/group_classes.dart';
@@ -160,6 +162,18 @@ final GoRouter appRouter = GoRouter(
               child: BlocProvider<GroupClassesCubit>(
                 create: (context) => GroupClassesCubit(),
                 child: const GroupClassesScreen(),
+              ),
+            );
+          },
+        ),
+        GoRoute(
+          path: RouteNames.classPasses,
+          name: 'classPasses',
+          pageBuilder: (context, state) {
+            return NoTransitionPage(
+              child: BlocProvider<ClassPassesCubit>(
+                create: (context) => ClassPassesCubit(),
+                child: const ClassPassesScreen(),
               ),
             );
           },

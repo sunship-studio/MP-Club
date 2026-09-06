@@ -10,14 +10,223 @@ import {
 import resend from '../../config/resend';
 import stripe from '../../config/stripe';
 import AdminSettings from '../../models/AdminSettings';
+import ClassPass from '../../models/ClassPass';
+import ClassPassProduct from '../../models/ClassPassProduct';
 import Exercise from '../../models/Exercise';
 import GroupClass from '../../models/GroupClass';
 import { PlanForSale } from '../../models/PlanForSale';
+import { activatePass, findActivePassForEmail, venueToday } from '../../services/class_pass';
+import { sendPassLinkEmail } from '../../services/class_pass_email';
 import { toLocalDateString } from '../../services/group_class_booking';
 import User from '../../models/User';
 import { WaitingListEntry } from '../../models/WaitingListEntry';
 import excelService from '../../services/excel';
 export default class AdminAppController {
+  /**
+   * Who holds a pass and when it runs out.
+   *
+   * Tokens are deliberately absent: they are bearer credentials, and an admin
+   * list is a screen that gets screenshotted and shared. Shane gets a holder
+   * back onto their pass with `resendClassPassLink` instead (D8).
+   */
+  public async listClassPasses(req: Request, res: Response): Promise<Response> {
+    try {
+      const search =
+        typeof req.query.search === 'string' ? req.query.search.trim() : '';
+
+      const filter = search
+        ? { email: { $regex: search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } }
+        : {};
+
+      const passes = await ClassPass.find(filter).sort({ purchasedAt: -1 }).lean();
+      const today = venueToday();
+
+      const products = await ClassPassProduct.find().lean();
+      const productName = new Map(products.map((p) => [String(p._id), p.name]));
+
+      return res.status(200).json(
+        passes.map((pass) => ({
+          _id: pass._id,
+          firstName: pass.firstName,
+          lastName: pass.lastName,
+          email: pass.email,
+          productName: productName.get(String(pass.productId)) ?? `${pass.months} Month Pass`,
+          months: pass.months,
+          pricePaidCents: pass.pricePaidCents,
+          validFromDate: pass.validFromDate,
+          validUntilDate: pass.validUntilDate,
+          purchasedAt: pass.purchasedAt,
+          grantedByAdmin: pass.grantedByAdmin,
+          // Renewal state, so an admin can see what is still being charged
+          // (D19). The subscription id itself stays server-side — the admin
+          // app has no use for it and it is a Stripe handle.
+          recurring: Boolean(pass.stripeSubscriptionId),
+          autoRenew: Boolean(pass.autoRenew),
+          subscriptionStatus: pass.subscriptionStatus,
+          nextChargeDate: pass.nextChargeDate,
+          status: pass.revoked
+            ? 'revoked'
+            : pass.validUntilDate < today
+              ? 'expired'
+              : 'active',
+        }))
+      );
+    } catch (error) {
+      console.error('Error listing class passes:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  /** The products a grant can be made against. */
+  public async getPassProductsForAdmin(req: Request, res: Response): Promise<Response> {
+    try {
+      const products = await ClassPassProduct.find({ active: true }).lean();
+      return res.status(200).json(products);
+    } catch (error) {
+      console.error('Error listing class pass products:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  /**
+   * Grant a pass by hand. The failure this exists for: Stripe took the money,
+   * the webhook didn't land, and a customer who turned up has no pass (D12).
+   */
+  public async grantClassPass(req: Request, res: Response): Promise<Response> {
+    try {
+      const { productId, firstName, lastName } = req.body;
+      const email: string | undefined = req.body.email?.trim().toLowerCase();
+
+      if (!productId || !email || !firstName) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+
+      const product = await ClassPassProduct.findById(productId);
+      if (!product) {
+        return res.status(404).json({ message: 'Class pass product not found' });
+      }
+
+      // Same one-at-a-time rule as a purchase (D7), which is also what stops a
+      // double tap on the grant button minting two passes.
+      const held = await findActivePassForEmail(email);
+      if (held) {
+        return res.status(409).json({
+          error: `${email} already has a pass, valid until ${held.validUntilDate}.`,
+          validUntilDate: held.validUntilDate,
+        });
+      }
+
+      const pass = await activatePass({
+        productId: String(product._id),
+        email,
+        firstName,
+        lastName,
+        purchaseDate: venueToday(),
+        grantedByAdmin: true,
+      });
+
+      // The grant is the point; the email is a courtesy. Shane fixing a
+      // customer in front of him must not fail because Resend is down — he can
+      // resend from the list once it is back.
+      let emailSent = true;
+      try {
+        await sendPassLinkEmail(pass);
+      } catch (error) {
+        emailSent = false;
+        console.error('Granted pass but failed to email the link:', error);
+      }
+
+      return res.status(201).json({
+        _id: pass._id,
+        email: pass.email,
+        validFromDate: pass.validFromDate,
+        validUntilDate: pass.validUntilDate,
+        emailSent,
+      });
+    } catch (error) {
+      console.error('Error granting class pass:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  /**
+   * Revoke or un-revoke a pass.
+   *
+   * Revoking blocks new bookings and moves no spots: classes already booked
+   * stand, and Shane removes an attendee deliberately in the editor if he wants
+   * them gone. A misclick is fixed by un-revoking, not by reconstructing
+   * somebody's calendar (D9).
+   */
+  public async setClassPassRevoked(req: Request, res: Response): Promise<Response> {
+    try {
+      const revoked = req.body?.revoked !== false;
+
+      const pass = await ClassPass.findByIdAndUpdate(
+        req.params.id,
+        { $set: { revoked } },
+        { new: true }
+      );
+      if (!pass) {
+        return res.status(404).json({ message: 'Class pass not found' });
+      }
+
+      // Revoking has to stop the money as well as the entitlement: a revoked
+      // pass that keeps billing monthly is a bug with a bank statement
+      // attached (D19). Cancelled outright, not at period end — there is no
+      // term left to honour once the pass is withdrawn.
+      let subscriptionCancelFailed = false;
+      const stillCharging =
+        revoked &&
+        pass.stripeSubscriptionId &&
+        pass.subscriptionStatus !== 'canceled';
+
+      if (stillCharging) {
+        try {
+          await stripe.subscriptions.cancel(pass.stripeSubscriptionId!);
+        } catch (error) {
+          // The entitlement is ours to withdraw and has been. Billing is a
+          // best effort, and a failure here must be visible rather than leave
+          // the pass live.
+          console.error('Failed to cancel subscription for revoked pass:', error);
+          subscriptionCancelFailed = true;
+        }
+
+        pass.autoRenew = false;
+        pass.subscriptionStatus = 'canceled';
+        pass.nextChargeDate = undefined;
+        await pass.save();
+      }
+
+      return res.status(200).json({
+        _id: pass._id,
+        revoked: pass.revoked,
+        // Un-revoking restores the pass but never the subscription: resuming a
+        // cancelled one would need a card, and we hold none.
+        subscriptionEnded: pass.subscriptionStatus === 'canceled',
+        ...(subscriptionCancelFailed ? { subscriptionCancelFailed: true } : {}),
+      });
+    } catch (error) {
+      console.error('Error updating class pass:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  /** Resend a holder their current pass link, so a lost email is self-service. */
+  public async resendClassPassLink(req: Request, res: Response): Promise<Response> {
+    try {
+      const pass = await ClassPass.findById(req.params.id);
+      if (!pass) {
+        return res.status(404).json({ message: 'Class pass not found' });
+      }
+
+      await sendPassLinkEmail(pass);
+      return res.status(200).json({ sent: true, email: pass.email });
+    } catch (error) {
+      console.error('Error resending class pass link:', error);
+      return res.status(500).json({ message: 'Failed to send the pass email' });
+    }
+  }
+
   public async getAllExercises(req: Request, res: Response): Promise<Response> {
     try {
       const exercises = await Exercise.find();

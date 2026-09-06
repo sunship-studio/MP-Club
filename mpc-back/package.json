@@ -7,8 +7,12 @@
     "start": "node dist/app.js",
     "dev": "nodemon --exec ts-node src/app.ts",
     "lint": "eslint . --ext .ts",
-    "test": "ts-node src/services/group_class_booking.test.ts",
-    "seed": "ts-node src/seed-exercises.ts"
+    "test": "ts-node src/services/class_pass.test.ts && ts-node src/controllers/web/auth.test.ts && ts-node src/controllers/web/class_pass_products.test.ts && ts-node src/controllers/web/class_pass_purchase.test.ts && ts-node src/controllers/web/class_pass_session.test.ts && ts-node src/controllers/web/class_pass_subscription.test.ts && ts-node src/controllers/web/my_bookings.test.ts && ts-node src/controllers/admin/admin_class_passes.test.ts && ts-node src/services/group_class_booking.test.ts && ts-node src/controllers/admin/admin_attendees.test.ts",
+    "seed": "ts-node src/seed-exercises.ts",
+    "seed:passes": "ts-node src/scripts/seed_class_passes.ts",
+    "seed:local": "ts-node src/scripts/seed_local_dev.ts",
+    "mongo:local": "ts-node src/scripts/local_mongo.ts",
+    "dev:expire": "ts-node src/scripts/dev_expire_pass.ts"
   },
   "keywords": [],
   "author": "",

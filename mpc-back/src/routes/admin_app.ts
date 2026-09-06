@@ -27,6 +27,47 @@ adminAppRouter.get(
   }
 );
 
+// Class passes (D12)
+adminAppRouter.get(
+  '/class-passes',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    await adminAppController.listClassPasses(req, res);
+  }
+);
+
+adminAppRouter.post(
+  '/class-passes',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    await adminAppController.grantClassPass(req, res);
+  }
+);
+
+adminAppRouter.patch(
+  '/class-passes/:id/revoked',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    await adminAppController.setClassPassRevoked(req, res);
+  }
+);
+
+adminAppRouter.post(
+  '/class-passes/:id/resend',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    await adminAppController.resendClassPassLink(req, res);
+  }
+);
+
+adminAppRouter.get(
+  '/class-pass-products',
+  adminAppAuth,
+  async (req: Request, res: Response) => {
+    await adminAppController.getPassProductsForAdmin(req, res);
+  }
+);
+
 adminAppRouter.get('/exercises', async (req: Request, res: Response) => {
   await adminAppController.getAllExercises(req, res);
 });

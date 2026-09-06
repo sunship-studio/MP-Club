@@ -43,6 +43,20 @@ class ApiService {
     }
   }
 
+  Future<Response> patch(String endpoint, Map<String, dynamic> data) async {
+    try {
+      Response response = await dio.patch(endpoint, data: data);
+      return response;
+    } on DioException catch (e) {
+      final serverMessage = e.response?.data is Map
+          ? (e.response?.data as Map)['message']
+          : null;
+      throw Exception(serverMessage ?? 'Failed to update: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to update: $e');
+    }
+  }
+
   Future<Response> postFormData({
     required String endpoint,
     required FormData formData,

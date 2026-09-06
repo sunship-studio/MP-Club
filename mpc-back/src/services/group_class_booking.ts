@@ -55,6 +55,8 @@ export interface ReserveParams {
   /** how long the hold stays valid; should outlast the Stripe session */
   holdTtlMs: number;
   now: Date;
+  /** Whether a class pass is paying for this spot (D22). */
+  bookedWithPass?: boolean;
 }
 
 /**
@@ -99,6 +101,7 @@ export async function reserveSpot(
       holdId,
       holdExpiresAt: new Date(now.getTime() + params.holdTtlMs),
       bookedAt: now,
+      bookedWithPass: params.bookedWithPass ?? false,
     };
 
     // CAS: push only if the document version is still the one we read.
@@ -150,4 +153,39 @@ export async function releaseHold(
     { _id: classId },
     { $pull: { 'timeSlots.$[].spots': { holdId, status: 'pending' } } }
   );
+}
+
+/**
+ * A slot label like "09:30 AM" as minutes since midnight, or null if it is not
+ * a shape we recognise. Slot times are free text typed in the admin app, so an
+ * unparseable one must not silently become midnight.
+ */
+export function slotMinutes(time: string): number | null {
+  const match = /^\s*(\d{1,2}):(\d{2})\s*(AM|PM)?\s*$/i.exec(time ?? '');
+  if (!match) return null;
+
+  let hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+
+  const meridiem = match[3]?.toUpperCase();
+  if (meridiem) {
+    if (hours < 1 || hours > 12) return null;
+    if (meridiem === 'PM' && hours !== 12) hours += 12;
+    if (meridiem === 'AM' && hours === 12) hours = 0;
+  }
+
+  return hours * 60 + minutes;
+}
+
+/** Minutes since midnight in the venue's own timezone (D4). */
+export function venueClockMinutes(now: Date = new Date()): number {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Dublin',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(now);
+  const [hours, minutes] = parts.split(':').map(Number);
+  return hours * 60 + minutes;
 }

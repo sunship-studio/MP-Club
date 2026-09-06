@@ -5,17 +5,47 @@ import GroupClass from '../models/GroupClass';
 import { groupClassController } from '../routes/group_classes';
 import { releaseHold } from '../services/group_class_booking';
 
+/**
+ * A Stripe epoch as a `"YYYY-MM-DD"` date in the venue's timezone. Dates on a
+ * pass are never `Date` objects — see services/class_pass.ts for why (D4).
+ */
+function venueDateFromEpoch(seconds: number): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Dublin',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(seconds * 1000));
+}
+
 const stripe = new Stripe(
   process.env.NODE_ENV === 'development'
     ? process.env.STRIPE_TEST_SECRET_KEY!
     : process.env.STRIPE_SECRET_KEY!
 );
 
-// Webhook endpoint secret - you'll need to set this up in Stripe dashboard
-const endpointSecret =
-  process.env.NODE_ENV === 'development'
-    ? 'whsec_4495b0404ed8c74eb68af4cda973b84e7b44fc4ef7106c6682a567706594fc47'
-    : 'whsec_M8tsimlpTL3EclroIrWp6NRmiYddUNtO';
+/**
+ * Webhook endpoint secret, from the environment only.
+ *
+ * There used to be hardcoded fallbacks here. They were wrong: the live
+ * destination's secret had been rotated and no longer matched the literal, so
+ * the fallback could only ever have failed signature verification on every
+ * event — customers paying and receiving nothing, with the cause invisible.
+ *
+ * Failing loudly at startup is the right trade. A server that cannot verify
+ * Stripe's signature cannot safely take money.
+ */
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+if (!endpointSecret) {
+  throw new Error(
+    'STRIPE_WEBHOOK_SECRET is not set, so the group class webhook cannot verify ' +
+      'Stripe signatures and would reject every payment event. Set it to the ' +
+      "signing secret of this environment's Stripe event destination " +
+      '(Stripe → Developers → Webhooks → the destination → Signing secret), ' +
+      'as a Railway service variable in production or in mpc-back/.env locally.'
+  );
+}
 
 export const handleGroupClassWebhook = async (
   req: Request,
@@ -44,6 +74,34 @@ export const handleGroupClassWebhook = async (
     if (!metadata) {
       console.error('No metadata found in session');
       res.status(400).send('No metadata found');
+      return;
+    }
+
+    // Pass purchases share this endpoint with class bookings — one Stripe
+    // webhook config, one signature verification path (D14). They are told
+    // apart by metadata.kind, which only pass checkouts set.
+    if (metadata.kind === 'class_pass') {
+      try {
+        await groupClassController.activatePassAfterPayment({
+          productId: metadata.productId,
+          email: metadata.email,
+          firstName: metadata.firstName,
+          lastName: metadata.lastName || '',
+          stripeSessionId: session.id,
+          // Present only on a subscription checkout (D17). Expanded or not,
+          // Stripe gives either the id or the object here.
+          stripeSubscriptionId:
+            typeof session.subscription === 'string'
+              ? session.subscription
+              : session.subscription?.id,
+        });
+        console.log('✅ Class pass activated for:', metadata.email);
+      } catch (error) {
+        console.error('Error activating class pass:', error);
+        // Don't return an error — Stripe will retry, and activation is
+        // idempotent on the session id.
+      }
+      res.status(200).json({ received: true });
       return;
     }
 
@@ -79,6 +137,57 @@ export const handleGroupClassWebhook = async (
     } catch (error) {
       console.error('Error confirming booking:', error);
       // Don't return error - Stripe will retry
+    }
+  }
+
+  // A membership renewal was paid for. The pass it belongs to gets its end
+  // date pushed out; no new pass is created (D18).
+  if (event.type === 'invoice.paid') {
+    const invoice = event.data.object as Stripe.Invoice;
+    const subscriptionId =
+      typeof (invoice as any).subscription === 'string'
+        ? (invoice as any).subscription
+        : (invoice as any).subscription?.id;
+
+    // The first invoice of a subscription is the purchase itself, which
+    // `checkout.session.completed` already turned into a pass. Extending on it
+    // would hand the buyer a free extra term.
+    const isFirstCharge = invoice.billing_reason === 'subscription_create';
+
+    if (subscriptionId && !isFirstCharge) {
+      try {
+        await groupClassController.renewPassFromInvoice({
+          stripeSubscriptionId: subscriptionId,
+          invoiceId: invoice.id!,
+        });
+        console.log('🔁 Membership renewed for subscription:', subscriptionId);
+      } catch (error) {
+        console.error('Error renewing pass from invoice:', error);
+        // Swallowed on purpose: extension is idempotent on the invoice id, so
+        // Stripe's retry is safe, and a 500 here would stall the whole webhook.
+      }
+    }
+  }
+
+  // Stripe is the source of truth for a subscription's state: a cancellation
+  // made in the dashboard has to reach the member's page (D19).
+  if (
+    event.type === 'customer.subscription.updated' ||
+    event.type === 'customer.subscription.deleted'
+  ) {
+    const subscription = event.data.object as Stripe.Subscription;
+    const periodEnd = (subscription as any).current_period_end as number | undefined;
+
+    try {
+      await groupClassController.syncSubscriptionState({
+        stripeSubscriptionId: subscription.id,
+        status:
+          event.type === 'customer.subscription.deleted' ? 'canceled' : subscription.status,
+        cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
+        currentPeriodEndDate: periodEnd ? venueDateFromEpoch(periodEnd) : undefined,
+      });
+    } catch (error) {
+      console.error('Error syncing subscription state:', error);
     }
   }
 

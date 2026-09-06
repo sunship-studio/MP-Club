@@ -139,6 +139,26 @@ async function main() {
       check('released hold frees the pool', after.ok);
     }
 
+    // D22: a booking has to say what paid for it, so the profile page knows
+    // which ones a member may cancel themselves.
+    {
+      const id = await makeClass(2);
+      await reserveSpot(GroupClass, {
+        classId: id, timeSlot: SLOT, occurrenceDate: OCC_A,
+        email: 'holder@x.com', firstName: 'H', holdTtlMs: 600000, now: new Date(),
+        bookedWithPass: true,
+      });
+      await reserve(id, OCC_A, 'payer@x.com');
+
+      const gc: any = await GroupClass.findById(id).lean();
+      const spots = gc.timeSlots[0].spots;
+      const holder = spots.find((s: any) => s.email === 'holder@x.com');
+      const payer = spots.find((s: any) => s.email === 'payer@x.com');
+
+      check('a pass booking is recorded as one', holder.bookedWithPass === true);
+      check('a paid booking is not', payer.bookedWithPass === false);
+    }
+
     console.log(`\nALL ${passed} CHECKS PASSED`);
   } finally {
     await mongoose.disconnect();

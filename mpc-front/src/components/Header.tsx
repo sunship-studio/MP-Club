@@ -79,7 +79,7 @@ const MobileHeader = () => {
               PLANS
             </Link>
 
-            <Link href="/cancel" className="text-gray-800 py-2">
+            <Link href="/profile" className="text-gray-800 py-2">
               <img
                 src="/assets/profile_1.png"
                 alt="profile"
@@ -133,7 +133,7 @@ const DesktopHeader = () => {
             PLANS
           </a>
 
-          <a href="/cancel" className="hover:text-gray-400">
+          <a href="/profile" className="hover:text-gray-400">
             <Image
               src="/assets/profile.png"
               alt="menu"

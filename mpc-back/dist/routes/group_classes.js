@@ -21,8 +21,26 @@ exports.groupClassController = groupClassController;
 groupClassRouter.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield groupClassController.getGroupClasses(req, res);
 }));
-groupClassRouter.post('/book', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield groupClassController.bookGroupClass(req, res);
+groupClassRouter.get('/passes', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield groupClassController.getPassProducts(req, res);
+}));
+groupClassRouter.get('/passes/mine', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield groupClassController.getMyPass(req, res);
+}));
+groupClassRouter.post('/passes/create-checkout-session', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield groupClassController.createPassCheckoutSession(req, res);
+}));
+groupClassRouter.get('/my-bookings', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield groupClassController.getMyBookings(req, res);
+}));
+groupClassRouter.post('/passes/auto-renew', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield groupClassController.setAutoRenew(req, res);
+}));
+groupClassRouter.post('/book-with-pass', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield groupClassController.bookWithPass(req, res);
+}));
+groupClassRouter.post('/cancel-with-pass', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield groupClassController.cancelPassBooking(req, res);
 }));
 groupClassRouter.post('/create-checkout-session', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield groupClassController.createCheckoutSession(req, res);

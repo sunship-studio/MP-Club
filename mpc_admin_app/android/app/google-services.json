@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:408557830192:android:33120ce233d98c9141edf5",
         "android_client_info": {
-          "package_name": "com.example.mpc_admin_app"
+          "package_name": "studio.sunship.mpc.admin"
         }
       },
       "oauth_client": [],

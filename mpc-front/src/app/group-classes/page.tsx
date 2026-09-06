@@ -1,7 +1,19 @@
 'use client';
 import apiService from '@/services/api.service';
-import { useEffect, useMemo, useState } from 'react';
-import { Clock, Users, CalendarDays, CheckCircle2, Sparkles } from 'lucide-react';
+import apiClient from '@/services/api.client';
+import { useSession } from '@/hooks/useSession';
+import MembershipPanel from '@/components/MembershipPanel';
+import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Clock,
+  Users,
+  CalendarDays,
+  CheckCircle2,
+  Sparkles,
+  Ticket,
+  X,
+} from 'lucide-react';
 
 const BRAND = '#0B79AB';
 const PRICE_LABEL = '€10';
@@ -49,21 +61,83 @@ export default function GroupClassesPage() {
   const [classes, setClasses] = useState<GroupClass[]>([]);
   const [isLoadingClasses, setIsLoadingClasses] = useState(true);
 
-  useEffect(() => {
-    const fetchGroupClasses = async () => {
-      try {
-        setIsLoadingClasses(true);
-        const response = await apiService.get<GroupClass[]>('/group-classes');
-        setClasses(response);
-      } catch (error) {
-        console.error('Error fetching group classes:', error);
-      } finally {
-        setIsLoadingClasses(false);
-      }
-    };
+  const { session, refresh: refreshSession, signOut } = useSession();
+  const pass = session.pass;
+  const [passError, setPassError] = useState<string | null>(null);
 
-    fetchGroupClasses();
+  const fetchGroupClasses = useCallback(async () => {
+    try {
+      const response = await apiService.get<GroupClass[]>('/group-classes');
+      setClasses(response);
+    } catch (error) {
+      console.error('Error fetching group classes:', error);
+    } finally {
+      setIsLoadingClasses(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void fetchGroupClasses();
+  }, [fetchGroupClasses]);
+
+  /** The signed-in customer's own spot in a given slot and week, if any. */
+  const hasBooking = useCallback(
+    (cls: GroupClass, time: string, date: Date) => {
+      if (!session.signedIn || !session.email) return false;
+      const occurrenceDate = toLocalDateString(date);
+      const slot = cls.timeSlots.find((s) => s.time === time);
+      return !!slot?.spots.some(
+        (spot) =>
+          spot.email?.toLowerCase() === session.email &&
+          spot.occurrenceDate === occurrenceDate
+      );
+    },
+    [session]
+  );
+
+  const bookWithPass = async (classId: string, timeSlot: string, date: Date) => {
+    setIsSubmitting(true);
+    setPassError(null);
+    try {
+      await apiClient.post('/group-classes/book-with-pass', {
+        classId,
+        timeSlot,
+        // Never derived from a timestamp: an ISO conversion is a day out in
+        // Irish summer time, right on the pass expiry boundary.
+        occurrenceDate: toLocalDateString(date),
+      });
+      await fetchGroupClasses();
+      await refreshSession();
+      setSelectedClass(null);
+    } catch (error: unknown) {
+      setPassError(
+        (error as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+          'We could not book that class. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const cancelWithPass = async (classId: string, timeSlot: string, date: Date) => {
+    setIsSubmitting(true);
+    setPassError(null);
+    try {
+      await apiClient.post('/group-classes/cancel-with-pass', {
+        classId,
+        timeSlot,
+        occurrenceDate: toLocalDateString(date),
+      });
+      await fetchGroupClasses();
+    } catch (error: unknown) {
+      setPassError(
+        (error as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+          'We could not cancel that booking. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const getClassesForDate = (date: Date | null): ClassWithAvailability[] => {
     if (!date) return [];
@@ -220,6 +294,128 @@ export default function GroupClassesPage() {
         </div>
       </div>
 
+      {/* Pass state */}
+      {pass?.valid ? (
+        <div className="mb-8 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold text-emerald-200">
+              {session.firstName ?? 'You'}, your {pass.productName} is active.
+            </p>
+            <p className="text-sm text-emerald-100/80">
+              Book any class below — no payment step. Valid until{' '}
+              {pass.validUntilDate}
+              {pass.recurring && pass.autoRenew
+                ? `, renewing automatically${
+                    pass.nextChargeDate ? ` on ${pass.nextChargeDate}` : ''
+                  }.`
+                : '.'}
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/profile"
+              className="text-sm font-semibold text-emerald-100 underline"
+            >
+              Your profile
+            </Link>
+            <button
+              onClick={signOut}
+              className="text-xs text-emerald-100/70 underline hover:text-emerald-100"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+      ) : session.signedIn && pass ? (
+        <div className="mb-8 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-5">
+          <p className="font-semibold text-amber-200">
+            {pass.expired ? 'Your pass has ended' : 'Your pass is not active'}
+          </p>
+          <p className="text-sm text-amber-100/80 mt-1">
+            {pass.expired
+              ? `It ran until ${pass.validUntilDate}. Renew it, or book a single class for ${PRICE_LABEL}.`
+              : 'Get in touch and we will sort it out.'}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-4 text-sm">
+            <Link href="/group-classes/passes" className="text-amber-100 underline">
+              Renew your pass
+            </Link>
+            <Link href="/profile" className="text-amber-100 underline">
+              Your profile
+            </Link>
+            <button onClick={signOut} className="text-amber-100/60 underline">
+              Sign out
+            </button>
+          </div>
+        </div>
+      ) : session.signedIn ? (
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur">
+          <div>
+            <p className="font-semibold text-white">
+              Signed in as {session.email}
+            </p>
+            <p className="text-sm text-gray-300">
+              You don&apos;t have a pass. Book below for {PRICE_LABEL}, or get every
+              class included.
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/group-classes/passes"
+              className="rounded-xl px-4 py-2 text-sm font-semibold text-white"
+              style={{ backgroundColor: BRAND }}
+            >
+              See passes →
+            </Link>
+            <Link href="/profile" className="text-sm text-gray-300 underline">
+              Your profile
+            </Link>
+            <button onClick={signOut} className="text-xs text-gray-400 underline">
+              Sign out
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur">
+          <div className="flex items-start gap-3">
+            <Ticket className="h-6 w-6 shrink-0 mt-0.5" style={{ color: '#7CC7E8' }} />
+            <div>
+              <p className="font-semibold text-white">
+                Coming most weeks? Get a pass instead.
+              </p>
+              <p className="text-sm text-gray-300">
+                Every class included for a fixed term — no {PRICE_LABEL} each time.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/group-classes/passes"
+              className="rounded-xl px-4 py-2 text-sm font-semibold text-white"
+              style={{ backgroundColor: BRAND }}
+            >
+              See passes →
+            </Link>
+            <Link href="/sign-in" className="text-sm text-gray-300 underline">
+              Already have one? Sign in
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* The renewal switch, for a membership that actually recurs (D19). */}
+      {pass && pass.recurring && (
+        <div className="mb-8">
+          <MembershipPanel pass={pass} onChanged={refreshSession} />
+        </div>
+      )}
+
+      {passError && (
+        <div className="mb-8 rounded-2xl bg-red-500/15 border border-red-400/30 p-4 text-sm text-red-100">
+          {passError}
+        </div>
+      )}
+
       {/* Day strip */}
       <div className="mb-8">
         <div className="mb-3 flex items-center gap-2 text-white/90">
@@ -338,6 +534,39 @@ export default function GroupClassesPage() {
                         0,
                         Math.min(100, (slot.spotsLeft / classItem.spotsAvailable) * 100)
                       );
+                      const booked =
+                        !!selectedDate &&
+                        hasBooking(classItem, slot.time, selectedDate);
+
+                      // A slot the holder already has is not selectable — it
+                      // shows what they hold and how to give it back (D6).
+                      if (booked && selectedDate) {
+                        return (
+                          <div
+                            key={slot.time}
+                            className="w-full rounded-xl border-2 border-emerald-500 bg-emerald-50 px-4 py-3"
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="text-base font-bold text-emerald-900">
+                                {slot.time}
+                              </span>
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                                <CheckCircle2 className="h-4 w-4" /> You&apos;re booked
+                              </span>
+                            </div>
+                            <button
+                              onClick={() =>
+                                cancelWithPass(classItem._id, slot.time, selectedDate)
+                              }
+                              disabled={isSubmitting}
+                              className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800/70 underline hover:text-emerald-900 disabled:opacity-50"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                              Can&apos;t make it? Cancel and free the spot
+                            </button>
+                          </div>
+                        );
+                      }
 
                       return (
                         <button
@@ -443,6 +672,40 @@ export default function GroupClassesPage() {
             </div>
           </div>
 
+          {pass?.valid ? (
+            <>
+              <p className="mb-6 text-gray-700">
+                Booking as <strong>{session.firstName ?? session.email}</strong> with
+                your {pass.productName}. Nothing to pay.
+              </p>
+              <button
+                onClick={() =>
+                  selectedDate &&
+                  bookWithPass(
+                    selectedClass.split('-')[0],
+                    selectedClass.split('-')[1],
+                    selectedDate
+                  )
+                }
+                disabled={isSubmitting}
+                className="w-full text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-100"
+                style={{ backgroundColor: BRAND }}
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                    Booking...
+                  </span>
+                ) : (
+                  'Book free with your pass →'
+                )}
+              </button>
+              <p className="text-center text-sm text-gray-500 mt-3">
+                Included in your pass · cancel any time if plans change
+              </p>
+            </>
+          ) : (
+          <>
           <div className="grid gap-4 md:grid-cols-2 mb-6">
             <div>
               <label
@@ -504,6 +767,8 @@ export default function GroupClassesPage() {
           <p className="text-center text-sm text-gray-500 mt-3">
             🔒 Secure checkout · spot held while you pay
           </p>
+          </>
+          )}
         </div>
       )}
 

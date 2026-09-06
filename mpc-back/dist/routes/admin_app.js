@@ -32,6 +32,22 @@ const uploadFields = (0, multer_1.default)({
 adminAppRouter.get('/waiting-list', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield adminAppController.getWaitingList(req, res);
 }));
+// Class passes (D12)
+adminAppRouter.get('/class-passes', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield adminAppController.listClassPasses(req, res);
+}));
+adminAppRouter.post('/class-passes', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield adminAppController.grantClassPass(req, res);
+}));
+adminAppRouter.patch('/class-passes/:id/revoked', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield adminAppController.setClassPassRevoked(req, res);
+}));
+adminAppRouter.post('/class-passes/:id/resend', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield adminAppController.resendClassPassLink(req, res);
+}));
+adminAppRouter.get('/class-pass-products', auth_1.adminAppAuth, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield adminAppController.getPassProductsForAdmin(req, res);
+}));
 adminAppRouter.get('/exercises', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield adminAppController.getAllExercises(req, res);
 }));
