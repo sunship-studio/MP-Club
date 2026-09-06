@@ -19,9 +19,13 @@ const cloudinary_1 = require("../../config/cloudinary");
 const resend_1 = __importDefault(require("../../config/resend"));
 const stripe_1 = __importDefault(require("../../config/stripe"));
 const AdminSettings_1 = __importDefault(require("../../models/AdminSettings"));
+const ClassPass_1 = __importDefault(require("../../models/ClassPass"));
+const ClassPassProduct_1 = __importDefault(require("../../models/ClassPassProduct"));
 const Exercise_1 = __importDefault(require("../../models/Exercise"));
 const GroupClass_1 = __importDefault(require("../../models/GroupClass"));
 const PlanForSale_1 = require("../../models/PlanForSale");
+const class_pass_1 = require("../../services/class_pass");
+const class_pass_email_1 = require("../../services/class_pass_email");
 const group_class_booking_1 = require("../../services/group_class_booking");
 const User_1 = __importDefault(require("../../models/User"));
 const WaitingListEntry_1 = require("../../models/WaitingListEntry");
@@ -31,6 +35,200 @@ class AdminAppController {
         this.readHTMLFile = (filePath) => {
             return fs_1.default.readFileSync(filePath, 'utf8');
         };
+    }
+    /**
+     * Who holds a pass and when it runs out.
+     *
+     * Tokens are deliberately absent: they are bearer credentials, and an admin
+     * list is a screen that gets screenshotted and shared. Shane gets a holder
+     * back onto their pass with `resendClassPassLink` instead (D8).
+     */
+    listClassPasses(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+                const filter = search
+                    ? { email: { $regex: search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } }
+                    : {};
+                const passes = yield ClassPass_1.default.find(filter).sort({ purchasedAt: -1 }).lean();
+                const today = (0, class_pass_1.venueToday)();
+                const products = yield ClassPassProduct_1.default.find().lean();
+                const productName = new Map(products.map((p) => [String(p._id), p.name]));
+                return res.status(200).json(passes.map((pass) => {
+                    var _a;
+                    return ({
+                        _id: pass._id,
+                        firstName: pass.firstName,
+                        lastName: pass.lastName,
+                        email: pass.email,
+                        productName: (_a = productName.get(String(pass.productId))) !== null && _a !== void 0 ? _a : `${pass.months} Month Pass`,
+                        months: pass.months,
+                        pricePaidCents: pass.pricePaidCents,
+                        validFromDate: pass.validFromDate,
+                        validUntilDate: pass.validUntilDate,
+                        purchasedAt: pass.purchasedAt,
+                        grantedByAdmin: pass.grantedByAdmin,
+                        // Renewal state, so an admin can see what is still being charged
+                        // (D19). The subscription id itself stays server-side — the admin
+                        // app has no use for it and it is a Stripe handle.
+                        recurring: Boolean(pass.stripeSubscriptionId),
+                        autoRenew: Boolean(pass.autoRenew),
+                        subscriptionStatus: pass.subscriptionStatus,
+                        nextChargeDate: pass.nextChargeDate,
+                        status: pass.revoked
+                            ? 'revoked'
+                            : pass.validUntilDate < today
+                                ? 'expired'
+                                : 'active',
+                    });
+                }));
+            }
+            catch (error) {
+                console_1.default.error('Error listing class passes:', error);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+        });
+    }
+    /** The products a grant can be made against. */
+    getPassProductsForAdmin(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const products = yield ClassPassProduct_1.default.find({ active: true }).lean();
+                return res.status(200).json(products);
+            }
+            catch (error) {
+                console_1.default.error('Error listing class pass products:', error);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+        });
+    }
+    /**
+     * Grant a pass by hand. The failure this exists for: Stripe took the money,
+     * the webhook didn't land, and a customer who turned up has no pass (D12).
+     */
+    grantClassPass(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const { productId, firstName, lastName } = req.body;
+                const email = (_a = req.body.email) === null || _a === void 0 ? void 0 : _a.trim().toLowerCase();
+                if (!productId || !email || !firstName) {
+                    return res.status(400).json({ message: 'Missing required fields' });
+                }
+                const product = yield ClassPassProduct_1.default.findById(productId);
+                if (!product) {
+                    return res.status(404).json({ message: 'Class pass product not found' });
+                }
+                // Same one-at-a-time rule as a purchase (D7), which is also what stops a
+                // double tap on the grant button minting two passes.
+                const held = yield (0, class_pass_1.findActivePassForEmail)(email);
+                if (held) {
+                    return res.status(409).json({
+                        error: `${email} already has a pass, valid until ${held.validUntilDate}.`,
+                        validUntilDate: held.validUntilDate,
+                    });
+                }
+                const pass = yield (0, class_pass_1.activatePass)({
+                    productId: String(product._id),
+                    email,
+                    firstName,
+                    lastName,
+                    purchaseDate: (0, class_pass_1.venueToday)(),
+                    grantedByAdmin: true,
+                });
+                // The grant is the point; the email is a courtesy. Shane fixing a
+                // customer in front of him must not fail because Resend is down — he can
+                // resend from the list once it is back.
+                let emailSent = true;
+                try {
+                    yield (0, class_pass_email_1.sendPassLinkEmail)(pass);
+                }
+                catch (error) {
+                    emailSent = false;
+                    console_1.default.error('Granted pass but failed to email the link:', error);
+                }
+                return res.status(201).json({
+                    _id: pass._id,
+                    email: pass.email,
+                    validFromDate: pass.validFromDate,
+                    validUntilDate: pass.validUntilDate,
+                    emailSent,
+                });
+            }
+            catch (error) {
+                console_1.default.error('Error granting class pass:', error);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+        });
+    }
+    /**
+     * Revoke or un-revoke a pass.
+     *
+     * Revoking blocks new bookings and moves no spots: classes already booked
+     * stand, and Shane removes an attendee deliberately in the editor if he wants
+     * them gone. A misclick is fixed by un-revoking, not by reconstructing
+     * somebody's calendar (D9).
+     */
+    setClassPassRevoked(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            try {
+                const revoked = ((_a = req.body) === null || _a === void 0 ? void 0 : _a.revoked) !== false;
+                const pass = yield ClassPass_1.default.findByIdAndUpdate(req.params.id, { $set: { revoked } }, { new: true });
+                if (!pass) {
+                    return res.status(404).json({ message: 'Class pass not found' });
+                }
+                // Revoking has to stop the money as well as the entitlement: a revoked
+                // pass that keeps billing monthly is a bug with a bank statement
+                // attached (D19). Cancelled outright, not at period end — there is no
+                // term left to honour once the pass is withdrawn.
+                let subscriptionCancelFailed = false;
+                const stillCharging = revoked &&
+                    pass.stripeSubscriptionId &&
+                    pass.subscriptionStatus !== 'canceled';
+                if (stillCharging) {
+                    try {
+                        yield stripe_1.default.subscriptions.cancel(pass.stripeSubscriptionId);
+                    }
+                    catch (error) {
+                        // The entitlement is ours to withdraw and has been. Billing is a
+                        // best effort, and a failure here must be visible rather than leave
+                        // the pass live.
+                        console_1.default.error('Failed to cancel subscription for revoked pass:', error);
+                        subscriptionCancelFailed = true;
+                    }
+                    pass.autoRenew = false;
+                    pass.subscriptionStatus = 'canceled';
+                    pass.nextChargeDate = undefined;
+                    yield pass.save();
+                }
+                return res.status(200).json(Object.assign({ _id: pass._id, revoked: pass.revoked, 
+                    // Un-revoking restores the pass but never the subscription: resuming a
+                    // cancelled one would need a card, and we hold none.
+                    subscriptionEnded: pass.subscriptionStatus === 'canceled' }, (subscriptionCancelFailed ? { subscriptionCancelFailed: true } : {})));
+            }
+            catch (error) {
+                console_1.default.error('Error updating class pass:', error);
+                return res.status(500).json({ message: 'Internal server error' });
+            }
+        });
+    }
+    /** Resend a holder their current pass link, so a lost email is self-service. */
+    resendClassPassLink(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const pass = yield ClassPass_1.default.findById(req.params.id);
+                if (!pass) {
+                    return res.status(404).json({ message: 'Class pass not found' });
+                }
+                yield (0, class_pass_email_1.sendPassLinkEmail)(pass);
+                return res.status(200).json({ sent: true, email: pass.email });
+            }
+            catch (error) {
+                console_1.default.error('Error resending class pass link:', error);
+                return res.status(500).json({ message: 'Failed to send the pass email' });
+            }
+        });
     }
     getAllExercises(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -211,28 +409,22 @@ class AdminAppController {
     }
     addSubscriber(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            // Sending mail (Waiting for designers to create templates)
-            const template_path = path_1.default.join(process.cwd(), 'templates', 'online_coaching_confirmation.html');
-            const templateSource = this.readHTMLFile(template_path);
-            const { data, error } = yield resend_1.default.emails.send({
-                from: 'Midlands Performance Club <shanemahon@midlandsperformanceclub.ie>',
-                to: [req.body.email],
-                subject: 'Subscription Confirmation',
-                html: templateSource,
-            });
-            if (error) {
-                console_1.default.error('Error sending email:', error);
-            }
-            else {
-                console_1.default.log('✅ Email sent successfully:', data);
-            }
+            var _a;
             try {
-                const { email, firstName, lastName, age } = req.body;
-                const existingUser = yield User_1.default.findOne({ email });
-                if (existingUser) {
-                    return res.status(400).json({ message: 'User already exists' });
+                const { firstName, lastName, age } = req.body;
+                const email = String((_a = req.body.email) !== null && _a !== void 0 ? _a : '').trim().toLowerCase();
+                if (!email) {
+                    return res.status(400).json({ message: 'Email is required' });
                 }
-                const newUser = yield User_1.default.create({
+                const existingUser = yield User_1.default.findOne({
+                    email: { $regex: `^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' },
+                });
+                if (existingUser) {
+                    return res.status(400).json({
+                        message: `User with email ${existingUser.email} already exists (status: ${existingUser.status}, type: ${existingUser.type})`,
+                    });
+                }
+                yield User_1.default.create({
                     email,
                     firstName,
                     lastName,
@@ -243,6 +435,21 @@ class AdminAppController {
                     status: 'active',
                     startDate: new Date(),
                 });
+                // Send confirmation only after the subscriber is actually created
+                const template_path = path_1.default.join(process.cwd(), 'templates', 'online_coaching_confirmation.html');
+                const templateSource = this.readHTMLFile(template_path);
+                const { data, error } = yield resend_1.default.emails.send({
+                    from: 'Midlands Performance Club <shanemahon@midlandsperformanceclub.ie>',
+                    to: [email],
+                    subject: 'Subscription Confirmation',
+                    html: templateSource,
+                });
+                if (error) {
+                    console_1.default.error('Error sending email:', error);
+                }
+                else {
+                    console_1.default.log('✅ Email sent successfully:', data);
+                }
                 return res.status(200).json({ message: 'Subscriber added' });
             }
             catch (error) {

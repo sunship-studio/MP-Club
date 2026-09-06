@@ -54,6 +54,9 @@ const GroupClassSchema = new mongoose_1.Schema({
                             enum: ['pending', 'confirmed'],
                             default: 'confirmed',
                         },
+                        // Defaults false so bookings made before this existed read as paid,
+                        // which is the conservative answer: they are not self-cancellable.
+                        bookedWithPass: { type: Boolean, default: false },
                         holdId: { type: String, required: false },
                         holdExpiresAt: { type: Date, required: false },
                     },
