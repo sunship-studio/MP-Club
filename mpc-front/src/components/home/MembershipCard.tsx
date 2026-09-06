@@ -88,7 +88,7 @@ const MembershipCard = ({
                    transition-all duration-200 transform hover:scale-105 active:scale-100`}
         onClick={handleClick}
       >
-        {option === 2 ? 'Book Now' : 'Get Started'} →
+        {option === 2 ? 'Book Now' : 'Get Started'}
       </button>
 
       {/* Learn More Link */}

@@ -62,7 +62,7 @@ export default function PassPurchaseSuccessPage() {
           className="inline-block w-full text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all hover:scale-[1.01]"
           style={{ backgroundColor: BRAND }}
         >
-          Book your first class →
+          Book your first class
         </Link>
       </div>
     </div>

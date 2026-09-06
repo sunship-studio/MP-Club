@@ -365,7 +365,7 @@ export default function GroupClassesPage() {
               className="rounded-xl px-4 py-2 text-sm font-semibold text-white"
               style={{ backgroundColor: BRAND }}
             >
-              See passes →
+              See passes
             </Link>
             <Link href="/profile" className="text-sm text-gray-300 underline">
               Your profile
@@ -394,7 +394,7 @@ export default function GroupClassesPage() {
               className="rounded-xl px-4 py-2 text-sm font-semibold text-white"
               style={{ backgroundColor: BRAND }}
             >
-              See passes →
+              See passes
             </Link>
             <Link href="/sign-in" className="text-sm text-gray-300 underline">
               Already have one? Sign in
@@ -697,7 +697,7 @@ export default function GroupClassesPage() {
                     Booking...
                   </span>
                 ) : (
-                  'Book free with your pass →'
+                  'Book free with your pass'
                 )}
               </button>
               <p className="text-center text-sm text-gray-500 mt-3">
@@ -761,7 +761,7 @@ export default function GroupClassesPage() {
                 Redirecting to payment...
               </span>
             ) : (
-              `Pay ${PRICE_LABEL} & confirm booking →`
+              `Pay ${PRICE_LABEL} & confirm booking`
             )}
           </button>
           <p className="text-center text-sm text-gray-500 mt-3">

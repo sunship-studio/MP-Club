@@ -106,7 +106,7 @@ const WhatsIncludedSection = () => {
             className="bg-[#0B79AB] text-white px-8 py-4 rounded-lg font-bold text-lg
                      hover:bg-[#0b78ab9e] transition-all transform hover:scale-105 inline-block"
           >
-            Get Started Today →
+            Get Started Today
           </a>
           <a
             href="/online-coaching"

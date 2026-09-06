@@ -241,7 +241,7 @@ export default function ClassPassesPage() {
                           product.months
                         )}`
                       : `Buy for ${formatPrice(product.priceCents)}`
-                  } →`
+                  }`
                 )}
               </button>
 

@@ -408,7 +408,7 @@ const WorkoutSplitPlans: React.FC = () => {
                       }
                     }}
                   >
-                    Purchase Plan →
+                    Purchase Plan
                   </button>
                 )}
               </div>

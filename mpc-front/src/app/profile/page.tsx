@@ -170,7 +170,7 @@ export default function ProfilePage() {
                 className="mt-3 inline-block rounded-xl px-4 py-2 text-sm font-semibold text-white"
                 style={{ backgroundColor: BRAND }}
               >
-                Start again →
+                Start again
               </Link>
             )}
           </div>
@@ -190,7 +190,7 @@ export default function ProfilePage() {
               className="mt-4 inline-block rounded-xl px-4 py-2 text-sm font-semibold text-white"
               style={{ backgroundColor: BRAND }}
             >
-              See membership →
+              See membership
             </Link>
           </div>
         )}

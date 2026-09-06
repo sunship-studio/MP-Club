@@ -25,26 +25,58 @@ const stripe = new Stripe(
 );
 
 /**
- * Webhook endpoint secret, from the environment only.
+ * Webhook signing secrets, from the environment only.
  *
- * There used to be hardcoded fallbacks here. They were wrong: the live
- * destination's secret had been rotated and no longer matched the literal, so
- * the fallback could only ever have failed signature verification on every
- * event — customers paying and receiving nothing, with the cause invisible.
+ * Accepts a comma-separated list so a secret can be rolled without dropping
+ * events: Stripe's old and new secrets are both live during the overlap, and
+ * a single-secret check rejects every delivery signed with the other one.
  *
- * Failing loudly at startup is the right trade. A server that cannot verify
- * Stripe's signature cannot safely take money.
+ * There used to be hardcoded fallbacks here. They were removed because a
+ * signing secret does not belong in the repository — but note that the literal
+ * was *correct*; what broke production was the environment variable being set
+ * to a different destination's secret, which the fallback had been masking.
+ * Hence the list: setting one wrong value should not be silent.
+ *
+ * Each destination has its own URL and its own secret:
+ *   /webhook             online coaching
+ *   /plan_webhook        training plans
+ *   /group_class_webhook group classes and passes  ← this one
  */
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+const endpointSecrets = (process.env.STRIPE_WEBHOOK_SECRET ?? '')
+  .split(',')
+  .map((secret) => secret.trim())
+  .filter(Boolean);
 
-if (!endpointSecret) {
+if (endpointSecrets.length === 0) {
   throw new Error(
     'STRIPE_WEBHOOK_SECRET is not set, so the group class webhook cannot verify ' +
       'Stripe signatures and would reject every payment event. Set it to the ' +
       "signing secret of this environment's Stripe event destination " +
       '(Stripe → Developers → Webhooks → the destination → Signing secret), ' +
-      'as a Railway service variable in production or in mpc-back/.env locally.'
+      'as a Railway service variable in production or in mpc-back/.env locally. ' +
+      'If several destinations post to this URL, list every secret, comma-separated.'
   );
+}
+
+/**
+ * Verify against each configured secret, accepting the first that matches.
+ *
+ * This is not weaker than checking one: a forged payload still has to carry a
+ * valid HMAC for a secret we hold. It only stops us rejecting genuine events
+ * from a second destination we also own.
+ */
+function constructEvent(payload: Buffer, signature: string | string[]): Stripe.Event {
+  let lastError: unknown;
+
+  for (const secret of endpointSecrets) {
+    try {
+      return stripe.webhooks.constructEvent(payload, signature, secret);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError;
 }
 
 export const handleGroupClassWebhook = async (
@@ -56,7 +88,7 @@ export const handleGroupClassWebhook = async (
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig!, endpointSecret);
+    event = constructEvent(req.body, sig!);
   } catch (err: any) {
     console.error('⚠️ Webhook signature verification failed:', err.message);
     res.status(400).send(`Webhook Error: ${err.message}`);

@@ -72,7 +72,7 @@ const BuyButton = () => {
         }}
         className="bg-[#0B79AB] w-full py-4 font-bold rounded-lg shadow-lg text-white hover:bg-[#0b78ab9e] active:shadow-md transition-all duration-150 transform hover:scale-105 active:scale-100 cursor-pointer"
       >
-        Start Now →
+        Start Now
       </button>
 
       {/* Stripe Badge */}
